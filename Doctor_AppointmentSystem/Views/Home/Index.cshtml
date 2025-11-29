@@ -57,7 +57,7 @@
 
             <div class="hero-right">
                 <div class="doctor-wrapper">
-                    <img src="~/images/doctor.png" alt="Doctor smiling" class="doctor-img" />
+                    <img src="/images/doctor.png" alt="Doctor smiling" class="doctor-img" />
                 </div>
             </div>
         </main>
@@ -199,7 +199,7 @@
                      data-specialty="cardiology"
                      data-experience="12">
                     <div class="doctor-photo-wrap">
-                        <img src="~/images/D4.jpg" alt="Cardiologist" class="doctor-photo">
+                        <img src="/images/D4.jpg" alt="Cardiologist" class="doctor-photo">
                     </div>
                     <div class="doctor-info">
                         <div class="doctor-name">Dr. Ahsan Rahman</div>
@@ -245,7 +245,7 @@
                      data-specialty="neurology"
                      data-experience="9">
                     <div class="doctor-photo-wrap">
-                        <img src="~/images/D3.jpg" alt="Neurologist" class="doctor-photo">
+                        <img src="/images/D3.jpg" alt="Neurologist" class="doctor-photo">
                     </div>
                     <div class="doctor-info">
                         <div class="doctor-name">Dr. Farhan Islam</div>
@@ -383,6 +383,7 @@
             </div>
         </div>
     </footer>
+
 </div>
 
 <!-- ========= SIGN IN MODAL ========= -->
@@ -395,16 +396,17 @@
         <h2 class="auth-title" id="signinTitle">Welcome Back</h2>
         <p class="auth-subtitle">Sign in to manage your doctor appointments.</p>
 
-        <form asp-controller="Account" asp-action="Login" method="post">
+        <form method="post" action="/Account/Login">
             @Html.AntiForgeryToken()
 
             <div class="auth-form-col" style="margin-bottom:14px;">
                 <label class="auth-label" for="signinIdentifier">Email address</label>
                 <input id="signinIdentifier"
-                       name="Email"
                        type="email"
+                       name="Email"
                        class="auth-input"
                        placeholder="Enter email"
+                       autocomplete="email"
                        required />
             </div>
 
@@ -412,10 +414,11 @@
                 <label class="auth-label" for="signinPassword">Password</label>
                 <div class="auth-input-wrap">
                     <input id="signinPassword"
-                           name="Password"
                            type="password"
+                           name="Password"
                            class="auth-input"
                            placeholder="Enter password"
+                           autocomplete="current-password"
                            required />
                     <button class="auth-password-toggle" type="button">
                         <i class="fa-regular fa-eye"></i>
@@ -439,7 +442,6 @@
                 <button type="button" class="auth-link" data-switch-to="signup">Sign Up</button>
             </p>
         </form>
-
     </div>
 </div>
 
@@ -453,15 +455,15 @@
         <h2 class="auth-title" id="signupTitle">Create Account</h2>
         <p class="auth-subtitle">Register to book and manage your doctor appointments.</p>
 
-        <form asp-controller="Account" asp-action="Register" method="post">
+        <form method="post" action="/Account/Register">
             @Html.AntiForgeryToken()
 
             <div class="auth-form-row">
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupFirstName">First name</label>
                     <input id="signupFirstName"
-                           name="FirstName"
                            type="text"
+                           name="FirstName"
                            class="auth-input"
                            placeholder="Enter first name"
                            required />
@@ -469,8 +471,8 @@
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupLastName">Last name</label>
                     <input id="signupLastName"
-                           name="LastName"
                            type="text"
+                           name="LastName"
                            class="auth-input"
                            placeholder="Enter last name"
                            required />
@@ -481,18 +483,19 @@
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupEmail">Email address</label>
                     <input id="signupEmail"
-                           name="Email"
                            type="email"
+                           name="Email"
                            class="auth-input"
                            placeholder="example@domain.com"
+                           autocomplete="email"
                            required />
                     <div class="auth-helper">Use a valid email. It will be used for login and notifications.</div>
                 </div>
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupPhone">Mobile number</label>
                     <input id="signupPhone"
-                           name="PhoneNumber"
                            type="tel"
+                           name="PhoneNumber"
                            class="auth-input"
                            placeholder="e.g. 01XXXXXXXXX"
                            required />
@@ -503,8 +506,8 @@
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupDob">Date of birth (dd/mm/yyyy)</label>
                     <input id="signupDob"
-                           name="DateOfBirth"
                            type="date"
+                           name="DateOfBirth"
                            class="auth-input"
                            required />
                 </div>
@@ -528,10 +531,11 @@
                     <label class="auth-label" for="signupPassword">Password</label>
                     <div class="auth-input-wrap">
                         <input id="signupPassword"
-                               name="Password"
                                type="password"
+                               name="Password"
                                class="auth-input"
                                placeholder="Enter password"
+                               autocomplete="new-password"
                                required />
                         <button class="auth-password-toggle" type="button">
                             <i class="fa-regular fa-eye"></i>
@@ -542,10 +546,11 @@
                     <label class="auth-label" for="signupConfirmPassword">Confirm password</label>
                     <div class="auth-input-wrap">
                         <input id="signupConfirmPassword"
-                               name="ConfirmPassword"
                                type="password"
+                               name="ConfirmPassword"
                                class="auth-input"
                                placeholder="Confirm password"
+                               autocomplete="new-password"
                                required />
                         <button class="auth-password-toggle" type="button">
                             <i class="fa-regular fa-eye"></i>
@@ -568,6 +573,9 @@
                 <button type="button" class="auth-link" data-switch-to="signin">Sign In</button>
             </p>
         </form>
-
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/landing.js"></script>
+}

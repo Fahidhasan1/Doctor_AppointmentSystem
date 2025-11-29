@@ -1,0 +1,66 @@
+﻿@{
+    Layout = "~/Views/Shared/_DashboardLayout.cshtml";
+}
+
+@section PageTitle {
+        Patient Dashboard
+}
+
+@section PageSubtitle {
+        View your appointments, find doctors, and manage your profile.
+}
+
+<div class="dashboard-cards-grid">
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Upcoming Appointments</div>
+        <div class="dashboard-card-value">2</div>
+        <div class="dashboard-card-footer">Next visit: 02 Dec 2025</div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Completed Visits</div>
+        <div class="dashboard-card-value">7</div>
+        <div class="dashboard-card-footer">Total visits in last 12 months</div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Favourite Doctors</div>
+        <div class="dashboard-card-value">3</div>
+        <div class="dashboard-card-footer">Quick access to preferred doctors</div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="dashboard-card-title">Notifications</div>
+        <div class="dashboard-card-value">1</div>
+        <div class="dashboard-card-footer">New reminder for upcoming appointment</div>
+    </div>
+</div>
+
+<div class="dashboard-section">
+    <div class="dashboard-section-title">Your Upcoming Appointments (Sample)</div>
+
+    <table class="dashboard-table">
+        <thead>
+            <tr>
+                <th>Doctor</th>
+                <th>Department</th>
+                <th>Date &amp; Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Dr. Ahsan Rahman</td>
+                <td>Cardiology</td>
+                <td>02 Dec 2025 · 09:30 AM</td>
+                <td><span class="dashboard-badge dashboard-badge-success">Confirmed</span></td>
+            </tr>
+            <tr>
+                <td>Dr. Mita Chowdhury</td>
+                <td>Pediatrics</td>
+                <td>15 Dec 2025 · 03:00 PM</td>
+                <td><span class="dashboard-badge dashboard-badge-warning">Pending</span></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

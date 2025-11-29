@@ -30,6 +30,15 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
+// ?? SEED ROLES + ADMIN USER ON STARTUP
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    await SeedAdminAsync(roleManager, userManager);
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -56,3 +65,47 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+
+// ========== SEED METHOD ==========
+
+static async Task SeedAdminAsync(RoleManager<IdentityRole> roleManager, UserManager<ApplicationUser> userManager)
+{
+    // 1) Ensure roles exist
+    string[] roleNames = { "Admin", "Doctor", "Receptionist", "Patient" };
+
+    foreach (var roleName in roleNames)
+    {
+        if (!await roleManager.RoleExistsAsync(roleName))
+        {
+            await roleManager.CreateAsync(new IdentityRole(roleName));
+        }
+    }
+
+    // 2) Ensure an Admin user exists
+    var adminEmail = "admin@das.local";      // ?? your default admin email
+    var adminPassword = "Admin@123";         // ?? your default admin password (change in production!)
+
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if (adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            EmailConfirmed = true,
+            FirstName = "System",
+            LastName = "Admin",
+            IsActive = true,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        var createResult = await userManager.CreateAsync(adminUser, adminPassword);
+
+        if (createResult.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+        // (Optionally: else log errors)
+    }
+}

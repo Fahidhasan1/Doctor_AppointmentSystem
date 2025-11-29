@@ -1,8 +1,520 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-wrapper">
+
+    <!-- Sticky Header -->
+    <div class="header-bar">
+        <div class="container-main">
+            <header class="header-main">
+                <div class="logo-wrapper">
+                    <div class="logo-mark"></div>
+                    <div class="logo-text-main">DOCTOR APPOINTMENT SYSTEM</div>
+                </div>
+
+                <nav class="navbar-links">
+                    <a href="#home" class="nav-link nav-active">Home</a>
+                    <a href="#about" class="nav-link">About Us</a>
+                    <a href="#contact" class="nav-link">Contact</a>
+                    <a href="#doctors" class="nav-link">Doctors</a>
+                    <!-- Sign In as white box button -->
+                    <a href="#signin" class="nav-link nav-auth-link nav-signin-btn">Sign In</a>
+                    <!-- Sign Up button -->
+                    <button class="nav-link nav-auth-link nav-signup" type="button" data-open="signupModal">
+                        Sign Up
+                    </button>
+                </nav>
+            </header>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="container-main hero-wrapper">
+        <main id="home" class="hero-section">
+            <div class="hero-left">
+                <div class="hero-hospital-name">SUNSHINE HOSPITAL</div>
+
+                <h1 class="hero-title">
+                    <span class="hero-title-row hero-title-row-first">
+                        <span class="hero-title-main">Your Health</span>
+                    </span>
+                    <span class="hero-title-row hero-title-row-second">
+                        <span class="hero-title-secondary">Is Our Priority</span>
+                    </span>
+                </h1>
+
+                <p class="hero-subtitle">
+                    Schedule appointments with experienced doctors effortlessly.
+                    Your health is our priority – book your next visit in just a few clicks.
+                </p>
+
+                <div class="hero-cta-group">
+                    <button class="btn-primary js-appointment-btn">Make An Appointment</button>
+                    <button class="btn-outline js-book-btn">Book Now</button>
+                </div>
+            </div>
+
+            <div class="hero-right">
+                <div class="doctor-wrapper">
+                    <img src="~/images/doctor.png" alt="Doctor smiling" class="doctor-img" />
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WHY CHOOSE US -->
+    <section class="section-block section-block-alt" id="why">
+        <div class="section-inner">
+            <h2 class="section-heading">Why Choose Us?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <div class="feature-title">Easy Booking</div>
+                    <div class="feature-text">
+                        Book appointments in just a few clicks. Choose your preferred doctor, date, and time slot.
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Instant Confirmation</div>
+                    <div class="feature-text">
+                        Get immediate confirmation and view all your upcoming visits in one place.
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <div class="feature-title">Smart Reminders</div>
+                    <div class="feature-text">
+                        Receive automatic reminders so you never miss an important consultation.
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👨‍⚕️</div>
+                    <div class="feature-title">Qualified Doctors</div>
+                    <div class="feature-text">
+                        Connect with experienced specialists across multiple departments and services.
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <div class="feature-title">Secure Payments</div>
+                    <div class="feature-text">
+                        Pay safely using digital methods like mobile banking and online gateways.
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">24/7 Access</div>
+                    <div class="feature-text">
+                        Manage your profile and appointments anytime from desktop, tablet, or mobile.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section-block" id="how">
+        <div class="section-inner">
+            <h2 class="section-heading">How It Works</h2>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Register / Login</div>
+                    <div class="step-text">
+                        Create your account or sign in with your existing credentials to get started.
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Find a Doctor</div>
+                    <div class="step-text">
+                        Search by name, specialty, or experience to find the right doctor for you.
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Check Availability</div>
+                    <div class="step-text">
+                        View available time slots and pick the date and time that fits your schedule.
+                    </div>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-title">Book & Confirm</div>
+                    <div class="step-text">
+                        Submit your booking and receive instant confirmation with visit details.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FIND YOUR DOCTOR -->
+    <section class="section-block section-block-alt" id="doctors">
+        <div class="section-inner">
+            <h2 class="section-heading">Find Your Doctor</h2>
+
+            <div class="doctor-filter-bar">
+                <div class="doctor-filter-field">
+                    <label for="filterName" class="doctor-filter-label">Doctor Name</label>
+                    <input id="filterName" type="text" class="doctor-filter-input" placeholder="e.g. Rahman" />
+                </div>
+
+                <div class="doctor-filter-field">
+                    <label for="filterSpecialty" class="doctor-filter-label">Specialty</label>
+                    <select id="filterSpecialty" class="doctor-filter-select">
+                        <option value="all">All Specialties</option>
+                        <option value="cardiology">Cardiology</option>
+                        <option value="neurology">Neurology</option>
+                        <option value="pediatrics">Pediatrics</option>
+                        <option value="orthopedics">Orthopedics</option>
+                        <option value="dermatology">Dermatology</option>
+                        <option value="general">General Medicine</option>
+                    </select>
+                </div>
+
+                <div class="doctor-filter-field">
+                    <label for="filterExperience" class="doctor-filter-label">Experience</label>
+                    <select id="filterExperience" class="doctor-filter-select">
+                        <option value="all">Any Experience</option>
+                        <option value="0-5">0 - 5 years</option>
+                        <option value="5-10">5 - 10 years</option>
+                        <option value="10plus">10+ years</option>
+                    </select>
+                </div>
+
+                <div class="doctor-filter-actions">
+                    <button type="button" class="doctor-filter-reset" id="filterResetBtn">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+
+            <div class="doctor-grid" id="doctorGrid">
+                <!-- Doctor 1 -->
+                <div class="doctor-card"
+                     data-name="Dr. Ahsan Rahman"
+                     data-specialty="cardiology"
+                     data-experience="12">
+                    <div class="doctor-photo-wrap">
+                        <img src="~/images/D4.jpg" alt="Cardiologist" class="doctor-photo">
+                    </div>
+                    <div class="doctor-info">
+                        <div class="doctor-name">Dr. Ahsan Rahman</div>
+                        <div class="doctor-specialty">Cardiologist</div>
+                        <div class="doctor-meta">12+ years experience · Sunshine Hospital</div>
+                        <div class="doctor-desc">
+                            Specialised in heart failure, hypertension, and preventive cardiology with
+                            a strong focus on lifestyle-based treatment.
+                        </div>
+                    </div>
+                    <div class="doctor-card-footer">
+                        <span><i class="fa-solid fa-star"></i> 4.9 (320 reviews)</span>
+                        <button class="doctor-cta-btn">View Slots</button>
+                    </div>
+                </div>
+
+                <!-- Doctor 2 -->
+                <div class="doctor-card"
+                     data-name="Dr. Mita Chowdhury"
+                     data-specialty="pediatrics"
+                     data-experience="7">
+                    <div class="doctor-photo-wrap">
+                        <img src="~/images/D2.jpg" alt="Pediatrician" class="doctor-photo">
+                    </div>
+                    <div class="doctor-info">
+                        <div class="doctor-name">Dr. Mita Chowdhury</div>
+                        <div class="doctor-specialty">Pediatrician</div>
+                        <div class="doctor-meta">7 years experience · Children Care Unit</div>
+                        <div class="doctor-desc">
+                            Focused on child growth, vaccinations, and common childhood illnesses with a
+                            very friendly approach for kids and parents.
+                        </div>
+                    </div>
+                    <div class="doctor-card-footer">
+                        <span><i class="fa-solid fa-star"></i> 4.8 (210 reviews)</span>
+                        <button class="doctor-cta-btn">View Slots</button>
+                    </div>
+                </div>
+
+                <!-- Doctor 3 -->
+                <div class="doctor-card"
+                     data-name="Dr. Farhan Islam"
+                     data-specialty="neurology"
+                     data-experience="9">
+                    <div class="doctor-photo-wrap">
+                        <img src="~/images/D3.jpg" alt="Neurologist" class="doctor-photo">
+                    </div>
+                    <div class="doctor-info">
+                        <div class="doctor-name">Dr. Farhan Islam</div>
+                        <div class="doctor-specialty">Neurologist</div>
+                        <div class="doctor-meta">9 years experience · Brain & Nerve Center</div>
+                        <div class="doctor-desc">
+                            Treats migraine, stroke, epilepsy and other neurological disorders using modern
+                            diagnostic tools and patient education.
+                        </div>
+                    </div>
+                    <div class="doctor-card-footer">
+                        <span><i class="fa-solid fa-star"></i> 4.7 (185 reviews)</span>
+                        <button class="doctor-cta-btn">View Slots</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT US -->
+    <section class="section-block" id="about">
+        <div class="section-inner">
+            <h2 class="section-heading">About Us</h2>
+            <div class="about-content-wrap">
+                <p class="about-main-text">
+                    Our Doctor Appointment System is designed to make healthcare more accessible and organized.
+                    We connect patients with qualified doctors in a few simple steps, reducing waiting time at
+                    hospitals and helping both patients and staff manage appointments more efficiently.
+                    With secure authentication, clear schedules, and smart reminders, we aim to provide a smooth
+                    digital experience for every visit.
+                </p>
+
+                <div class="about-highlights">
+                    <div class="about-highlight-item about-active">
+                        <div class="about-highlight-icon">🎯</div>
+                        <div class="about-highlight-title">Our Mission</div>
+                        <div class="about-highlight-text">
+                            To simplify access to quality healthcare by digitizing appointment booking,
+                            reducing walk-in queues, and ensuring every patient gets proper time with their doctor.
+                        </div>
+                    </div>
+                    <div class="about-highlight-item">
+                        <div class="about-highlight-icon">👁️</div>
+                        <div class="about-highlight-title">Our Vision</div>
+                        <div class="about-highlight-text">
+                            To become a trusted hospital platform where patients, doctors, and administrators
+                            work together through a single unified system for better outcomes.
+                        </div>
+                    </div>
+                    <div class="about-highlight-item">
+                        <div class="about-highlight-icon">💎</div>
+                        <div class="about-highlight-title">Our Values</div>
+                        <div class="about-highlight-text">
+                            We believe in transparency, data security, and patient-centered design. Every feature
+                            we build is focused on reliability, ease of use, and respectful care.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT US -->
+    <section class="section-block section-block-alt" id="contact">
+        <div class="section-inner">
+            <h2 class="section-heading">Contact Us</h2>
+
+            <div class="contact-grid">
+                <div class="contact-card">
+                    <div class="contact-icon">📍</div>
+                    <div class="contact-title">Visit Us</div>
+                    <div class="contact-info">
+                        Sunshine Hospital<br>
+                        123 Medical Plaza, Gulshan<br>
+                        Dhaka-1212, Bangladesh
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">📞</div>
+                    <div class="contact-title">Call Us</div>
+                    <div class="contact-info">
+                        <a href="tel:+8801234567890" class="contact-link">+880 1234-567890</a><br>
+                        <a href="tel:+8801987654321" class="contact-link">+880 1987-654321</a><br>
+                        Mon–Sat: 8:00 AM – 8:00 PM
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">✉️</div>
+                    <div class="contact-title">Email Us</div>
+                    <div class="contact-info">
+                        <a href="mailto:info@sunshinehospital.com" class="contact-link">info@sunshinehospital.com</a><br>
+                        <a href="mailto:support@sunshinehospital.com" class="contact-link">support@sunshinehospital.com</a><br>
+                        24/7 Support Available
+                    </div>
+                </div>
+
+                <div class="contact-card">
+                    <div class="contact-icon">🗺️</div>
+                    <div class="contact-title">Find on Map</div>
+                    <div class="contact-map-wrap">
+                        <iframe class="contact-map-frame"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3651.903626228545!2d90.41251851543232!3d23.750885894615105!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8b0ac3d0a5f%3A0x4d7c92ce40938e35!2sGulshan%202%20Circle!5e0!3m2!1sen!2sbd!4v1700000000000!5m2!1sen!2sbd"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer-bar">
+        <div class="footer-content">
+            <div class="footer-item">
+                <div class="footer-icon"><i class="fa-solid fa-location-dot"></i></div>
+                <div>A120, Boick pr-1SON 24eb kois st.</div>
+            </div>
+
+            <div class="footer-item">
+                <div class="footer-icon"><i class="fa-solid fa-phone"></i></div>
+                <div>+90412 404 44 90 / +98412 509</div>
+            </div>
+
+            <div class="footer-item">
+                <div class="footer-icon"><i class="fa-solid fa-envelope"></i></div>
+                <div><a href="mailto:timpoleket@domain.com" class="footer-link">timpoleket@domain.com</a></div>
+            </div>
+
+            <div class="footer-copy">
+                &copy; 2025 Doctor Appointment System. All rights reserved.
+            </div>
+        </div>
+    </footer>
+</div>
+
+<!-- ========= SIGN IN MODAL ========= -->
+<div class="auth-modal-overlay" id="signinModal" aria-hidden="true">
+    <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="signinTitle">
+        <button class="auth-close-btn" type="button" data-close-modal>
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="auth-title" id="signinTitle">Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to manage your doctor appointments.</p>
+
+        <form>
+            <div class="auth-form-col" style="margin-bottom:14px;">
+                <label class="auth-label" for="signinIdentifier">Email address</label>
+                <input id="signinIdentifier" type="email" class="auth-input" placeholder="Enter email" required />
+            </div>
+
+            <div class="auth-form-col">
+                <label class="auth-label" for="signinPassword">Password</label>
+                <div class="auth-input-wrap">
+                    <input id="signinPassword" type="password" class="auth-input" placeholder="Enter password" required />
+                    <button class="auth-password-toggle" type="button">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="auth-inline">
+                <label class="auth-checkbox-wrap">
+                    <input type="checkbox" class="auth-checkbox" />
+                    <span>Remember me</span>
+                </label>
+
+                <a href="#" class="auth-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="auth-primary-btn">Sign In</button>
+
+            <p class="auth-footer-text">
+                Don’t have an account?
+                <button type="button" class="auth-link" data-switch-to="signup">Sign Up</button>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- ========= SIGN UP MODAL ========= -->
+<div class="auth-modal-overlay" id="signupModal" aria-hidden="true">
+    <div class="auth-modal-dialog auth-modal-dialog-wide" role="dialog" aria-modal="true" aria-labelledby="signupTitle">
+        <button class="auth-close-btn" type="button" data-close-modal>
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="auth-title" id="signupTitle">Create Account</h2>
+        <p class="auth-subtitle">Register to book and manage your doctor appointments.</p>
+
+        <form>
+            <div class="auth-form-row">
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupFirstName">First name</label>
+                    <input id="signupFirstName" type="text" class="auth-input" placeholder="Enter first name" required />
+                </div>
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupLastName">Last name</label>
+                    <input id="signupLastName" type="text" class="auth-input" placeholder="Enter last name" required />
+                </div>
+            </div>
+
+            <div class="auth-form-row">
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupEmail">Email address</label>
+                    <input id="signupEmail" type="email" class="auth-input" placeholder="example@domain.com" required />
+                    <div class="auth-helper">Use a valid email. It will be used for login and notifications.</div>
+                </div>
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupPhone">Mobile number</label>
+                    <input id="signupPhone" type="tel" class="auth-input" placeholder="e.g. 01XXXXXXXXX" required />
+                </div>
+            </div>
+
+            <div class="auth-form-row">
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupDob">Date of birth (dd/mm/yyyy)</label>
+                    <input id="signupDob" type="date" class="auth-input" required />
+                </div>
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupGender">Gender</label>
+                    <select id="signupGender" class="auth-select" required>
+                        <option value="">Select gender</option>
+                        <option value="female">Female</option>
+                        <option value="male">Male</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not_say">Prefer not to say</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="auth-form-row">
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupPassword">Password</label>
+                    <div class="auth-input-wrap">
+                        <input id="signupPassword" type="password" class="auth-input" placeholder="Enter password" required />
+                        <button class="auth-password-toggle" type="button">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="auth-form-col">
+                    <label class="auth-label" for="signupConfirmPassword">Confirm password</label>
+                    <div class="auth-input-wrap">
+                        <input id="signupConfirmPassword" type="password" class="auth-input" placeholder="Confirm password" required />
+                        <button class="auth-password-toggle" type="button">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-inline" style="margin-top:10px;">
+                <label class="auth-checkbox-wrap">
+                    <input type="checkbox" class="auth-checkbox" id="signupTerms" />
+                    <span>I agree to the terms &amp; conditions and privacy policy.</span>
+                </label>
+            </div>
+
+            <button type="submit" class="auth-primary-btn">Sign Up</button>
+
+            <p class="auth-footer-text">
+                Already have an account?
+                <button type="button" class="auth-link" data-switch-to="signin">Sign In</button>
+            </p>
+        </form>
+    </div>
 </div>

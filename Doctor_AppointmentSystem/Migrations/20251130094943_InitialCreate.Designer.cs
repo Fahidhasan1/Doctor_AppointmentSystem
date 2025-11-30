@@ -4,16 +4,19 @@ using Doctor_AppointmentSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace Doctor_AppointmentSystem.Data.Migrations
+namespace Doctor_AppointmentSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251130094943_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,11 +33,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -43,24 +46,22 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("OfficePhoneNo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OfficeRoomNo")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("LastModifiedByUserId");
 
                     b.HasIndex("UserId");
 
@@ -75,15 +76,18 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("CreatedByUserId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
@@ -97,12 +101,10 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Gender")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<int?>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -113,23 +115,15 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<string>("LastModifiedByUserId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NID")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -142,32 +136,23 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PermanentAddress")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("PresentAddress")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("ProfilePicturePath")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("RegisteredByUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("ProfileImagePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -182,8 +167,6 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("RegisteredByUserId");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -200,13 +183,12 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("BookedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CancellationReason")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DoctorProfileId")
@@ -221,11 +203,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<bool>("IsFirstVisit")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("LastStatusChangedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
 
                     b.Property<int>("PatientProfileId")
                         .HasColumnType("int");
@@ -233,17 +215,17 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("VisitType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookedByUserId");
-
                     b.HasIndex("DoctorProfileId");
 
-                    b.HasIndex("LastStatusChangedByUserId");
+                    b.HasIndex("PatientId");
 
                     b.HasIndex("PatientProfileId");
 
@@ -293,11 +275,9 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs");
                 });
@@ -313,11 +293,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<bool>("AutoAcceptAppointments")
                         .HasColumnType("bit");
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
@@ -343,10 +323,7 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LicenseNumber")
                         .IsRequired()
@@ -356,28 +333,17 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<int>("MaxAppointmentsPerDay")
                         .HasColumnType("int");
 
-                    b.Property<string>("OtherSpecialties")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("PrimarySpecialty")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Qualification")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<double?>("Rating")
-                        .HasColumnType("float");
-
                     b.Property<string>("RoomNo")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int?>("TotalReviews")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -388,13 +354,62 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("LastModifiedByUserId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("DoctorProfiles");
+                });
+
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DoctorProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVisible")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastModifiedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PatientProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.ToTable("DoctorReviews");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorSchedule", b =>
@@ -405,11 +420,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DayOfWeek")
                         .HasColumnType("int");
@@ -430,10 +445,7 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SlotDurationMinutes")
                         .HasColumnType("int");
@@ -441,13 +453,12 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<TimeSpan>("StartTime")
                         .HasColumnType("time");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("DoctorProfileId");
-
-                    b.HasIndex("LastModifiedByUserId");
 
                     b.ToTable("DoctorSchedules");
                 });
@@ -486,11 +497,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DoctorProfileId")
                         .HasColumnType("int");
@@ -505,10 +516,7 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(200)
@@ -517,18 +525,17 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<DateTime>("StartDateTime")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("DoctorProfileId");
-
-                    b.HasIndex("LastModifiedByUserId");
 
                     b.ToTable("DoctorUnavailabilities");
                 });
 
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.NotificationLog", b =>
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -542,30 +549,23 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<int>("Channel")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ErrorMessage")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("MessageBody")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProviderMessageId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProviderName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("SentAtUtc")
                         .HasColumnType("datetime2");
@@ -574,31 +574,28 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Subject")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TemplateName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ToEmail")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ToPhoneNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentId");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("NotificationLogs");
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.PatientProfile", b =>
@@ -610,34 +607,30 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BloodGroup")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("EmergencyContact")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmergencyContactName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EmergencyContactRelation")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("LastModifiedDate")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
@@ -646,16 +639,12 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("LastModifiedByUserId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("PatientProfiles");
                 });
 
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.PaymentTransaction", b =>
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Payment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -669,26 +658,21 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<int>("AppointmentId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("GatewayTransactionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("InitiatedByUserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("Method")
                         .HasColumnType("int");
@@ -697,8 +681,7 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ProviderName")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -706,13 +689,14 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     b.Property<DateTime?>("StatusLastUpdatedUtc")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppointmentId");
 
-                    b.HasIndex("InitiatedByUserId");
-
-                    b.ToTable("PaymentTransactions");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.ReceptionistProfile", b =>
@@ -724,27 +708,25 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CounterNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OfficePhone")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -752,70 +734,9 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("LastModifiedByUserId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("ReceptionistProfiles");
-                });
-
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Review", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DoctorProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsVisible")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PatientProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppointmentId");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("DoctorProfileId");
-
-                    b.HasIndex("LastModifiedByUserId");
-
-                    b.HasIndex("PatientProfileId");
-
-                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.Specialty", b =>
@@ -826,11 +747,11 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
@@ -840,21 +761,17 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("LastModifiedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime?>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("LastModifiedByUserId");
 
                     b.ToTable("Specialties");
                 });
@@ -998,120 +915,80 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.AdminProfile", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("LastModifiedByUser");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.ApplicationUser", b =>
-                {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "RegisteredByUser")
-                        .WithMany()
-                        .HasForeignKey("RegisteredByUserId");
-
-                    b.Navigation("RegisteredByUser");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.Appointment", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "BookedByUser")
-                        .WithMany()
-                        .HasForeignKey("BookedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.DoctorProfile", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorProfileId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastStatusChangedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastStatusChangedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", null)
                         .WithMany()
                         .HasForeignKey("PatientProfileId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("BookedByUser");
-
                     b.Navigation("Doctor");
-
-                    b.Navigation("LastStatusChangedByUser");
 
                     b.Navigation("Patient");
                 });
 
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.AuditLog", b =>
-                {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorProfile", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("LastModifiedByUser");
-
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorReview", b =>
+                {
+                    b.HasOne("Doctor_AppointmentSystem.Models.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Doctor_AppointmentSystem.Models.DoctorProfile", null)
+                        .WithMany("Reviews")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", null)
+                        .WithMany()
+                        .HasForeignKey("PatientProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorSchedule", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.DoctorProfile", "Doctor")
                         .WithMany("Schedules")
                         .HasForeignKey("DoctorProfileId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Doctor");
-
-                    b.Navigation("LastModifiedByUser");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorSpecialty", b =>
@@ -1135,67 +1012,35 @@ namespace Doctor_AppointmentSystem.Data.Migrations
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.DoctorUnavailability", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.DoctorProfile", "Doctor")
                         .WithMany("Unavailabilities")
                         .HasForeignKey("DoctorProfileId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Doctor");
-
-                    b.Navigation("LastModifiedByUser");
                 });
 
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.NotificationLog", b =>
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Notification", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.Appointment", "Appointment")
+                    b.HasOne("Doctor_AppointmentSystem.Models.Appointment", null)
                         .WithMany()
                         .HasForeignKey("AppointmentId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.PatientProfile", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("LastModifiedByUser");
-
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.PaymentTransaction", b =>
+            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Payment", b =>
                 {
                     b.HasOne("Doctor_AppointmentSystem.Models.Appointment", "Appointment")
                         .WithMany()
@@ -1203,89 +1048,18 @@ namespace Doctor_AppointmentSystem.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "InitiatedByUser")
-                        .WithMany()
-                        .HasForeignKey("InitiatedByUserId");
-
                     b.Navigation("Appointment");
-
-                    b.Navigation("InitiatedByUser");
                 });
 
             modelBuilder.Entity("Doctor_AppointmentSystem.Models.ReceptionistProfile", b =>
                 {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
                     b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("LastModifiedByUser");
-
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Review", b =>
-                {
-                    b.HasOne("Doctor_AppointmentSystem.Models.Appointment", "Appointment")
-                        .WithMany()
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.DoctorProfile", "Doctor")
-                        .WithMany("Reviews")
-                        .HasForeignKey("DoctorProfileId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", "Patient")
-                        .WithMany()
-                        .HasForeignKey("PatientProfileId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("Doctor");
-
-                    b.Navigation("LastModifiedByUser");
-
-                    b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("Doctor_AppointmentSystem.Models.Specialty", b =>
-                {
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId");
-
-                    b.HasOne("Doctor_AppointmentSystem.Models.ApplicationUser", "LastModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedByUserId");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("LastModifiedByUser");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

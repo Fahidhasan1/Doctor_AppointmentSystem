@@ -1,4 +1,6 @@
-﻿using Doctor_AppointmentSystem.Models;
+﻿using Doctor_AppointmentSystem.Data;
+using Doctor_AppointmentSystem.Enums;
+using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,19 +13,21 @@ namespace Doctor_AppointmentSystem.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _context;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _context = context;
         }
 
         // We are not using full-page login/register views at all.
-        // If someone browses to /Account/Login manually, just send them Home.
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
@@ -38,7 +42,9 @@ namespace Doctor_AppointmentSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // ============================================
         // POST: /Account/Login (from modal)
+        // ============================================
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -53,7 +59,7 @@ namespace Doctor_AppointmentSystem.Controllers
             var result = await _signInManager.PasswordSignInAsync(
                 model.Email,
                 model.Password,
-                model.RememberMe,          // ✅ this makes the cookie persistent when checked
+                model.RememberMe,
                 lockoutOnFailure: false);
 
             if (result.Succeeded)
@@ -82,7 +88,9 @@ namespace Doctor_AppointmentSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // POST: /Account/Register (from modal – always Patient)
+        // ============================================
+        // POST: /Account/Register (PATIENT self-register)
+        // ============================================
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -94,6 +102,13 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            // Convert Gender string -> enum
+            Gender? gender = null;
+            if (!string.IsNullOrEmpty(model.Gender))
+            {
+                gender = Enum.Parse<Gender>(model.Gender);
+            }
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -102,9 +117,10 @@ namespace Doctor_AppointmentSystem.Controllers
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 DateOfBirth = model.DateOfBirth,
-                Gender = model.Gender,
+                Gender = gender,
+               
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -120,6 +136,20 @@ namespace Doctor_AppointmentSystem.Controllers
 
                 await _userManager.AddToRoleAsync(user, PatientRoleName);
 
+                // ============================================
+                // Create PatientProfile for this new user
+                // ============================================
+                var patientProfile = new PatientProfile
+                {
+                    UserId = user.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedByUserId = user.Id
+                };
+
+                _context.PatientProfiles.Add(patientProfile);
+                await _context.SaveChangesAsync();
+
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "PatientDashboard");
             }
@@ -128,7 +158,9 @@ namespace Doctor_AppointmentSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // ============================================
         // POST: /Account/Logout
+        // ============================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()

@@ -4,34 +4,29 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Doctor_AppointmentSystem.Models
 {
-    public class DoctorSchedule
+    public class DoctorReview
     {
         [Key]
         public int Id { get; set; }
 
-        // Link to Doctor Profile
+        // Doctor & Patient
         [Required]
         public int DoctorProfileId { get; set; }
 
-        [ForeignKey(nameof(DoctorProfileId))]
-        public DoctorProfile Doctor { get; set; } = null!;
-
-        // Weekly Schedule
         [Required]
-        public DayOfWeek DayOfWeek { get; set; }
+        public int PatientProfileId { get; set; }
 
-        [Required]
-        public TimeSpan StartTime { get; set; }
+        // Link to Appointment (optional)
+        public int? AppointmentId { get; set; }
 
-        [Required]
-        public TimeSpan EndTime { get; set; }
+        // Review Content
+        [Range(1, 5)]
+        public int Rating { get; set; }
 
-        [Range(5, 240)]
-        public int SlotDurationMinutes { get; set; } = 20;
+        [StringLength(1000)]
+        public string? Comment { get; set; }
 
-        public DateTime? EffectiveFromDate { get; set; }
-        public DateTime? EffectiveToDate { get; set; }
-
+        public bool IsVisible { get; set; } = true;
         public bool IsActive { get; set; } = true;
 
         // Audit

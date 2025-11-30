@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Doctor_AppointmentSystem.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace Doctor_AppointmentSystem.Models
 {
@@ -9,9 +11,7 @@ namespace Doctor_AppointmentSystem.Models
         [Key]
         public int Id { get; set; }
 
-        // ================================
-        //  DOCTOR & PATIENT LINKS
-        // ================================
+        // Doctor & Patient Links
         [Required]
         public int DoctorProfileId { get; set; }
 
@@ -24,46 +24,29 @@ namespace Doctor_AppointmentSystem.Models
         [ForeignKey(nameof(PatientProfileId))]
         public PatientProfile Patient { get; set; } = null!;
 
-        // ================================
-        //  SCHEDULE INFORMATION
-        // ================================
+        // Schedule Information
         [Required]
         public DateTime AppointmentDateTime { get; set; }
 
         [Range(5, 480)]
         public int DurationMinutes { get; set; } = 20;
 
-        [StringLength(50)]
         public string? VisitType { get; set; }
 
-        // ================================
-        //  STATUS & WORKFLOW
-        // ================================
+        // Status & Workflow
         [Required]
-        public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
+        public AppointmentStatus Status { get; set; } = AppointmentStatus.Confirmed;
 
-        [StringLength(250)]
         public string? CancellationReason { get; set; }
-
         public bool IsFirstVisit { get; set; } = false;
 
         public string? BookedByUserId { get; set; }
-
-        [ForeignKey(nameof(BookedByUserId))]
-        public ApplicationUser? BookedByUser { get; set; }
-
         public string? LastStatusChangedByUserId { get; set; }
-
-        [ForeignKey(nameof(LastStatusChangedByUserId))]
-        public ApplicationUser? LastStatusChangedByUser { get; set; }
 
         public bool IsActive { get; set; } = true;
 
-        // ================================
-        //  AUDIT FIELDS
-        // ================================
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
-
-        public DateTime? LastModifiedDate { get; set; }
+        // Audit
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

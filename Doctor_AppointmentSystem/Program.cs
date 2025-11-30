@@ -19,8 +19,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
-    // you can tweak password rules here if needed
-    // options.Password.RequireNonAlphanumeric = false;
+    // options.Password.RequireNonAlphanumeric = false; // tweak if needed
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -30,7 +29,7 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// ?? SEED ROLES + ADMIN USER ON STARTUP
+// SEED ROLES + ADMIN USER ON STARTUP
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -82,8 +81,8 @@ static async Task SeedAdminAsync(RoleManager<IdentityRole> roleManager, UserMana
     }
 
     // 2) Ensure an Admin user exists
-    var adminEmail = "admin@das.local";      // ?? your default admin email
-    var adminPassword = "Admin@123";         // ?? your default admin password (change in production!)
+    var adminEmail = "admin@das.local";      // default admin email
+    var adminPassword = "Admin@123";         // default admin password (change for demo/prod)
 
     var adminUser = await userManager.FindByEmailAsync(adminEmail);
 
@@ -97,7 +96,7 @@ static async Task SeedAdminAsync(RoleManager<IdentityRole> roleManager, UserMana
             FirstName = "System",
             LastName = "Admin",
             IsActive = true,
-            CreatedDate = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow   // ? fixed name
         };
 
         var createResult = await userManager.CreateAsync(adminUser, adminPassword);
@@ -106,6 +105,6 @@ static async Task SeedAdminAsync(RoleManager<IdentityRole> roleManager, UserMana
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
         }
-        // (Optionally: else log errors)
+        // else you could log errors if needed
     }
 }

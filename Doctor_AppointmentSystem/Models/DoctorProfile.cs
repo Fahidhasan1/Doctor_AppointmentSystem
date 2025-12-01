@@ -45,6 +45,10 @@ namespace Doctor_AppointmentSystem.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal? FollowUpCharge { get; set; }
 
+        public double? Rating { get; set; }
+        public int? TotalReviews { get; set; }
+
+
         // Availability Logic
         public bool IsTelemedicineAvailable { get; set; } = false;
         public int MaxAppointmentsPerDay { get; set; }

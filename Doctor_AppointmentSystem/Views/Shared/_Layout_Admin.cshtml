@@ -1,0 +1,126 @@
+﻿@{
+    Layout = null;
+
+    var userName = ViewBag.CurrentUserName as string ?? User.Identity?.Name ?? "Admin";
+    var firstLetter = string.IsNullOrWhiteSpace(userName) ? "A" : userName.Trim()[0].ToString().ToUpper();
+    string? profileImagePath = ViewBag.ProfileImagePath as string;
+
+    // Dynamic page title & subtitle for the top bar
+    var pageTitle = ViewBag.PageTitle as string ?? "Admin Dashboard";
+    // var pageSubtitle = ViewBag.PageSubtitle as string
+    //                    ?? "Quick overview of roles, appointments and revenue.";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@(ViewData["Title"] ?? (pageTitle + " | Doctor Appointment System"))</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                @if (!string.IsNullOrEmpty(profileImagePath))
+                {
+                    <img src="@profileImagePath" alt="Profile" class="admin-avatar-img" />
+                }
+                else
+                {
+                    <div class="admin-avatar">@firstLetter</div>
+                }
+
+                <div class="sidebar-role">Admin</div>
+                <div class="sidebar-username">@userName</div>
+                <div class="sidebar-subtitle">Doctor Appointment System</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">🏠</div>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">👥</div>
+                            <span>Manage Users</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
+                    <div class="nav-submenu">
+                        <a asp-controller="AdminDashboard" asp-action="Admins" class="nav-link nav-link--sub">Admins</a>
+                        <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link nav-link--sub">Doctors</a>
+                        <a asp-controller="AdminDashboard" asp-action="Receptionists" class="nav-link nav-link--sub">Receptionists</a>
+                        <a asp-controller="AdminDashboard" asp-action="Patients" class="nav-link nav-link--sub">Patients</a>
+                    </div>
+                </div>
+
+                <a asp-controller="AdminAppointment" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">📅</div>
+                    <span>All Appointments</span>
+                </a>
+
+                <a asp-controller="AdminSpecialty" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">🏥</div>
+                    <span>Doctor Specialties</span>
+                </a>
+
+                <a asp-controller="AdminPayment" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">💳</div>
+                    <span>Payments &amp; Income</span>
+                </a>
+
+                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">👤</div>
+                    <span>My Profile</span>
+                </a>
+
+                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">⚙️</div>
+                    <span>Settings</span>
+                </a>
+
+                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="nav-link nav-link-button">
+                        <div class="nav-link-icon">🚪</div>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <div>
+                        <div class="topbar-title">@pageTitle</div>
+                        @* <div class="topbar-subtext">
+                            @pageSubtitle
+                        </div> *@
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-date" id="currentDate"></div>
+                </div>
+            </header>
+
+            <section class="dashboard-content">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

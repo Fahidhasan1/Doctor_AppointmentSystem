@@ -1,0 +1,197 @@
+﻿@using Doctor_AppointmentSystem.Enums
+@model Doctor_AppointmentSystem.ViewModels.DoctorCreateViewModel
+
+@{
+    ViewData["Title"] = "Add Doctor";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+}
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title-row">
+        <div>
+            <h3>Add New Doctor</h3>
+            <div class="card-title-sub">
+                Create a new doctor account with login access, profile and specialties.
+            </div>
+        </div>
+        <a asp-controller="AdminDoctor" asp-action="Index" class="btn-tag btn-tag--ghost">
+            ← Back to Doctor List
+        </a>
+    </div>
+
+    <div asp-validation-summary="All" class="validation-summary"></div>
+
+    <form asp-action="Create" asp-controller="AdminDoctor" method="post" enctype="multipart/form-data">
+        <div class="form-grid">
+            <!-- Left column: basic info -->
+            <div>
+                <div class="form-section-title">Basic Information</div>
+
+                <div class="form-field">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-input" />
+                    <span asp-validation-for="FirstName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-input" />
+                    <span asp-validation-for="LastName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-input" />
+                    <span asp-validation-for="Email" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-input" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender"
+                            class="form-input"
+                            asp-items="Html.GetEnumSelectList<Gender>()">
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-input" />
+                    <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="password-wrapper">
+                        <input asp-for="Password" class="form-input password-input" type="password" />
+                        <button type="button" class="password-toggle" data-target="Password" aria-label="Show password">
+                            👁
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="field-validation"></span>
+                </div>
+
+
+                <div class="form-field">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <div class="password-wrapper">
+                        <input asp-for="ConfirmPassword" class="form-input password-input" type="password" />
+                        <button type="button" class="password-toggle" data-target="ConfirmPassword" aria-label="Show password">
+                            👁
+                        </button>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="field-validation"></span>
+                </div>
+
+            </div>
+
+            <!-- Right column: professional info -->
+            <div>
+                <div class="form-section-title">Professional & Profile</div>
+
+                <div class="form-field">
+                    <label asp-for="LicenseNumber" class="form-label"></label>
+                    <input asp-for="LicenseNumber" class="form-input" />
+                    <span asp-validation-for="LicenseNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Qualification" class="form-label"></label>
+                    <input asp-for="Qualification" class="form-input" />
+                    <span asp-validation-for="Qualification" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Designation" class="form-label"></label>
+                    <input asp-for="Designation" class="form-input" />
+                    <span asp-validation-for="Designation" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Experience" class="form-label"></label>
+                    <input asp-for="Experience" class="form-input" type="number" min="0" max="60" />
+                    <span asp-validation-for="Experience" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="VisitCharge" class="form-label"></label>
+                    <input asp-for="VisitCharge" class="form-input no-spinner" type="number" min="0" step="0.01" />
+                    <span asp-validation-for="VisitCharge" class="field-validation"></span>
+                </div>
+
+
+                <div class="form-field">
+                    <label asp-for="ProfileImage" class="form-label"></label>
+                    <input asp-for="ProfileImage" type="file" class="form-input-file" />
+                    <span asp-validation-for="ProfileImage" class="field-validation"></span>
+                    <div class="form-help-text">
+                        JPG/PNG, up to ~2MB. Will be shown on doctor list and profile.
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label">Specialties</label>
+
+                    <div class="checkbox-pill-container">
+                        @if (Model.SpecialtyOptions == null || !Model.SpecialtyOptions.Any())
+                        {
+                            <div class="form-help-text">
+                                No specialties found. Please create specialties from "Doctor Specialties" first.
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var sp in Model.SpecialtyOptions)
+                            {
+                                var intVal = int.Parse(sp.Value);
+                                var isChecked = Model.SelectedSpecialtyIds.Contains(intVal);
+
+                                <label class="checkbox-pill">
+                                    <input type="checkbox"
+                                           name="SelectedSpecialtyIds"
+                                           value="@sp.Value"
+                                           @(isChecked ? "checked" : "") />
+                                    <span>@sp.Text</span>
+                                </label>
+                            }
+                        }
+                    </div>
+
+                    <span asp-validation-for="SelectedSpecialtyIds" class="field-validation"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary-main">Save Doctor</button>
+            <a asp-controller="AdminDoctor" asp-action="Index" class="btn-secondary-main">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggles = document.querySelectorAll(".password-toggle");
+            toggles.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const targetId = btn.getAttribute("data-target");
+                    const input = document.getElementById(targetId);
+                    if (!input) return;
+
+                    const isPassword = input.type === "password";
+                    input.type = isPassword ? "text" : "password";
+                    btn.classList.toggle("password-toggle--active", isPassword);
+                });
+            });
+        });
+    </script>
+}

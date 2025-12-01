@@ -1,0 +1,174 @@
+﻿@using Doctor_AppointmentSystem.Enums
+@model Doctor_AppointmentSystem.ViewModels.DoctorEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Doctor";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+}
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title-row">
+        <div>
+            <h3>Edit Doctor</h3>
+            <div class="card-title-sub">
+                Update doctor profile, specialties and visit charge.
+            </div>
+        </div>
+        <a asp-controller="AdminDoctor" asp-action="Index" class="btn-tag btn-tag--ghost">
+            ← Back to Doctor List
+        </a>
+    </div>
+
+    <div asp-validation-summary="All" class="validation-summary"></div>
+
+    <form asp-action="Edit"
+          asp-controller="AdminDoctor"
+          method="post"
+          enctype="multipart/form-data">
+        <input type="hidden" asp-for="DoctorProfileId" />
+        <input type="hidden" asp-for="UserId" />
+
+        <div class="form-grid">
+            <!-- LEFT: basic info -->
+            <div>
+                <div class="form-section-title">Basic Information</div>
+
+                <div class="form-field">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-input" />
+                    <span asp-validation-for="FirstName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-input" />
+                    <span asp-validation-for="LastName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-input" readonly />
+                    <div class="form-help-text">Email cannot be changed from here.</div>
+                    <span asp-validation-for="Email" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-input" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender"
+                            class="form-input"
+                            asp-items="Html.GetEnumSelectList<Gender>()">
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-input" />
+                    <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+                </div>
+            </div>
+
+            <!-- RIGHT: professional info -->
+            <div>
+                <div class="form-section-title">Professional & Profile</div>
+
+                <div class="form-field">
+                    <label asp-for="LicenseNumber" class="form-label"></label>
+                    <input asp-for="LicenseNumber" class="form-input" readonly />
+                    <div class="form-help-text">License number is not editable.</div>
+                    <span asp-validation-for="LicenseNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Qualification" class="form-label"></label>
+                    <input asp-for="Qualification" class="form-input" />
+                    <span asp-validation-for="Qualification" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Designation" class="form-label"></label>
+                    <input asp-for="Designation" class="form-input" />
+                    <span asp-validation-for="Designation" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Experience" class="form-label"></label>
+                    <input asp-for="Experience" class="form-input" type="number" min="0" max="60" />
+                    <span asp-validation-for="Experience" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="VisitCharge" class="form-label"></label>
+                    <input asp-for="VisitCharge" class="form-input no-spinner" type="number" min="0" step="0.01" />
+                    <span asp-validation-for="VisitCharge" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="NewProfileImage" class="form-label"></label>
+
+                    @if (!string.IsNullOrEmpty(Model.ExistingProfileImagePath))
+                    {
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                            <img src="@Model.ExistingProfileImagePath"
+                                 alt="Current photo"
+                                 style="width:40px;height:40px;border-radius:999px;object-fit:cover;" />
+                            <span class="form-help-text">Current photo</span>
+                        </div>
+                    }
+
+                    <input asp-for="NewProfileImage" type="file" class="form-input-file" />
+                    <span asp-validation-for="NewProfileImage" class="field-validation"></span>
+                    <div class="form-help-text">
+                        Upload to replace existing photo (JPG/PNG, up to ~2MB).
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label">Specialties</label>
+
+                    <div class="checkbox-pill-container">
+                        @if (Model.SpecialtyOptions == null || !Model.SpecialtyOptions.Any())
+                        {
+                            <div class="form-help-text">
+                                No specialties found. Please create specialties from "Doctor Specialties" first.
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var sp in Model.SpecialtyOptions)
+                            {
+                                var intVal = int.Parse(sp.Value);
+                                var isChecked = Model.SelectedSpecialtyIds.Contains(intVal);
+
+                                <label class="checkbox-pill">
+                                    <input type="checkbox"
+                                           name="SelectedSpecialtyIds"
+                                           value="@sp.Value"
+                                           @(isChecked ? "checked" : "") />
+                                    <span>@sp.Text</span>
+                                </label>
+                            }
+                        }
+                    </div>
+
+                    <span asp-validation-for="SelectedSpecialtyIds" class="field-validation"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary-main">Save Changes</button>
+            <a asp-controller="AdminDoctor" asp-action="Index" class="btn-secondary-main">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

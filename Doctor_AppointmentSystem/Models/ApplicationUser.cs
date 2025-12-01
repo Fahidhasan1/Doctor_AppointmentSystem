@@ -17,6 +17,7 @@ namespace Doctor_AppointmentSystem.Models
         public string? Address { get; set; }
         public string? ProfileImagePath { get; set; }
 
+
         // Status
         public bool IsActive { get; set; } = true;
 

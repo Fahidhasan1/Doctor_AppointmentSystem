@@ -1,322 +1,237 @@
-﻿@using System.Text.Json
-@model Doctor_AppointmentSystem.ViewModels.AdminDashboardViewModel
+﻿@model Doctor_AppointmentSystem.ViewModels.AdminDashboardViewModel
 
 @{
-    Layout = null; // stand-alone layout for admin dashboard
-
-    var revenueJson = JsonSerializer.Serialize(Model.MonthlyRevenueSeries);
-    var appointmentJson = JsonSerializer.Serialize(Model.MonthlyAppointmentSeries);
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <title>Admin Dashboard | Doctor Appointment System</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-    <!-- Admin Dashboard CSS -->
-    <link rel="stylesheet" href="~/css/admin-dashboard.css" />
-</head>
-<body>
-    <div class="admin-layout">
-        <!-- SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="admin-avatar">@Model.AdminInitial</div>
-                <div class="sidebar-role">Admin</div>
-                <div class="sidebar-username">@Model.AdminFullName</div>
-                <div class="sidebar-subtitle">Doctor Appointment System</div>
+<!-- TOP STATS -->
+<div class="stats-grid">
+    <div class="card stat-card" data-url="@Url.Action("Admins", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Admin</div>
+                <div class="stat-value">@Model.TotalAdmins</div>
             </div>
-
-            <nav class="sidebar-nav">
-                <a class="nav-link active">
-                    <div class="nav-link-icon">🏠</div>
-                    <span>Dashboard</span>
-                </a>
-
-                <div class="nav-dropdown">
-                    <div class="nav-dropdown-toggle" data-dropdown>
-                        <div class="nav-dropdown-toggle-main">
-                            <div class="nav-link-icon">👥</div>
-                            <span>Manage Users</span>
-                        </div>
-                        <span class="nav-dropdown-chevron">▶</span>
-                    </div>
-                    <div class="nav-submenu">
-                        <a class="nav-sub-link">Admins</a>
-                        <a class="nav-sub-link">Doctors</a>
-                        <a class="nav-sub-link">Receptionists</a>
-                        <a class="nav-sub-link">Patients</a>
-                    </div>
-                </div>
-
-                <a class="nav-link">
-                    <div class="nav-link-icon">📅</div>
-                    <span>All Appointments</span>
-                </a>
-                <a class="nav-link">
-                    <div class="nav-link-icon">🏷️</div>
-                    <span>Doctor Specialties</span>
-                </a>
-                <a class="nav-link">
-                    <div class="nav-link-icon">💳</div>
-                    <span>Payments & Income</span>
-                </a>
-
-                <a class="nav-link">
-                    <div class="nav-link-icon">👤</div>
-                    <span>My Profile</span>
-                </a>
-                <a class="nav-link">
-                    <div class="nav-link-icon">⚙️</div>
-                    <span>Settings</span>
-                </a>
-                <form asp-controller="Account" asp-action="Logout" method="post" style="margin:0;">
-                    <button type="submit" class="nav-link" style="width:100%; border:none; background:transparent; text-align:left;">
-                        <div class="nav-link-icon">🚪</div>
-                        <span>Logout</span>
-                    </button>
-                </form>
-            </nav>
-        </aside>
-
-        <!-- MAIN -->
-        <main class="main">
-            <!-- TOPBAR -->
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="menu-toggle" id="menuToggle">☰</button>
-                    <div>
-                        <div class="topbar-title">Admin Dashboard</div>
-                        <div class="topbar-subtext">Quick overview of roles, appointments and revenue.</div>
-                    </div>
-                </div>
-                <div class="topbar-right">
-                    <div class="topbar-date" id="currentDate"></div>
-                </div>
-            </header>
-
-            <!-- DASHBOARD CONTENT -->
-            <section class="dashboard-content">
-
-                <!-- TOP STATS -->
-                <div class="stats-grid">
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Admin</div>
-                                <div class="stat-value">@Model.TotalAdmins</div>
-                            </div>
-                            <div class="stat-icon">🛡️</div>
-                        </div>
-                        <div class="stat-sub">All system administrators</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Doctor</div>
-                                <div class="stat-value">@Model.TotalDoctors</div>
-                            </div>
-                            <div class="stat-icon">🩺</div>
-                        </div>
-                        <div class="stat-sub">Across all specialties</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Receptionist</div>
-                                <div class="stat-value">@Model.TotalReceptionists</div>
-                            </div>
-                            <div class="stat-icon">📞</div>
-                        </div>
-                        <div class="stat-sub">Handling front-desk & booking</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Registered Patient</div>
-                                <div class="stat-value">@Model.TotalPatients</div>
-                            </div>
-                            <div class="stat-icon">🧑‍🤝‍🧑</div>
-                        </div>
-                        <div class="stat-sub">Active patient profiles</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Specialties</div>
-                                <div class="stat-value">@Model.TotalSpecialties</div>
-                            </div>
-                            <div class="stat-icon">🏥</div>
-                        </div>
-                        <div class="stat-sub">Distinct medical departments</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Total Appointments</div>
-                                <div class="stat-value">@Model.TotalAppointments</div>
-                            </div>
-                            <div class="stat-icon">📋</div>
-                        </div>
-                        <div class="stat-sub">All-time booked appointments</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Today's Appointments</div>
-                                <div class="stat-value">@Model.TodaysAppointments</div>
-                            </div>
-                            <div class="stat-icon">⏰</div>
-                        </div>
-                        <div class="stat-sub">Scheduled for today</div>
-                    </div>
-
-                    <div class="card stat-card">
-                        <div class="stat-card-header">
-                            <div>
-                                <div class="stat-title">Monthly Revenue</div>
-                                <div class="stat-value">৳@Model.MonthlyRevenue.ToString("N0")</div>
-                            </div>
-                            <div class="stat-icon">💳</div>
-                        </div>
-                        <div class="stat-sub">From all digital payments</div>
-                    </div>
-                </div>
-
-                <!-- CHARTS -->
-                <div class="charts-grid">
-                    <!-- Monthly Revenue Trend -->
-                    <div class="card">
-                        <div class="card-title-row">
-                            <div>
-                                <h3>Monthly Revenue Trend</h3>
-                                <div class="card-title-sub">Current year total revenue by month</div>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Appointment Trends -->
-                    <div class="card">
-                        <div class="card-title-row">
-                            <div>
-                                <h3>Appointment Trends</h3>
-                                <div class="card-title-sub">Monthly total appointments</div>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="appointmentChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- LOWER ROW -->
-                <div class="lower-grid">
-                    <!-- Today's Appointments -->
-                    <div class="card">
-                        <div class="card-title-row">
-                            <div>
-                                <h3>Today's Appointments</h3>
-                                <div class="card-title-sub">Live list of booked visits</div>
-                            </div>
-                            <span class="link-small">View All</span>
-                        </div>
-
-                        @if (Model.TodaysAppointmentsList.Any())
-                        {
-                            <table class="table-simple">
-                                <thead>
-                                    <tr>
-                                        <th>TIME</th>
-                                        <th>PATIENT</th>
-                                        <th>DOCTOR</th>
-                                        <th>SPECIALTY</th>
-                                        <th>STATUS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var row in Model.TodaysAppointmentsList)
-                                    {
-                                        <tr>
-                                            <td>@row.Time</td>
-                                            <td>@row.PatientName</td>
-                                            <td>@row.DoctorName</td>
-                                            <td>@row.Specialty</td>
-                                            <td>
-                                                <span class="pill-status @row.StatusCssClass">@row.StatusText</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        }
-                        else
-                        {
-                            <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">
-                                No appointments for today.
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Recent System Activity -->
-                    <div class="card">
-                        <div class="activity-header-row">
-                            <div>
-                                <h3>Recent System Activity</h3>
-                                <div class="card-title-sub">Latest events in the system</div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top:6px;">
-                            <div style="font-size:11px; color:var(--text-muted);">This Month's Revenue</div>
-                            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
-                                <div class="activity-total">৳ @Model.MonthlyRevenue.ToString("N0")</div>
-                                <span class="activity-change-badge">+12% vs last month</span>
-                            </div>
-                        </div>
-
-                        <div class="activity-list">
-                            @foreach (var act in Model.RecentActivities)
-                            {
-                                <div class="activity-item">
-                                    <span class="activity-dot @act.DotCssClass"></span>
-                                    <div class="activity-main">
-                                        @act.Text
-                                        <div class="activity-time">@act.TimeAgo</div>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-            </section>
-        </main>
+            
+            <div class="stat-icon">🛡️</div>
+        </div>
+        <div class="stat-sub">All system administrators</div>
     </div>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <div class="card stat-card" data-url="@Url.Action("Index", "AdminDoctor")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Doctor</div>
+                <div class="stat-value">@Model.TotalDoctors</div>
+            </div>
+            <div class="stat-icon">🩺</div>
+        </div>
+        <div class="stat-sub">Across all specialties</div>
+    </div>
 
-    <!-- Pass server data to JS -->
-    <script>
-        window.dashboardRevenueData = @Html.Raw(revenueJson);
-        window.dashboardAppointmentData = @Html.Raw(appointmentJson);
-    </script>
+    <div class="card stat-card" data-url="@Url.Action("Receptionists", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Receptionist</div>
+                <div class="stat-value">@Model.TotalReceptionists</div>
+            </div>
+            <div class="stat-icon">📞</div>
+        </div>
+        <div class="stat-sub">Handling front-desk &amp; booking</div>
+    </div>
 
-    <!-- Admin Dashboard JS -->
-    <script src="~/js/admin-dashboard.js"></script>
-</body>
-</html>
+    <div class="card stat-card" data-url="@Url.Action("Patients", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Registered Patient</div>
+                <div class="stat-value">@Model.TotalPatients</div>
+            </div>
+            <div class="stat-icon">🧑‍🤝‍🧑</div>
+        </div>
+        <div class="stat-sub">Active patient profiles</div>
+    </div>
+
+    <div class="card stat-card" data-url="@Url.Action("Specialties", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Specialties</div>
+                <div class="stat-value">@Model.TotalSpecialties</div>
+            </div>
+            <div class="stat-icon">📚</div>
+        </div>
+        <div class="stat-sub">Distinct medical departments</div>
+    </div>
+
+    <div class="card stat-card" data-url="@Url.Action("Appointments", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Appointments</div>
+                <div class="stat-value">@Model.TotalAppointments</div>
+            </div>
+            <div class="stat-icon">📋</div>
+        </div>
+        <div class="stat-sub">All-time booked appointments</div>
+    </div>
+
+    <div class="card stat-card" data-url="@Url.Action("TodayAppointments", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Today's Appointments</div>
+                <div class="stat-value">@Model.TodaysAppointments</div>
+            </div>
+            <div class="stat-icon">⏰</div>
+        </div>
+        <div class="stat-sub">Scheduled for today</div>
+    </div>
+
+    <div class="card stat-card" data-url="@Url.Action("Payments", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Monthly Revenue</div>
+                <div class="stat-value">৳@Model.MonthlyRevenue.ToString("0")</div>
+            </div>
+            <div class="stat-icon">💳</div>
+        </div>
+        <div class="stat-sub">From all digital payments</div>
+    </div>
+</div>
+
+<!-- CHARTS (Revenue = BAR, Appointments = LINE) -->
+<div class="charts-grid">
+    <!-- Monthly Revenue Trend -->
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Monthly Revenue Trend</h3>
+                <div class="card-title-sub">Current year total revenue by month</div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Appointment Trends -->
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Appointment Trends</h3>
+                <div class="card-title-sub">Monthly total appointments</div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <canvas id="appointmentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- LOWER GRID: Today’s Appointments + Recent System Activity -->
+<div class="lower-grid">
+    <!-- Today's Appointments -->
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Today's Appointments</h3>
+                <div class="card-title-sub">Live list of booked visits</div>
+            </div>
+            <span class="link-small">View All</span>
+        </div>
+
+        <table class="table-simple">
+            <thead>
+                <tr>
+                    <th>TIME</th>
+                    <th>PATIENT</th>
+                    <th>DOCTOR</th>
+                    <th>SPECIALTY</th>
+                    <th>STATUS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>09:30 AM</td>
+                    <td>Md. Rahim</td>
+                    <td>Dr. Ahmed</td>
+                    <td>Cardiology</td>
+                    <td><span class="status-pill status-pill--confirmed">Confirmed</span></td>
+                </tr>
+                <tr>
+                    <td>10:15 AM</td>
+                    <td>Sadia K.</td>
+                    <td>Dr. Nabila</td>
+                    <td>Dermatology</td>
+                    <td><span class="status-pill status-pill--completed">Completed</span></td>
+                </tr>
+                <tr>
+                    <td>11:00 AM</td>
+                    <td>Jamal U.</td>
+                    <td>Dr. Hasan</td>
+                    <td>Orthopedics</td>
+                    <td><span class="status-pill status-pill--cancelled">Cancelled</span></td>
+                </tr>
+                <tr>
+                    <td>12:30 PM</td>
+                    <td>Rafiq A.</td>
+                    <td>Dr. Tania</td>
+                    <td>Pediatrics</td>
+                    <td><span class="status-pill status-pill--noshow">No Show</span></td>
+                </tr>
+                <tr>
+                    <td>02:00 PM</td>
+                    <td>Nasrin S.</td>
+                    <td>Dr. Imran</td>
+                    <td>Neurology</td>
+                    <td><span class="status-pill status-pill--rescheduled">Rescheduled</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent System Activity -->
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Recent System Activity</h3>
+                <div class="card-title-sub">Latest events in the system</div>
+            </div>
+            <div class="revenue-change-badge">+12% vs last month</div>
+        </div>
+
+        <div class="activity-revenue-block">
+            <div class="activity-revenue-label">This Month's Revenue</div>
+            <div class="activity-revenue-value">৳ 1,820,000</div>
+        </div>
+
+        <div class="activity-feed">
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--blue"></span>
+                <div class="activity-main">
+                    New doctor <strong>Dr. Farhana (Cardiology)</strong> registered.
+                    <div class="activity-time">5 mins ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--green"></span>
+                <div class="activity-main">
+                    12 appointments auto-confirmed for tomorrow.
+                    <div class="activity-time">25 mins ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--orange"></span>
+                <div class="activity-main">
+                    3 appointments cancelled by patients (email &amp; SMS sent).
+                    <div class="activity-time">1 hour ago</div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--purple"></span>
+                <div class="activity-main">
+                    Bkash settlement received for yesterday's payments.
+                    <div class="activity-time">2 hours ago</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,199 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.DoctorListItemViewModel>
+
+@{
+    ViewData["Title"] = "Manage Doctors";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+
+    int total = ViewBag.TotalDoctors ?? 0;
+    int active = ViewBag.ActiveDoctors ?? 0;
+    int inactive = ViewBag.InactiveDoctors ?? 0;
+    string? search = ViewBag.Search as string;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success-soft">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title-row">
+        <div>
+            <h3>Manage Doctors</h3>
+            <div class="card-title-sub">
+                Overview of all registered doctors, their specialties and status.
+            </div>
+        </div>
+
+        <div class="doctor-actions-wrapper">
+            <form asp-controller="AdminDoctor" asp-action="Index" method="get" class="search-wrapper">
+                <input type="text" name="search" value="@ViewBag.Search"
+                       class="doctor-search-input-large"
+                       placeholder="Search by name or specialty..." />
+
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+
+            <a asp-controller="AdminDoctor" asp-action="Create" class="btn-add-large">
+                + Add Doctor
+            </a>
+        </div>
+    </div>
+
+    <div class="doctor-filter-pills">
+        <a asp-controller="AdminDoctor" asp-action="Index" asp-route-filter=""
+           class="filter-pill @(ViewBag.Filter == null ? "filter-pill--active" : "")">
+            Total: @ViewBag.TotalDoctors
+        </a>
+
+        <a asp-controller="AdminDoctor" asp-action="Index" asp-route-filter="active"
+           class="filter-pill @(ViewBag.Filter == "active" ? "filter-pill--active" : "")">
+            Active: @ViewBag.ActiveDoctors
+        </a>
+
+        <a asp-controller="AdminDoctor" asp-action="Index" asp-route-filter="inactive"
+           class="filter-pill @(ViewBag.Filter == "inactive" ? "filter-pill--active" : "")">
+            Inactive: @ViewBag.InactiveDoctors
+        </a>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-title-row" style="margin-bottom:4px;">
+        <div>
+            <h3>Doctor List</h3>
+            <div class="card-title-sub">
+                Click edit to update profile, assign specialties or deactivate accounts.
+            </div>
+        </div>
+    </div>
+
+    <table class="table-simple">
+        <thead>
+            <tr>
+                <th>DOCTOR</th>
+                <th>CONTACT</th>
+                <th>SPECIALTIES</th>
+                <th>EXPERIENCE</th>
+                <th>STATUS</th>
+                <th style="text-align:right;">ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" style="font-size:12px; color:#7b88b0; padding-top:12px;">
+                        No doctors found. Use the <strong>“Add Doctor”</strong> button to register a new doctor.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var d in Model)
+                {
+                    var statusClass = d.IsActive ? "status-pill--active" : "status-pill--inactive";
+                    var statusText = d.IsActive ? "Active" : "Inactive";
+
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                @{
+                                    var initials = !string.IsNullOrWhiteSpace(d.FullName)
+                                    ? d.FullName.Trim()[0].ToString().ToUpper()
+                                    : "D";
+                                }
+                                @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                                {
+                                    <img src="@d.ProfileImagePath"
+                                         alt="Doctor photo"
+                                         style="width:36px;height:36px;border-radius:999px;object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <div class="doctor-avatar doctor-avatar--blue"
+                                         style="width:36px;height:36px;font-size:14px;">
+                                        @initials
+                                    </div>
+                                }
+
+                                <div>
+                                    <div style="font-size:13px;font-weight:500;">@d.FullName</div>
+                                    <div style="font-size:11px;color:#7b88b0;">
+                                        @(string.IsNullOrWhiteSpace(d.Designation) ? "Doctor" : d.Designation)
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div style="font-size:12px;">
+                                @d.Email
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(d.PhoneNumber))
+                            {
+                                <div style="font-size:11px;color:#7b88b0;">
+                                    @d.PhoneNumber
+                                </div>
+                            }
+                        </td>
+
+                        <td style="font-size:12px;">
+                            @(!string.IsNullOrWhiteSpace(d.Specialties) ? d.Specialties : "Not assigned")
+                        </td>
+
+                        <td style="font-size:12px;">
+                            @d.Experience year(s)
+                        </td>
+
+                        <td>
+                            <span class="status-pill @statusClass">@statusText</span>
+                        </td>
+
+                        <td style="text-align:right;">
+                            <div class="action-buttons">
+                                <a asp-controller="AdminDoctor"
+                                   asp-action="Edit"
+                                   asp-route-id="@d.DoctorProfileId"
+                                   class="btn-tag">
+                                    Edit
+                                </a>
+
+                                @if (d.IsActive)
+                                {
+                                    <form asp-controller="AdminDoctor"
+                                          asp-action="Deactivate"
+                                          asp-route-id="@d.DoctorProfileId"
+                                          method="post"
+                                          class="inline-form">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn-tag btn-tag--danger">
+                                            Deactivate
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-controller="AdminDoctor"
+                                          asp-action="Activate"
+                                          asp-route-id="@d.DoctorProfileId"
+                                          method="post"
+                                          class="inline-form">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit"
+                                                class="btn-tag btn-tag--ghost">
+                                            Activate
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

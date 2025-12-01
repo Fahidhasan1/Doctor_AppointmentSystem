@@ -1,151 +1,99 @@
-﻿using Doctor_AppointmentSystem.Models;
+﻿using Doctor_AppointmentSystem.Data;
+using Doctor_AppointmentSystem.Enums;
+using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Doctor_AppointmentSystem.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminDashboardController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
 
         public AdminDashboardController(
-            UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
+            _context = context;
             _userManager = userManager;
-            _roleManager = roleManager;
         }
 
+        // GET: /AdminDashboard
         public async Task<IActionResult> Index()
         {
-            var vm = new AdminDashboardViewModel();
-
-            // ===== current admin info =====
             var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser != null)
-            {
-                var fullName = $"{currentUser.FirstName} {currentUser.LastName}".Trim();
-                vm.AdminFullName = string.IsNullOrWhiteSpace(fullName) ? currentUser.UserName ?? "Admin" : fullName;
 
-                var initialChar = vm.AdminFullName.Trim().FirstOrDefault();
-                vm.AdminInitial = (initialChar == '\0') ? "A" : initialChar.ToString().ToUpperInvariant();
+            // For sidebar header
+            var name = (currentUser?.FirstName + " " + currentUser?.LastName)?.Trim();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = User.Identity?.Name ?? "Admin";
             }
 
-            // ===== counts by role (real counts from Identity) =====
-            async Task<int> CountUsersInRoleAsync(string roleName)
+            ViewBag.CurrentUserName = name;
+            ViewBag.ProfileImagePath = currentUser?.ProfileImagePath;
+
+            // Counts by role
+            var admins = await _userManager.GetUsersInRoleAsync("Admin");
+            var doctors = await _userManager.GetUsersInRoleAsync("Doctor");
+            var receptionists = await _userManager.GetUsersInRoleAsync("Receptionist");
+            var patients = await _userManager.GetUsersInRoleAsync("Patient");
+
+            var totalSpecialties = await _context.Specialties.CountAsync();
+            var totalAppointments = await _context.Appointments.CountAsync(a => a.IsActive);
+
+            // Today's appointments
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var todaysAppointments = await _context.Appointments
+                .CountAsync(a =>
+                    a.IsActive &&
+                    a.AppointmentDateTime >= today &&
+                    a.AppointmentDateTime < tomorrow);
+
+            // Monthly revenue (Paid payments only)
+            decimal monthlyRevenue = 0;
+            var now = DateTime.UtcNow;
+            var monthStart = new DateTime(now.Year, now.Month, 1);
+            var nextMonthStart = monthStart.AddMonths(1);
+
+            monthlyRevenue = await _context.Payments
+                .Where(p => p.IsActive
+                            && p.Status == PaymentStatus.Paid
+                            && p.PaidAtUtc >= monthStart
+                            && p.PaidAtUtc < nextMonthStart)
+                .SumAsync(p => p.Amount);
+
+            var vm = new AdminDashboardViewModel
             {
-                if (!await _roleManager.RoleExistsAsync(roleName))
-                {
-                    return 0;
-                }
-                var users = await _userManager.GetUsersInRoleAsync(roleName);
-                return users.Count;
-            }
-
-            vm.TotalAdmins = await CountUsersInRoleAsync("Admin");
-            vm.TotalDoctors = await CountUsersInRoleAsync("Doctor");
-            vm.TotalReceptionists = await CountUsersInRoleAsync("Receptionist");
-            vm.TotalPatients = await CountUsersInRoleAsync("Patient");
-
-            // ===== placeholders until we add those tables =====
-            vm.TotalSpecialties = 3;      // TODO: replace with real specialties count later
-            vm.TotalAppointments = 0;     // TODO: real total appointments
-            vm.TodaysAppointments = 0;    // TODO: today's appointments
-            vm.MonthlyRevenue = 0m;       // TODO: real revenue
-
-            // ===== chart data (same as your static demo for now) =====
-            vm.MonthlyRevenueSeries = new List<decimal>
-            {
-                150000, 170000, 165000, 180000, 195000, 210000,
-                205000, 200000, 215000, 225000, 235000, 240000
-            };
-
-            vm.MonthlyAppointmentSeries = new List<int> { 40, 65, 55, 75, 70, 95 };
-
-            // ===== today's appointments sample rows (we'll replace with DB later) =====
-            vm.TodaysAppointmentsList = new List<DashboardAppointmentRow>
-            {
-                new DashboardAppointmentRow
-                {
-                    Time = "09:30 AM",
-                    PatientName = "Md. Rahim",
-                    DoctorName = "Dr. Ahmed",
-                    Specialty = "Cardiology",
-                    StatusText = "Accepted",
-                    StatusCssClass = "pill-status--accepted"
-                },
-                new DashboardAppointmentRow
-                {
-                    Time = "10:15 AM",
-                    PatientName = "Sadia K.",
-                    DoctorName = "Dr. Nabila",
-                    Specialty = "Dermatology",
-                    StatusText = "Pending",
-                    StatusCssClass = "pill-status--pending"
-                },
-                new DashboardAppointmentRow
-                {
-                    Time = "11:00 AM",
-                    PatientName = "Jamal U.",
-                    DoctorName = "Dr. Hasan",
-                    Specialty = "Orthopedics",
-                    StatusText = "Accepted",
-                    StatusCssClass = "pill-status--accepted"
-                },
-                new DashboardAppointmentRow
-                {
-                    Time = "12:30 PM",
-                    PatientName = "Rafiq A.",
-                    DoctorName = "Dr. Tania",
-                    Specialty = "Pediatrics",
-                    StatusText = "Cancelled",
-                    StatusCssClass = "pill-status--canceled"
-                },
-                new DashboardAppointmentRow
-                {
-                    Time = "02:00 PM",
-                    PatientName = "Nasrin S.",
-                    DoctorName = "Dr. Imran",
-                    Specialty = "Neurology",
-                    StatusText = "Accepted",
-                    StatusCssClass = "pill-status--accepted"
-                }
-            };
-
-            // ===== recent activity items (sample) =====
-            vm.RecentActivities = new List<DashboardActivityItem>
-            {
-                new DashboardActivityItem
-                {
-                    Text = "New doctor Dr. Farhana (Cardiology) registered.",
-                    TimeAgo = "5 mins ago",
-                    DotCssClass = ""              // default blue
-                },
-                new DashboardActivityItem
-                {
-                    Text = "12 appointments auto-accepted for tomorrow.",
-                    TimeAgo = "25 mins ago",
-                    DotCssClass = ""              // default blue
-                },
-                new DashboardActivityItem
-                {
-                    Text = "3 appointments cancelled by patients (email & SMS sent).",
-                    TimeAgo = "1 hour ago",
-                    DotCssClass = "activity-dot--red"
-                },
-                new DashboardActivityItem
-                {
-                    Text = "Bkash settlement received for yesterday's payments.",
-                    TimeAgo = "2 hours ago",
-                    DotCssClass = "activity-dot--green"
-                }
+                TotalAdmins = admins.Count,
+                TotalDoctors = doctors.Count,
+                TotalReceptionists = receptionists.Count,
+                TotalPatients = patients.Count,
+                TotalSpecialties = totalSpecialties,
+                TotalAppointments = totalAppointments,
+                TodaysAppointments = todaysAppointments,
+                MonthlyRevenue = monthlyRevenue
             };
 
             return View(vm);
         }
+
+
+        // These are placeholders for when you click the cards.
+        // Later we’ll replace them with actual list/manage pages.
+        public IActionResult Admins() => View();
+        public IActionResult Doctors() => View();
+        public IActionResult Receptionists() => View();
+        public IActionResult Patients() => View();
+        public IActionResult Specialties() => View();
+        public IActionResult Appointments() => View();
+        public IActionResult TodayAppointments() => View();
+        public IActionResult Payments() => View();
     }
 }

@@ -135,3 +135,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+// Auto-hide toast messages after 3 seconds
+document.addEventListener("DOMContentLoaded", () => {
+    const toast = document.querySelector(".alert-success-soft");
+    if (toast) {
+        setTimeout(() => {
+            toast.classList.add("toast-hidden");
+        }, 3000); // 3 seconds before fade-out
+
+        // Remove from DOM after fade
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 4000); // fully removed after fade animation
+    }
+});

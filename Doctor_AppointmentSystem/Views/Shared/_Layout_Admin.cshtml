@@ -1,21 +1,19 @@
 ﻿@{
     Layout = null;
-
     var userName = ViewBag.CurrentUserName as string ?? User.Identity?.Name ?? "Admin";
     var firstLetter = string.IsNullOrWhiteSpace(userName) ? "A" : userName.Trim()[0].ToString().ToUpper();
     string? profileImagePath = ViewBag.ProfileImagePath as string;
 
-    // Dynamic page title & subtitle for the top bar
+    // Dynamic page title / subtitle for top bar
     var pageTitle = ViewBag.PageTitle as string ?? "Admin Dashboard";
-    // var pageSubtitle = ViewBag.PageSubtitle as string
-    //                    ?? "Quick overview of roles, appointments and revenue.";
+    var pageSubtitle = ViewBag.PageSubtitle as string ?? "Quick overview of roles, appointments and revenue.";
 }
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>@(ViewData["Title"] ?? (pageTitle + " | Doctor Appointment System"))</title>
+    <title>@(ViewData["Title"] ?? "Admin Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
@@ -40,7 +38,7 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
+                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link active">
                     <div class="nav-link-icon">🏠</div>
                     <span>Dashboard</span>
                 </a>
@@ -56,9 +54,10 @@
                     <div class="nav-submenu">
                         <a asp-controller="AdminDashboard" asp-action="Admins" class="nav-link nav-link--sub">Admins</a>
                         <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link nav-link--sub">Doctors</a>
-                        <a asp-controller="AdminDashboard" asp-action="Receptionists" class="nav-link nav-link--sub">Receptionists</a>
+                        <a asp-controller="AdminReceptionist" asp-action="Index" class="nav-link nav-link--sub">Receptionists</a>
                         <a asp-controller="AdminDashboard" asp-action="Patients" class="nav-link nav-link--sub">Patients</a>
                     </div>
+
                 </div>
 
                 <a asp-controller="AdminAppointment" asp-action="Index" class="nav-link">
@@ -103,9 +102,9 @@
                     <button class="menu-toggle" id="menuToggle">☰</button>
                     <div>
                         <div class="topbar-title">@pageTitle</div>
-                        @* <div class="topbar-subtext">
+                        <div class="topbar-subtext">
                             @pageSubtitle
-                        </div> *@
+                        </div>
                     </div>
                 </div>
                 <div class="topbar-right">

@@ -304,7 +304,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 
-                Gender = user.Gender ?? Doctor_AppointmentSystem.Enums.Gender.NotPrefer,
+                Gender = user.Gender ?? Doctor_AppointmentSystem.Enums.Gender.Male,
 
                 DateOfBirth = user.DateOfBirth,
                 LicenseNumber = doctorProfile.LicenseNumber,

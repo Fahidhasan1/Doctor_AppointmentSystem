@@ -30,7 +30,7 @@
         <div class="stat-sub">Across all specialties</div>
     </div>
 
-    <div class="card stat-card" data-url="@Url.Action("Receptionists", "AdminDashboard")">
+    <div class="card stat-card" data-url="@Url.Action("Index", "AdminReceptionist")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Total Receptionist</div>
@@ -40,6 +40,17 @@
         </div>
         <div class="stat-sub">Handling front-desk &amp; booking</div>
     </div>
+
+    @* <a asp-controller="AdminReceptionist"
+       asp-action="Index"
+       class="summary-card-link">
+        <div class="summary-card">
+            <div class="summary-card-label">Total Receptionist</div>
+            <div class="summary-card-value">@Model.TotalReceptionists</div>
+            <div class="summary-card-subtext">Handling front-desk &amp; booking</div>
+        </div>
+    </a> *@
+
 
     <div class="card stat-card" data-url="@Url.Action("Patients", "AdminDashboard")">
         <div class="stat-card-header">

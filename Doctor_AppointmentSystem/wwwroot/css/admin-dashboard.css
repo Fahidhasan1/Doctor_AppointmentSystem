@@ -1087,15 +1087,15 @@ h2.page-title {
         background: #eef1ff;
     }
 
-    /* Remove underline from button-like links */
-    .btn-add-large,
-    .btn-add-large:hover,
-    .btn-add-large:focus,
-    .btn-tag,
-    .btn-tag:hover,
-    .btn-tag:focus {
-        text-decoration: none !important;
-    }
+        /* Remove underline from button-like links */
+        .btn-add-large,
+        .btn-add-large:hover,
+        .btn-add-large:focus,
+        .btn-tag,
+        .btn-tag:hover,
+        .btn-tag:focus {
+            text-decoration: none !important;
+        }
 
 /* ============ Filter Pills (Total / Active / Inactive) ============ */
 
@@ -1123,3 +1123,15 @@ h2.page-title {
     font-weight: 600;
 }
 
+/* ==============================
+   AUTO-HIDE TOASTER (3 seconds)
+   ============================== */
+
+.toast-hide {
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+}
+
+    .toast-hide.toast-hidden {
+        opacity: 0;
+    }

@@ -1,0 +1,122 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.ReceptionistEditViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewData["Title"] = "Edit Receptionist";
+}
+
+<div class="card">
+    <div class="card-title-row">
+        <div>
+            <h3>Edit Receptionist</h3>
+            <div class="card-title-sub">
+                Update profile details, contact information and counter assignment.
+            </div>
+        </div>
+
+        <a asp-action="Index" class="btn-secondary-main">
+            ← Back to Receptionist List
+        </a>
+    </div>
+
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="ExistingProfileImagePath" />
+
+        <div class="validation-summary">
+            @Html.ValidationSummary(false, "", new { @class = "field-validation" })
+        </div>
+
+        <div class="form-grid">
+            <!-- LEFT: Basic info -->
+            <div>
+                <div class="form-section-title">Basic Information</div>
+
+                <div class="form-field">
+                    <label asp-for="FirstName" class="form-label"></label>
+                    <input asp-for="FirstName" class="form-input" />
+                    <span asp-validation-for="FirstName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="LastName" class="form-label"></label>
+                    <input asp-for="LastName" class="form-input" />
+                    <span asp-validation-for="LastName" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-input" />
+                    <span asp-validation-for="Email" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-input" />
+                    <span asp-validation-for="PhoneNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Doctor_AppointmentSystem.Enums.Gender>()" class="form-input">
+                    </select>
+                    <span asp-validation-for="Gender" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" type="date" class="form-input" />
+                    <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+                </div>
+            </div>
+
+            <!-- RIGHT: Work details & photo -->
+            <div>
+                <div class="form-section-title">Work Details &amp; Profile</div>
+
+                <div class="form-field">
+                    <label asp-for="OfficePhone" class="form-label"></label>
+                    <input asp-for="OfficePhone" class="form-input" />
+                    <span asp-validation-for="OfficePhone" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="CounterNumber" class="form-label"></label>
+                    <input asp-for="CounterNumber" class="form-input" />
+                    <span asp-validation-for="CounterNumber" class="field-validation"></span>
+                </div>
+
+                <div class="form-field">
+                    <label class="form-label">Current Photo</label>
+                    @if (!string.IsNullOrEmpty(Model.ExistingProfileImagePath))
+                    {
+                        <img src="@Model.ExistingProfileImagePath"
+                             alt="@Model.FirstName"
+                             style="width:64px;height:64px;border-radius:999px;object-fit:cover;" />
+                    }
+                    else
+                    {
+                        <div class="card-title-sub">No photo uploaded.</div>
+                    }
+                </div>
+
+                <div class="form-field">
+                    <label asp-for="NewProfileImage" class="form-label">Change Photo</label>
+                    <input asp-for="NewProfileImage" type="file" class="form-input-file" />
+                    <span asp-validation-for="NewProfileImage" class="field-validation"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary-main">Save Changes</button>
+            <a asp-action="Index" class="btn-secondary-main">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

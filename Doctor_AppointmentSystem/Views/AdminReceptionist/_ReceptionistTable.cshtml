@@ -1,0 +1,123 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.ReceptionistListItemViewModel>
+
+<table class="table-simple">
+    <thead>
+        <tr>
+            <th>Receptionist</th>
+            <th>Contact</th>
+            <th>Counter &amp; Office</th>
+            <th class="status-cell-header">Status</th>
+            <th class="actions-cell-header">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" style="font-size:12px; color:#7b88b0; padding-top:12px;">
+                    No receptionists found for the selected filters.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <!-- Receptionist -->
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            @{
+                                var initials = !string.IsNullOrWhiteSpace(r.FullName)
+                                ? r.FullName.Trim()[0].ToString().ToUpper()
+                                : "R";
+                            }
+
+                            @if (!string.IsNullOrEmpty(r.ProfileImagePath))
+                            {
+                                <img src="@r.ProfileImagePath"
+                                     alt="@r.FullName"
+                                     style="width:40px;height:40px;border-radius:999px;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="admin-avatar"
+                                     style="width:40px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;">
+                                    @initials
+                                </div>
+                            }
+
+                            <div>
+                                <div style="font-weight:500;">@r.FullName</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- Contact: email + personal phone -->
+                    <td>
+                        <div>@r.Email</div>
+                        @if (!string.IsNullOrWhiteSpace(r.PhoneNumber))
+                        {
+                            <div class="card-title-sub">Mobile: @r.PhoneNumber</div>
+                        }
+                    </td>
+
+                    <!-- Counter & Office: office phone + counter no -->
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(r.OfficePhone))
+                        {
+                            <div class="card-title-sub">Office: @r.OfficePhone</div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(r.CounterNumber))
+                        {
+                            <div class="card-title-sub">Counter: @r.CounterNumber</div>
+                        }
+                    </td>
+
+                    <!-- Status -->
+                    <td class="status-cell">
+                        <span class="status-pill @(r.IsActive ? "status-pill--active" : "status-pill--inactive")">
+                            @(r.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a asp-action="Edit"
+                               asp-route-id="@r.ReceptionistProfileId"
+                               class="btn-tag btn-tag--ghost">
+                                Edit
+                            </a>
+
+                            @if (r.IsActive)
+                            {
+                                <form asp-action="Deactivate"
+                                      asp-route-id="@r.ReceptionistProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-tag btn-tag--danger">
+                                        Deactivate
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="Activate"
+                                      asp-route-id="@r.ReceptionistProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-tag">
+                                        Activate
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

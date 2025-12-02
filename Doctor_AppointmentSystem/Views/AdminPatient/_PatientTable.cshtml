@@ -1,0 +1,118 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.PatientListItemViewModel>
+
+<table class="table-simple">
+    <thead>
+        <tr>
+            <th>Patient</th>
+            <th>Contact</th>
+            <th>Gender</th>
+            <th>Registered At</th>
+            <th class="status-cell-header">Status</th>
+            <th class="actions-cell-header">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" style="font-size:12px; color:#7b88b0; padding-top:12px;">
+                    No patients found.
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var p in Model)
+            {
+                var statusClass = p.IsActive ? "status-pill--active" : "status-pill--inactive";
+                var statusText = p.IsActive ? "Active" : "Inactive";
+
+                <tr>
+                    <!-- PATIENT -->
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            @{
+                                var initials = !string.IsNullOrWhiteSpace(p.FullName)
+                                ? p.FullName.Trim()[0].ToString().ToUpper()
+                                : "P";
+                            }
+
+                            @if (!string.IsNullOrEmpty(p.ProfileImagePath))
+                            {
+                                <img src="@p.ProfileImagePath"
+                                     style="width:36px;height:36px;border-radius:50%;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="admin-avatar"
+                                     style="width:40px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;">
+                                    @initials
+                                </div>
+                            }
+
+
+                            <div>
+                                <div style="font-size:13px;font-weight:500;">@p.FullName</div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- CONTACT -->
+                    <td>
+                        <div style="font-size:12px;">@p.Email</div>
+                        <div style="font-size:11px;color:#7b88b0;">
+                            @(string.IsNullOrWhiteSpace(p.PhoneNumber) ? "-" : p.PhoneNumber)
+                        </div>
+                    </td>
+
+                    <!-- GENDER -->
+                    <td style="font-size:12px;">
+                        @p.Gender
+                    </td>
+
+                    <!-- REGISTERED AT -->
+                    <td style="font-size:12px;">
+                        @p.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                    </td>
+
+                    <!-- STATUS -->
+                    <td class="status-cell">
+                        <span class="status-pill @statusClass">@statusText</span>
+                    </td>
+
+                    <!-- ACTIONS -->
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            @if (p.IsActive)
+                            {
+                                <form asp-controller="AdminPatient"
+                                      asp-action="Deactivate"
+                                      asp-route-id="@p.PatientProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-tag btn-tag--danger">
+                                        Deactivate
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="AdminPatient"
+                                      asp-action="Activate"
+                                      asp-route-id="@p.PatientProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-tag btn-tag--ghost">
+                                        Activate
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

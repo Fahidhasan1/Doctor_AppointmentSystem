@@ -98,7 +98,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 }
             }
 
-            // Search by name / email / specialties
+            // Search by name / email / specialties / phone
             if (!string.IsNullOrWhiteSpace(search))
             {
                 string term = search.Trim().ToLower();
@@ -107,15 +107,19 @@ namespace Doctor_AppointmentSystem.Controllers
                 {
                     var user = d.User;
                     var fullName = $"{user.FirstName} {user.LastName}".ToLower();
-                    var email = (user.Email ?? "").ToLower();
+                    var email = (user.Email ?? string.Empty).ToLower();
+                    var phone = (user.PhoneNumber ?? string.Empty).ToLower();
                     var specialties = string.Join(",",
                         d.DoctorSpecialties.Select(s => s.Specialty.Name)).ToLower();
 
+                    // partial search on all fields
                     return fullName.Contains(term)
                            || email.Contains(term)
+                           || phone.Contains(term)
                            || specialties.Contains(term);
                 });
             }
+
 
             // Map to view model
             var vmList = doctorsList.Select(d =>
@@ -146,6 +150,79 @@ namespace Doctor_AppointmentSystem.Controllers
             return View(vmList);
         }
 
+
+
+        [HttpGet]
+        public async Task<IActionResult> Search(string? search, string? filter)
+        {
+            // same logic as Index, but return only the table partial
+
+            var allDoctors = await _context.DoctorProfiles
+                .Include(d => d.User)
+                .Include(d => d.DoctorSpecialties).ThenInclude(ds => ds.Specialty)
+                .ToListAsync();
+
+            IEnumerable<DoctorProfile> doctorsList = allDoctors;
+
+            // apply filter (active / inactive)
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                switch (filter.ToLower())
+                {
+                    case "active":
+                        doctorsList = doctorsList.Where(d => d.IsActive && d.User.IsActive);
+                        break;
+                    case "inactive":
+                        doctorsList = doctorsList.Where(d => !d.IsActive || !d.User.IsActive);
+                        break;
+                }
+            }
+
+            // search by name / email / specialties / phone
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string term = search.Trim().ToLower();
+
+                doctorsList = doctorsList.Where(d =>
+                {
+                    var user = d.User;
+                    var fullName = $"{user.FirstName} {user.LastName}".ToLower();
+                    var email = (user.Email ?? string.Empty).ToLower();
+                    var phone = (user.PhoneNumber ?? string.Empty).ToLower();
+                    var specialties = string.Join(",",
+                        d.DoctorSpecialties.Select(s => s.Specialty.Name)).ToLower();
+
+                    return fullName.Contains(term)
+                           || email.Contains(term)
+                           || phone.Contains(term)
+                           || specialties.Contains(term);
+                });
+            }
+
+            var vmList = doctorsList.Select(d =>
+            {
+                var user = d.User;
+                var fullName = $"{user.FirstName} {user.LastName}".Trim();
+                var specialtyStr = string.Join(", ",
+                    d.DoctorSpecialties.Select(s => s.Specialty.Name));
+
+                return new DoctorListItemViewModel
+                {
+                    DoctorProfileId = d.Id,
+                    UserId = d.UserId,
+                    FullName = fullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    ProfileImagePath = user.ProfileImagePath,
+                    Designation = d.Designation,
+                    Experience = d.Experience,
+                    Specialties = specialtyStr,
+                    IsActive = d.IsActive && user.IsActive
+                };
+            }).ToList();
+
+            return PartialView("_DoctorTable", vmList);
+        }
 
 
         // -----------------------------------

@@ -55,7 +55,8 @@
                         <a asp-controller="AdminDashboard" asp-action="Admins" class="nav-link nav-link--sub">Admins</a>
                         <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link nav-link--sub">Doctors</a>
                         <a asp-controller="AdminReceptionist" asp-action="Index" class="nav-link nav-link--sub">Receptionists</a>
-                        <a asp-controller="AdminDashboard" asp-action="Patients" class="nav-link nav-link--sub">Patients</a>
+                        <a asp-controller="AdminPatient" asp-action="Index" class="nav-link nav-link--sub">Patients</a>
+
                     </div>
 
                 </div>
@@ -121,5 +122,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+
+    @{
+        var loginSuccess = TempData["LoginSuccess"] as string;
+    }
+
+    @if (!string.IsNullOrEmpty(loginSuccess))
+    {
+        <div class="toast-container">
+            <div class="toast-message toast-success">
+                @loginSuccess
+            </div>
+        </div>
+
+        <script>
+            setTimeout(function () {
+                var el = document.querySelector('.toast-message');
+                if (el) el.classList.add('toast-hide');
+            }, 4000);
+        </script>
+    }
+
+
 </body>
 </html>

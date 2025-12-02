@@ -1,0 +1,129 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.PatientListItemViewModel>
+
+@{
+    ViewData["Title"] = "Manage Patients";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+
+    int total = ViewBag.TotalPatients ?? 0;
+    int active = ViewBag.ActivePatients ?? 0;
+    int inactive = ViewBag.InactivePatients ?? 0;
+    string? search = ViewBag.Search as string;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success-soft">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert-danger-soft">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title-row">
+        <div>
+            <h3>Manage Patients</h3>
+            <div class="card-title-sub">
+                Overview of all registered patients and status.
+            </div>
+        </div>
+
+        <div class="doctor-actions-wrapper">
+            <form asp-controller="AdminPatient"
+                  asp-action="Index"
+                  method="get"
+                  class="search-wrapper">
+                <input type="text"
+                       name="search"
+                       value="@search"
+                       class="doctor-search-input-large"
+                       placeholder="Search by name, email or phone..." />
+
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+            @* Note: no "+ Add Patient" button here by design *@
+        </div>
+    </div>
+
+    <div class="doctor-filter-pills">
+        <a asp-controller="AdminPatient"
+           asp-action="Index"
+           asp-route-filter=""
+           class="filter-pill @(ViewBag.Filter == null ? "filter-pill--active" : "")">
+            Total: @total
+        </a>
+
+        <a asp-controller="AdminPatient"
+           asp-action="Index"
+           asp-route-filter="active"
+           class="filter-pill @(ViewBag.Filter == "active" ? "filter-pill--active" : "")">
+            Active: @active
+        </a>
+
+        <a asp-controller="AdminPatient"
+           asp-action="Index"
+           asp-route-filter="inactive"
+           class="filter-pill @(ViewBag.Filter == "inactive" ? "filter-pill--active" : "")">
+            Inactive: @inactive
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title-row" style="margin-bottom:4px;">
+        <div>
+            <h3>Patient List</h3>
+            <div class="card-title-sub">
+                Quickly see patient information and activate or deactivate accounts.
+            </div>
+        </div>
+    </div>
+
+    <div id="patient-table-container">
+        @Html.Partial("_PatientTable", Model)
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const input = document.querySelector('.doctor-search-input-large');
+            const container = document.getElementById('patient-table-container');
+
+            if (!input || !container) return;
+
+            let debounce = null;
+
+            input.addEventListener('keyup', function () {
+                clearTimeout(debounce);
+
+                debounce = setTimeout(function () {
+                    const term = input.value;
+                    const filter = '@(ViewBag.Filter ?? "")';
+
+                    const url = '@Url.Action("Search", "AdminPatient")'
+                        + '?search=' + encodeURIComponent(term)
+                        + '&filter=' + encodeURIComponent(filter);
+
+                    fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                        .then(r => r.text())
+                        .then(html => {
+                            container.innerHTML = html;
+                        })
+                        .catch(e => console.error("Patient live search error:", e));
+
+                }, 300);
+            });
+        });
+    </script>
+}
+
+

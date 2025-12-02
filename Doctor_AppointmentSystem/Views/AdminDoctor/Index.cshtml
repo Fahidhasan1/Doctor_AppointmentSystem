@@ -70,130 +70,44 @@
         </div>
     </div>
 
-    <table class="table-simple">
-        <thead>
-            <tr>
-                <th>DOCTOR</th>
-                <th>CONTACT</th>
-                <th>SPECIALTIES</th>
-                <th>EXPERIENCE</th>
-                <th>STATUS</th>
-                <th style="text-align:right;">ACTIONS</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (!Model.Any())
-            {
-                <tr>
-                    <td colspan="6" style="font-size:12px; color:#7b88b0; padding-top:12px;">
-                        No doctors found. Use the <strong>“Add Doctor”</strong> button to register a new doctor.
-                    </td>
-                </tr>
-            }
-            else
-            {
-                foreach (var d in Model)
-                {
-                    var statusClass = d.IsActive ? "status-pill--active" : "status-pill--inactive";
-                    var statusText = d.IsActive ? "Active" : "Inactive";
-
-                    <tr>
-                        <td>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                @{
-                                    var initials = !string.IsNullOrWhiteSpace(d.FullName)
-                                    ? d.FullName.Trim()[0].ToString().ToUpper()
-                                    : "D";
-                                }
-                                @if (!string.IsNullOrEmpty(d.ProfileImagePath))
-                                {
-                                    <img src="@d.ProfileImagePath"
-                                         alt="Doctor photo"
-                                         style="width:36px;height:36px;border-radius:999px;object-fit:cover;" />
-                                }
-                                else
-                                {
-                                    <div class="doctor-avatar doctor-avatar--blue"
-                                         style="width:36px;height:36px;font-size:14px;">
-                                        @initials
-                                    </div>
-                                }
-
-                                <div>
-                                    <div style="font-size:13px;font-weight:500;">@d.FullName</div>
-                                    <div style="font-size:11px;color:#7b88b0;">
-                                        @(string.IsNullOrWhiteSpace(d.Designation) ? "Doctor" : d.Designation)
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td>
-                            <div style="font-size:12px;">
-                                @d.Email
-                            </div>
-                            @if (!string.IsNullOrWhiteSpace(d.PhoneNumber))
-                            {
-                                <div style="font-size:11px;color:#7b88b0;">
-                                    @d.PhoneNumber
-                                </div>
-                            }
-                        </td>
-
-                        <td style="font-size:12px;">
-                            @(!string.IsNullOrWhiteSpace(d.Specialties) ? d.Specialties : "Not assigned")
-                        </td>
-
-                        <td style="font-size:12px;">
-                            @d.Experience year(s)
-                        </td>
-
-                        <td>
-                            <span class="status-pill @statusClass">@statusText</span>
-                        </td>
-
-                        <td style="text-align:right;">
-                            <div class="action-buttons">
-                                <a asp-controller="AdminDoctor"
-                                   asp-action="Edit"
-                                   asp-route-id="@d.DoctorProfileId"
-                                   class="btn-tag">
-                                    Edit
-                                </a>
-
-                                @if (d.IsActive)
-                                {
-                                    <form asp-controller="AdminDoctor"
-                                          asp-action="Deactivate"
-                                          asp-route-id="@d.DoctorProfileId"
-                                          method="post"
-                                          class="inline-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit"
-                                                class="btn-tag btn-tag--danger">
-                                            Deactivate
-                                        </button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form asp-controller="AdminDoctor"
-                                          asp-action="Activate"
-                                          asp-route-id="@d.DoctorProfileId"
-                                          method="post"
-                                          class="inline-form">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit"
-                                                class="btn-tag btn-tag--ghost">
-                                            Activate
-                                        </button>
-                                    </form>
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                }
-            }
-        </tbody>
-    </table>
+    <div id="doctor-table-container">
+        @Html.Partial("_DoctorTable", Model)
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.querySelector('.doctor-search-input-large');
+            const tableContainer = document.getElementById('doctor-table-container');
+
+            if (!input || !tableContainer) return;
+
+            let debounceId = null;
+
+            input.addEventListener('keyup', function () {
+                clearTimeout(debounceId);
+                const term = this.value;
+
+                debounceId = setTimeout(function () {
+                    const filter = '@(ViewBag.Filter ?? "")';
+
+                    const url = '@Url.Action("Search", "AdminDoctor")'
+                        + '?search=' + encodeURIComponent(term)
+                        + '&filter=' + encodeURIComponent(filter || '');
+
+                    fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                        .then(r => r.text())
+                        .then(html => {
+                            tableContainer.innerHTML = html;
+                        })
+                        .catch(err => {
+                            console.error('Doctor live search error:', err);
+                        });
+                }, 300); // 300ms debounce
+            });
+        });
+    </script>
+}

@@ -1,0 +1,149 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.DoctorListItemViewModel>
+
+<table class="table-simple">
+    <thead>
+        <tr>
+            <th>DOCTOR</th>
+            <th>CONTACT</th>
+            <th>SPECIALTIES</th>
+            <th>EXPERIENCE</th>
+            <th class="status-cell-header">STATUS</th>
+            <th class="actions-cell-header">ACTIONS</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" style="font-size:12px; color:#7b88b0; padding-top:12px;">
+                    No doctors found. Use the <strong>“Add Doctor”</strong> button to register a new doctor.
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var d in Model)
+            {
+                var statusClass = d.IsActive ? "status-pill--active" : "status-pill--inactive";
+                var statusText = d.IsActive ? "Active" : "Inactive";
+
+                <tr>
+                    <!-- DOCTOR -->
+                    <td style="max-width:240px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            @{
+                                var initials = !string.IsNullOrWhiteSpace(d.FullName)
+                                ? d.FullName.Trim()[0].ToString().ToUpper()
+                                : "D";
+                            }
+
+
+                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                            {
+                                <img src="@d.ProfileImagePath"
+                                     alt="Doctor photo"
+                                     style="width:110px;height:40px;border-radius:50%;object-fit:cover;" />
+                            }
+                            else
+                            {
+                                <div class="admin-avatar"
+                                     style="width:120px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;">
+                                    @initials
+                                </div>
+                            }
+
+
+
+                            <div>
+                                <div style="font-size:13px;font-weight:500;">@d.FullName</div>
+                                <div style="font-size:11px;color:#7b88b0;">
+                                    @(string.IsNullOrWhiteSpace(d.Designation) ? "Doctor" : d.Designation)
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+
+                    <!-- CONTACT -->
+                    <td>
+                        <div style="font-size:12px;">
+                            @d.Email
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(d.PhoneNumber))
+                        {
+                            <div style="font-size:11px;color:#7b88b0;">
+                                @d.PhoneNumber
+                            </div>
+                        }
+                    </td>
+
+                    <!-- SPECIALTIES: one per line -->
+                    <td style="font-size:12px;">
+                        @if (!string.IsNullOrWhiteSpace(d.Specialties))
+                        {
+                            var specs = d.Specialties.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                            foreach (var s in specs)
+                            {
+                                <div>@s.Trim()</div>
+                            }
+                        }
+                        else
+                        {
+                            @:Not assigned
+                        }
+                    </td>
+
+                    <!-- EXPERIENCE -->
+                    <td style="font-size:12px;">
+                        @d.Experience year(s)
+                    </td>
+
+                    <!-- STATUS -->
+                    <td class="status-cell">
+                        <span class="status-pill @statusClass">@statusText</span>
+                    </td>
+
+                    <!-- ACTIONS -->
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <a asp-controller="AdminDoctor"
+                               asp-action="Edit"
+                               asp-route-id="@d.DoctorProfileId"
+                               class="btn-tag">
+                                Edit
+                            </a>
+
+                            @if (d.IsActive)
+                            {
+                                <form asp-controller="AdminDoctor"
+                                      asp-action="Deactivate"
+                                      asp-route-id="@d.DoctorProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn-tag btn-tag--danger">
+                                        Deactivate
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-controller="AdminDoctor"
+                                      asp-action="Activate"
+                                      asp-route-id="@d.DoctorProfileId"
+                                      method="post"
+                                      class="inline-form">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn-tag btn-tag--ghost">
+                                        Activate
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

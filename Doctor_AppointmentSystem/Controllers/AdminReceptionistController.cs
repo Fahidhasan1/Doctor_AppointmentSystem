@@ -104,6 +104,75 @@ namespace Doctor_AppointmentSystem.Controllers
 
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Search(string? search, string? filter)
+        {
+            var allReceptionists = await _context.ReceptionistProfiles
+                .Include(r => r.User)
+                .ToListAsync();
+
+            IEnumerable<ReceptionistProfile> list = allReceptionists;
+
+            // Filter (active / inactive)
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                switch (filter.ToLower())
+                {
+                    case "active":
+                        list = list.Where(r => r.IsActive && r.User.IsActive);
+                        break;
+
+                    case "inactive":
+                        list = list.Where(r => !r.IsActive || !r.User.IsActive);
+                        break;
+                }
+            }
+
+            // Live search: name, email, phone, office phone, counter
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+
+                list = list.Where(r =>
+                {
+                    var u = r.User;
+                    var fullName = $"{u.FirstName} {u.LastName}".ToLower();
+                    var email = (u.Email ?? "").ToLower();
+                    var phone = (u.PhoneNumber ?? "").ToLower();
+                    var officePhone = (r.OfficePhone ?? "").ToLower();
+                    var counter = (r.CounterNumber ?? "").ToLower();
+
+                    return fullName.Contains(term)
+                           || email.Contains(term)
+                           || phone.Contains(term)
+                           || officePhone.Contains(term)
+                           || counter.Contains(term);
+                });
+            }
+
+            var vmList = list.Select(r =>
+            {
+                var u = r.User;
+
+                return new ReceptionistListItemViewModel
+                {
+                    ReceptionistProfileId = r.Id,
+                    UserId = u.Id,
+                    FullName = $"{u.FirstName} {u.LastName}",
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber,
+                    OfficePhone = r.OfficePhone,
+                    CounterNumber = r.CounterNumber,
+                    ProfileImagePath = u.ProfileImagePath,
+                    IsActive = r.IsActive && u.IsActive
+                };
+            }).ToList();
+
+            return PartialView("_ReceptionistTable", vmList);
+        }
+
+
+
         // ---------- CREATE ----------
         // GET: /AdminReceptionist/Create
         [HttpGet]

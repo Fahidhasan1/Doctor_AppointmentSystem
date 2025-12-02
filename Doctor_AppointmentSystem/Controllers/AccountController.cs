@@ -66,6 +66,8 @@ namespace Doctor_AppointmentSystem.Controllers
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
 
+                TempData["LoginSuccess"] = "Logged in successfully.";
+
                 if (user != null)
                 {
                     if (await _userManager.IsInRoleAsync(user, "Admin"))
@@ -103,11 +105,18 @@ namespace Doctor_AppointmentSystem.Controllers
             }
 
             // Convert Gender string -> enum
+            // Convert Gender string -> enum (safe)
             Gender? gender = null;
-            if (!string.IsNullOrEmpty(model.Gender))
+
+            if (!string.IsNullOrEmpty(model.Gender) && model.Gender != "prefer_not_say")
             {
-                gender = Enum.Parse<Gender>(model.Gender);
+                if (Enum.TryParse<Gender>(model.Gender, ignoreCase: true, out var parsedGender))
+                {
+                    gender = parsedGender;
+                }
+                // else: keep it null if somehow invalid
             }
+
 
             var user = new ApplicationUser
             {
@@ -136,6 +145,8 @@ namespace Doctor_AppointmentSystem.Controllers
 
                 await _userManager.AddToRoleAsync(user, PatientRoleName);
 
+                TempData["RegisterSuccess"] = "Registration successful! You can now log in.";
+
                 // ============================================
                 // Create PatientProfile for this new user
                 // ============================================
@@ -151,7 +162,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 await _context.SaveChangesAsync();
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "PatientDashboard");
+                return RedirectToAction("Index", "Home");
             }
 
             TempData["RegisterError"] = string.Join(" ", result.Errors.Select(e => e.Description));

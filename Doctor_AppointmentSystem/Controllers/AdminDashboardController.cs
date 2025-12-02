@@ -84,10 +84,7 @@ namespace Doctor_AppointmentSystem.Controllers
             return View(vm);
         }
 
-        //public IActionResult Receptionists(string? filter)
-        //{
-        //    return RedirectToAction("Index", "AdminReceptionist", new { filter });
-        //}
+        
 
 
         // These are placeholders for when you click the cards.

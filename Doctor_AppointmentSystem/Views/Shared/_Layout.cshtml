@@ -20,11 +20,70 @@
 
     @RenderSection("Styles", required: false)
 </head>
+
+
 <body class="app-body">
     @RenderBody()
 
     <script src="~/js/landing.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
+
+   
+    @{
+        // only care about register success + login/register errors here
+        var registerSuccess = TempData["RegisterSuccess"] as string;
+        var loginError = TempData["LoginError"] as string;
+        var registerError = TempData["RegisterError"] as string;
+
+        var toastMessage = registerSuccess ?? loginError ?? registerError;
+        bool toastIsError = (loginError != null || registerError != null);
+        bool registerSuccessFlag = (registerSuccess != null);
+    }
+
+    @if (!string.IsNullOrEmpty(toastMessage))
+    {
+        var toastClass = toastIsError ? "toast-message toast-error" : "toast-message toast-success";
+
+        <div class="toast-container">
+            <div class="@toastClass">
+                @toastMessage
+            </div>
+        </div>
+
+        <script>
+            setTimeout(function () {
+                var el = document.querySelector('.toast-message');
+                if (el) el.classList.add('toast-hide');
+            }, 4000);
+
+            // after successful registration, make sure modal/backdrop is gone
+            var isRegisterSuccess = @registerSuccessFlag.ToString().ToLower();
+            if (isRegisterSuccess) {
+                var modalElement = document.getElementById('signupModal'); // keep your id
+
+                if (modalElement) {
+                    if (window.bootstrap) {
+                        var modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                        modal.hide();
+                    } else {
+                        modalElement.classList.remove('show');
+                        modalElement.style.display = 'none';
+                    }
+                }
+
+                // extra safety: remove any leftover backdrop / body lock
+                document.querySelectorAll('.modal-backdrop').forEach(function (el) {
+                    el.parentNode.removeChild(el);
+                });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+            }
+        </script>
+    }
+
+
+
 </body>
 </html>

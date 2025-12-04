@@ -7,16 +7,16 @@
 
 <!-- TOP STATS -->
 <div class="stats-grid">
-    <div class="card stat-card" data-url="@Url.Action("Admins", "AdminDashboard")">
+    <div class="card stat-card" data-url="@Url.Action("Index", "AdminProfile")">
         <div class="stat-card-header">
             <div>
-                <div class="stat-title">Total Admin</div>
+                <div class="stat-title">System Admin</div>
                 <div class="stat-value">@Model.TotalAdmins</div>
             </div>
             
             <div class="stat-icon">🛡️</div>
         </div>
-        <div class="stat-sub">All system administrators</div>
+        <div class="stat-sub"> system administrator</div>
     </div>
 
     <div class="card stat-card" data-url="@Url.Action("Index", "AdminDoctor")">
@@ -55,7 +55,7 @@
         <div class="stat-sub">Active patient profiles</div>
     </div>
 
-    <div class="card stat-card" data-url="@Url.Action("Specialties", "AdminDashboard")">
+    <div class="card stat-card" data-url="@Url.Action("Index", "AdminSpecialty")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Total Specialties</div>

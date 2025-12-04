@@ -1,13 +1,55 @@
-﻿@{
+﻿@using Doctor_AppointmentSystem.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    // this is a layout file, so no parent layout
+    Layout = null;
+
+    // --- CURRENT USER INFO FOR SIDEBAR / TOPBAR ---
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    var fullName = ((currentUser?.FirstName ?? "") + " " + (currentUser?.LastName ?? ""))
+                   .Trim();
+
+    // userName = what we show around the app (sidebar etc.)
+    var userName = !string.IsNullOrWhiteSpace(fullName)
+        ? fullName
+        : (User.Identity?.Name ?? "Admin");
+
+    // first letter for placeholder avatar
+    var firstLetter = !string.IsNullOrWhiteSpace(userName)
+        ? userName.Trim()[0].ToString().ToUpper()
+        : "A";
+
+    // profile image path from AspNetUsers, fallback to any ViewBag value if used
+    var profileImagePath = currentUser?.ProfileImagePath
+                           ?? (ViewBag.ProfileImagePath as string);
+
+    // --- PAGE TITLES FOR TOPBAR ---
+    var pageTitle = ViewData["Title"] as string ?? "Admin Dashboard";
+    var pageSubtitle = ViewData["Subtitle"] as string
+                       ?? "Quick overview of roles, appointments and revenue.";
+
+    // --- CURRENT DATE TEXT (already used in your layout) ---
+    var currentDate = DateTime.Now.ToString("dddd, MMM dd, yyyy");
+}
+
+
+
+
+@* @{
     Layout = null;
     var userName = ViewBag.CurrentUserName as string ?? User.Identity?.Name ?? "Admin";
     var firstLetter = string.IsNullOrWhiteSpace(userName) ? "A" : userName.Trim()[0].ToString().ToUpper();
     string? profileImagePath = ViewBag.ProfileImagePath as string;
+   
+
 
     // Dynamic page title / subtitle for top bar
     var pageTitle = ViewBag.PageTitle as string ?? "Admin Dashboard";
     var pageSubtitle = ViewBag.PageSubtitle as string ?? "Quick overview of roles, appointments and revenue.";
-}
+} *@
 
 <!DOCTYPE html>
 <html lang="en">
@@ -23,18 +65,21 @@
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
+               
+
                 @if (!string.IsNullOrEmpty(profileImagePath))
                 {
-                    <img src="@profileImagePath" alt="Profile" class="admin-avatar-img" />
+                    <img src="@Url.Content(profileImagePath)" alt="Profile" class="admin-avatar-img" />
                 }
                 else
                 {
                     <div class="admin-avatar">@firstLetter</div>
                 }
 
+
                 <div class="sidebar-role">Admin</div>
                 <div class="sidebar-username">@userName</div>
-                <div class="sidebar-subtitle">Doctor Appointment System</div>
+                <div class="sidebar-subtitle">Sunshine Hospital</div>
             </div>
 
             <nav class="sidebar-nav">
@@ -52,7 +97,7 @@
                         <span class="nav-dropdown-arrow">▾</span>
                     </div>
                     <div class="nav-submenu">
-                        <a asp-controller="AdminDashboard" asp-action="Admins" class="nav-link nav-link--sub">Admins</a>
+                        <a asp-controller="AdminProfile" asp-action="Index" class="nav-link nav-link--sub">Admins</a>
                         <a asp-controller="AdminDoctor" asp-action="Index" class="nav-link nav-link--sub">Doctors</a>
                         <a asp-controller="AdminReceptionist" asp-action="Index" class="nav-link nav-link--sub">Receptionists</a>
                         <a asp-controller="AdminPatient" asp-action="Index" class="nav-link nav-link--sub">Patients</a>
@@ -76,7 +121,9 @@
                     <span>Payments &amp; Income</span>
                 </a>
 
-                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
+                
+
+                <a asp-controller="AdminProfile" asp-action="Index" class="nav-link">
                     <div class="nav-link-icon">👤</div>
                     <span>My Profile</span>
                 </a>

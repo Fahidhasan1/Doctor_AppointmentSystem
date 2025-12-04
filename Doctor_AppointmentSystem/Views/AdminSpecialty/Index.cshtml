@@ -1,0 +1,108 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.SpecialtyListItemViewModel>
+
+@{
+    ViewData["Title"] = "Manage Specialties";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+
+    int total = ViewBag.TotalSpecialties ?? 0;
+    string? search = ViewBag.Search as string;
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success-soft">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-title-row">
+        <div>
+            <h3>Manage Specialties</h3>
+            <div class="card-title-sub">
+                Overview of all registered specialties and their status.
+            </div>
+        </div>
+
+        <div class="doctor-actions-wrapper">
+            <form id="specialty-search-form"
+                  asp-controller="AdminSpecialty"
+                  asp-action="Index"
+                  method="get"
+                  class="search-wrapper">
+                <input type="text"
+                       id="specialty-search-input"
+                       name="search"
+                       value="@search"
+                       class="doctor-search-input-large"
+                       placeholder="Search by name or description..." />
+                <button type="submit" class="search-btn">Search</button>
+            </form>
+
+            <a asp-controller="AdminSpecialty"
+               asp-action="Create"
+               class="btn-add-large">
+                + Add Specialty
+            </a>
+        </div>
+    </div>
+
+    <div class="doctor-filter-pills">
+        <span class="filter-pill filter-pill--active">
+            Total: @total
+        </span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title-row" style="margin-bottom:4px;">
+        <div>
+            <h3>Specialty List</h3>
+            <div class="card-title-sub">
+                Manage doctor specialties and quickly edit them.
+            </div>
+        </div>
+    </div>
+
+    <div id="specialty-table-container">
+        @await Html.PartialAsync("_SpecialtyTable", Model)
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const input = document.getElementById('specialty-search-input');
+            const form = document.getElementById('specialty-search-form');
+            const container = document.getElementById('specialty-table-container');
+
+            if (!input || !container) return;
+
+            // prevent full page reload on submit
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                });
+            }
+
+            let timer;
+            input.addEventListener('keyup', function () {
+                clearTimeout(timer);
+                const term = this.value || "";
+
+                timer = setTimeout(function () {
+                    const url = '@Url.Action("Search", "AdminSpecialty")' + '?search=' + encodeURIComponent(term);
+
+                    fetch(url, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                        .then(r => r.text())
+                        .then(html => {
+                            container.innerHTML = html;
+                        })
+                        .catch(err => console.error(err));
+                }, 250); // small delay for live search
+            });
+        })();
+    </script>
+}

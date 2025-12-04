@@ -1,0 +1,57 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.SpecialtyFormViewModel
+
+@{
+    ViewData["Title"] = "Add Specialty";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+}
+
+<div class="card form-card">
+    <div class="card-title-row">
+        <div>
+            <h3>Add New Specialty</h3>
+            <div class="card-title-sub">
+                Create a new medical specialty that can be assigned to doctors.
+            </div>
+        </div>
+
+        <div>
+            <a asp-action="Index" class="btn-tag btn-tag--ghost">
+                ← Back to Specialty List
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-section">
+            <div class="form-field">
+                <label asp-for="Name" class="form-label">Specialty Name</label>
+                <input asp-for="Name" class="form-input" />
+                <span asp-validation-for="Name" class="field-validation"></span>
+            </div>
+
+            <div class="form-field">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description"
+                          class="form-input"
+                          rows="3"></textarea>
+                <span asp-validation-for="Description" class="field-validation"></span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a asp-action="Index" class="btn-tag btn-tag--ghost">
+                Cancel
+            </a>
+
+            <button type="submit" class="search-btn">
+                Save Specialty
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

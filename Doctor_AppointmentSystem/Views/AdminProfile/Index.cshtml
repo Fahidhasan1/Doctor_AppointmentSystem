@@ -1,0 +1,181 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.AdminProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+
+    var fullName = (Model.FirstName + " " + Model.LastName).Trim();
+    var initials = string.IsNullOrWhiteSpace(fullName)
+        ? "A"
+        : fullName.Substring(0, 1).ToUpperInvariant();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success-soft">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="card form-card">
+    <div class="card-title-row">
+        <div>
+            <h3>My Profile</h3>
+            <div class="card-title-sub">
+                View and update your admin profile information.
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+
+            <!-- LEFT: Profile summary -->
+            <div style="min-width:260px;max-width:280px;flex:0 0 260px;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+
+                    <!-- avatar (cleaned, uses CSS classes) -->
+                    <div class="profile-avatar">
+                        @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+                        {
+                            <img src="@Model.ProfileImagePath"
+                                 alt="Admin photo"
+                                 class="profile-avatar-img" />
+                        }
+                        else
+                        {
+                            <span class="profile-avatar-initials">@initials</span>
+                        }
+                    </div>
+
+                    <div style="text-align:center;margin-top:4px;">
+                        <div style="font-size:15px;font-weight:600;">@fullName</div>
+                        <div style="font-size:12px;color:#7b88b0;">System Admin</div>
+                        <div style="font-size:12px;color:#7b88b0;margin-top:4px;">@Model.Email</div>
+                    </div>
+
+                    <label for="ProfileImageFile" class="btn-tag" style="cursor:pointer;margin-top:8px;">
+                        Change Photo
+                    </label>
+                    <input asp-for="ProfileImageFile"
+                           type="file"
+                           id="ProfileImageFile"
+                           accept="image/*"
+                           style="display:none;" />
+                    <span asp-validation-for="ProfileImageFile" class="field-validation"></span>
+                </div>
+
+                <!-- PERSONAL + OFFICE DETAILS -->
+                <div style="margin-top:20px;font-size:12px;color:#7b88b0;">
+
+                    <div style="font-weight:600;margin-bottom:6px;">Personal Details</div>
+                    <div>
+                        <strong>Phone:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "-" : Model.PhoneNumber)
+                    </div>
+                    <div>
+                        <strong>Date of Birth:</strong>
+                        @(Model.DateOfBirth.HasValue
+                                                ? Model.DateOfBirth.Value.ToString("dd MMM yyyy")
+                                                : "-")
+                    </div>
+                    <div>
+                        <strong>Gender:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.Gender) ? "-" : Model.Gender)
+                    </div>
+
+                    <div style="height:12px;"></div>
+
+                    <div style="font-weight:600;margin-bottom:6px;">Office Details</div>
+                    <div>
+                        <strong>Office Phone:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.OfficePhoneNo) ? "-" : Model.OfficePhoneNo)
+                    </div>
+                    <div>
+                        <strong>Office Room:</strong>
+                        @(string.IsNullOrWhiteSpace(Model.OfficeRoomNo) ? "-" : Model.OfficeRoomNo)
+                    </div>
+                    <div style="margin-top:6px;">
+                        <strong>Address:</strong><br />
+                        @(string.IsNullOrWhiteSpace(Model.Address) ? "-" : Model.Address)
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Editable form -->
+            <div style="flex:1;min-width:260px;">
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;">
+                    <div class="form-field">
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <input asp-for="FirstName" class="form-input" />
+                        <span asp-validation-for="FirstName" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="LastName" class="form-label"></label>
+                        <input asp-for="LastName" class="form-input" />
+                        <span asp-validation-for="LastName" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-input" readonly />
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-input" />
+                        <span asp-validation-for="PhoneNumber" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="DateOfBirth" class="form-label"></label>
+                        <input asp-for="DateOfBirth" class="form-input" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="Gender" class="form-label"></label>
+                        <select asp-for="Gender" class="form-input">
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="OfficePhoneNo" class="form-label"></label>
+                        <input asp-for="OfficePhoneNo" class="form-input" />
+                        <span asp-validation-for="OfficePhoneNo" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="OfficeRoomNo" class="form-label"></label>
+                        <input asp-for="OfficeRoomNo" class="form-input" />
+                        <span asp-validation-for="OfficeRoomNo" class="field-validation"></span>
+                    </div>
+                </div>
+
+                <div class="form-field" style="margin-top:16px;">
+                    <label asp-for="Address" class="form-label"></label>
+                    <textarea asp-for="Address" class="form-input" rows="3"></textarea>
+                    <span asp-validation-for="Address" class="field-validation"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top:20px;">
+            <button type="submit" class="search-btn">
+                Save Profile
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,47 @@
+﻿@model IEnumerable<Doctor_AppointmentSystem.ViewModels.SpecialtyListItemViewModel>
+
+<table class="table-simple w-100">
+    <thead>
+        <tr>
+            <th>SPECIALTY</th>
+            <th>DESCRIPTION</th>
+            <th>DOCTORS</th>
+            <th style="text-align:right;">ACTIONS</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="4" style="font-size:12px;color:#7b88b0;padding-top:12px;">
+                    No specialties found. Use the <strong>“Add Specialty”</strong> button to create one.
+                </td>
+            </tr>
+        }
+        else
+        {
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td style="font-size:13px;font-weight:500;">
+                        @s.Name
+                    </td>
+                    <td style="font-size:12px;color:#7b88b0;">
+                        @(!string.IsNullOrWhiteSpace(s.Description) ? s.Description : "No description")
+                    </td>
+                    <td style="font-size:12px;">
+                        @s.DoctorCount
+                    </td>
+                    <td style="text-align:right;">
+                        <a asp-controller="AdminSpecialty"
+                           asp-action="Edit"
+                           asp-route-id="@s.Id"
+                           class="btn-tag">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

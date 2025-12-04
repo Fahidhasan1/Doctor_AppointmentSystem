@@ -27,6 +27,21 @@ namespace Doctor_AppointmentSystem.ViewModels
 
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public string Initials
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(FullName))
+                    return "";
+
+                var parts = FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 1) return parts[0][0].ToString().ToUpper();
+
+                return $"{parts[0][0]}{parts[parts.Length - 1][0]}".ToUpper();
+            }
+        }
+
     }
 
     // =========================

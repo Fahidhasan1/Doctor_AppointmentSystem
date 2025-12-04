@@ -38,7 +38,7 @@
                             }
 
 
-                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                            @* @if (!string.IsNullOrEmpty(d.ProfileImagePath))
                             {
                                 <img src="@d.ProfileImagePath"
                                      alt="Doctor photo"
@@ -49,6 +49,20 @@
                                 <div class="admin-avatar"
                                      style="width:120px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;">
                                     @initials
+                                </div>
+                            } *@
+
+
+                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                            {
+                                <img src="@d.ProfileImagePath"
+                                     alt="Doctor photo"
+                                     class="doctor-avatar" />
+                            }
+                            else
+                            {
+                                <div class="doctor-avatar doctor-avatar--initial">
+                                    @d.Initials
                                 </div>
                             }
 

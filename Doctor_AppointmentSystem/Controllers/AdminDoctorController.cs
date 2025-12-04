@@ -69,7 +69,7 @@ namespace Doctor_AppointmentSystem.Controllers
         public async Task<IActionResult> Index(string? search, string? filter)
         {
             await SetCurrentAdminInViewBag();
-            ViewBag.PageTitle = "Manage Doctors";
+            ViewBag.PageTitle = "Manage Doctors ";
             // Load ALL doctors once
             var allDoctors = await _context.DoctorProfiles
                 .Include(d => d.User)

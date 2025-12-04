@@ -1,55 +1,61 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.SpecialtyFormViewModel
 
 @{
-    ViewData["Title"] = "Edit Specialty";
+    ViewData["Title"] = "Sunshine Hospital";
     Layout = "~/Views/Shared/_Layout_Admin.cshtml";
 }
 
-<div class="card form-card">
-    <div class="card-title-row">
-        <div>
-            <h3>Edit Specialty</h3>
-            <div class="card-title-sub">
-                Update specialty information.
+<div class="specialty-page">
+    <div class="form-wrapper specialty-form-wrapper">
+        <div class="card form-card form-card--medium">
+
+            <div class="card-title-row card-title-row--with-action">
+                <div class="card-title-main">
+                    <h3>Edit Specialty</h3>
+                    <div class="card-title-sub">
+                        Update specialty information.
+                    </div>
+                </div>
+
+                <div class="card-title-action">
+                    <a asp-action="Index" class="btn-tag btn-tag--ghost">
+                        ← Back to Specialty List
+                    </a>
+                </div>
             </div>
-        </div>
-        <div>
-            <a asp-action="Index" class="btn-tag btn-tag--ghost">
-                ← Back to Specialty List
-            </a>
+
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+
+                <div class="form-section">
+                    <div class="form-field">
+                        <label asp-for="Name" class="form-label">Specialty Name</label>
+                        <input asp-for="Name" class="form-input" />
+                        <span asp-validation-for="Name" class="field-validation"></span>
+                    </div>
+
+                    <div class="form-field">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description"
+                                  class="form-input"
+                                  rows="3"></textarea>
+                        <span asp-validation-for="Description" class="field-validation"></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a asp-action="Index" class="btn-tag btn-tag--ghost">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="search-btn">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <form asp-action="Edit" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="Id" />
-
-        <div class="form-section">
-            <div class="form-field">
-                <label asp-for="Name" class="form-label">Specialty Name</label>
-                <input asp-for="Name" class="form-input" />
-                <span asp-validation-for="Name" class="field-validation"></span>
-            </div>
-
-            <div class="form-field">
-                <label asp-for="Description" class="form-label">Description</label>
-                <textarea asp-for="Description"
-                          class="form-input"
-                          rows="3"></textarea>
-                <span asp-validation-for="Description" class="field-validation"></span>
-            </div>
-        </div>
-
-        <div class="form-actions">
-            <a asp-action="Index" class="btn-tag btn-tag--ghost">
-                Cancel
-            </a>
-
-            <button type="submit" class="search-btn">
-                Save Changes
-            </button>
-        </div>
-    </form>
 </div>
 
 @section Scripts {

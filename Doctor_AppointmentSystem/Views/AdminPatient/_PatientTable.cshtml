@@ -31,7 +31,7 @@
                     <!-- PATIENT -->
                     <td>
                         <div style="display:flex; align-items:center; gap:10px;">
-                            @{
+                            @* @{
                                 var initials = !string.IsNullOrWhiteSpace(p.FullName)
                                 ? p.FullName.Trim()[0].ToString().ToUpper()
                                 : "P";
@@ -46,6 +46,25 @@
                             {
                                 <div class="admin-avatar"
                                      style="width:40px;height:40px;font-size:16px;display:flex;align-items:center;justify-content:center;">
+                                    @initials
+                                </div>
+                            } *@
+
+                            @{
+                                var initials = !string.IsNullOrWhiteSpace(p.FullName)
+                                ? p.FullName.Trim()[0].ToString().ToUpper()
+                                : "P";
+                            }
+
+                            @if (!string.IsNullOrEmpty(p.ProfileImagePath))
+                            {
+                                <img src="@p.ProfileImagePath"
+                                     alt="@p.FullName"
+                                     class="user-list-avatar" />
+                            }
+                            else
+                            {
+                                <div class="user-list-avatar--initials">
                                     @initials
                                 </div>
                             }

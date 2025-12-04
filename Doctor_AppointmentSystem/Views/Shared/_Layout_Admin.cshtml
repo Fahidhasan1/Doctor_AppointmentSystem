@@ -28,8 +28,8 @@
 
     // --- PAGE TITLES FOR TOPBAR ---
     var pageTitle = ViewData["Title"] as string ?? "Admin Dashboard";
-    var pageSubtitle = ViewData["Subtitle"] as string
-                       ?? "Quick overview of roles, appointments and revenue.";
+    // var pageSubtitle = ViewData["Subtitle"] as string
+    //                    ?? "Quick overview of roles, appointments and revenue.";
 
     // --- CURRENT DATE TEXT (already used in your layout) ---
     var currentDate = DateTime.Now.ToString("dddd, MMM dd, yyyy");
@@ -128,10 +128,25 @@
                     <span>My Profile</span>
                 </a>
 
-                <a asp-controller="AdminDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">⚙️</div>
-                    <span>Settings</span>
-                </a>
+               
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">⚙️</div>
+                            <span>Settings</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
+
+                    <div class="nav-submenu">
+                        <a asp-controller="Settings" asp-action="ChangePassword" class="nav-link nav-link--sub">
+                            Change Password
+                        </a>
+
+                        
+                    </div>
+                </div>
+
 
                 <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
                     @Html.AntiForgeryToken()
@@ -150,9 +165,9 @@
                     <button class="menu-toggle" id="menuToggle">☰</button>
                     <div>
                         <div class="topbar-title">@pageTitle</div>
-                        <div class="topbar-subtext">
+                        @* <div class="topbar-subtext">
                             @pageSubtitle
-                        </div>
+                        </div> *@
                     </div>
                 </div>
                 <div class="topbar-right">

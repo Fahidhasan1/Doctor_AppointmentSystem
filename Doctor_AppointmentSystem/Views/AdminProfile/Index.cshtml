@@ -1,7 +1,7 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.AdminProfileViewModel
 
 @{
-    ViewData["Title"] = "My Profile";
+    ViewData["Title"] = "Sunshine Hospital";
     Layout = "~/Views/Shared/_Layout_Admin.cshtml";
 
     var fullName = (Model.FirstName + " " + Model.LastName).Trim();
@@ -49,6 +49,7 @@
                             <span class="profile-avatar-initials">@initials</span>
                         }
                     </div>
+
 
                     <div style="text-align:center;margin-top:4px;">
                         <div style="font-size:15px;font-weight:600;">@fullName</div>

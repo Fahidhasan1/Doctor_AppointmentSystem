@@ -31,11 +31,11 @@
                     <!-- DOCTOR -->
                     <td style="max-width:240px;">
                         <div style="display:flex; align-items:center; gap:10px;">
-                            @{
+                            @* @{
                                 var initials = !string.IsNullOrWhiteSpace(d.FullName)
                                 ? d.FullName.Trim()[0].ToString().ToUpper()
                                 : "D";
-                            }
+                            } *@
 
 
                             @* @if (!string.IsNullOrEmpty(d.ProfileImagePath))
@@ -53,7 +53,7 @@
                             } *@
 
 
-                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                            @* @if (!string.IsNullOrEmpty(d.ProfileImagePath))
                             {
                                 <img src="@d.ProfileImagePath"
                                      alt="Doctor photo"
@@ -64,8 +64,26 @@
                                 <div class="doctor-avatar doctor-avatar--initial">
                                     @d.Initials
                                 </div>
+                            } *@
+
+                            @{
+                                var initials = !string.IsNullOrWhiteSpace(d.FullName)
+                                ? d.FullName.Trim()[0].ToString().ToUpper()
+                                : "D";
                             }
 
+                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                            {
+                                <img src="@d.ProfileImagePath"
+                                     alt="@d.FullName"
+                                     class="user-list-avatar" />
+                            }
+                            else
+                            {
+                                <div class="user-list-avatar--initials">
+                                    @initials
+                                </div>
+                            }
 
 
                             <div>

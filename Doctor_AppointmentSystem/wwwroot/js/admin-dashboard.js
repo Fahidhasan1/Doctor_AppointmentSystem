@@ -1,7 +1,8 @@
 ﻿const menuToggle = document.getElementById("menuToggle");
 const sidebar = document.getElementById("sidebar");
-const dropdownToggle = document.querySelector("[data-dropdown]");
-const submenu = document.querySelector(".nav-submenu");
+
+// ✅ get ALL dropdown toggles, not just the first one
+const dropdownToggles = document.querySelectorAll("[data-dropdown]");
 
 if (menuToggle && sidebar) {
     menuToggle.addEventListener("click", () => {
@@ -9,10 +10,18 @@ if (menuToggle && sidebar) {
     });
 }
 
-if (dropdownToggle && submenu) {
-    dropdownToggle.addEventListener("click", () => {
-        dropdownToggle.classList.toggle("open");
-        submenu.classList.toggle("open");
+if (dropdownToggles && dropdownToggles.length > 0) {
+    dropdownToggles.forEach(toggle => {
+        const dropdown = toggle.closest(".nav-dropdown");
+        if (!dropdown) return;
+
+        const submenu = dropdown.querySelector(".nav-submenu");
+        if (!submenu) return;
+
+        toggle.addEventListener("click", () => {
+            toggle.classList.toggle("open");
+            submenu.classList.toggle("open");
+        });
     });
 }
 

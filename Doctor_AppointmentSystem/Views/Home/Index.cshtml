@@ -2,6 +2,13 @@
     ViewData["Title"] = "Home";
 }
 
+@if (TempData["LoginError"] is string inactiveMsg && !string.IsNullOrWhiteSpace(inactiveMsg))
+{
+    <div class="alert alert-danger" role="alert" style="margin-bottom: 16px;">
+        @inactiveMsg
+    </div>
+}
+
 <div class="page-wrapper">
 
     <!-- Sticky Header -->

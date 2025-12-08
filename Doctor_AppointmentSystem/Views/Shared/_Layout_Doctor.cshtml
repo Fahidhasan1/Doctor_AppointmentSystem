@@ -1,0 +1,123 @@
+﻿@using Doctor_AppointmentSystem.Models
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    Layout = null;
+
+    var currentUser = await UserManager.GetUserAsync(User);
+
+    var fullName = ((currentUser?.FirstName ?? "") + " " + (currentUser?.LastName ?? ""))
+                   .Trim();
+
+    var userName = !string.IsNullOrWhiteSpace(fullName)
+        ? fullName
+        : (currentUser?.UserName ?? "Doctor");
+
+    var firstLetter = string.IsNullOrWhiteSpace(userName)
+        ? "D"
+        : userName.Trim()[0].ToString().ToUpper();
+
+    var profileImagePath = currentUser?.ProfileImagePath;
+
+    var pageTitle = ViewData["Title"] as string ?? "Doctor Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@(ViewData["Title"] ?? "Doctor Dashboard | Doctor Appointment System")</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                @if (!string.IsNullOrEmpty(profileImagePath))
+                {
+                    <img src="@Url.Content(profileImagePath)" alt="Profile" class="admin-avatar-img" />
+                }
+                else
+                {
+                    <div class="admin-avatar">@firstLetter</div>
+                }
+
+                <div class="sidebar-role">Doctor</div>
+                <div class="sidebar-username">@userName</div>
+                <div class="sidebar-subtitle">Sunshine Hospital</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link active">
+                    <div class="nav-link-icon">🏠</div>
+                    <span>Dashboard</span>
+                </a>
+
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">📅</div>
+                    <span>Today's Schedule</span>
+                </a>
+
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">🗓️</div>
+                    <span>Upcoming Appointments</span>
+                </a>
+
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">⏱️</div>
+                    <span>My Weekly Schedule</span>
+                </a>
+
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">💳</div>
+                    <span>My Revenue</span>
+                </a>
+
+                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">⭐</div>
+                    <span>Reviews</span>
+                </a>
+
+                <a asp-controller="Settings" asp-action="ChangePassword" class="nav-link">
+                    <div class="nav-link-icon">⚙️</div>
+                    <span>Settings</span>
+                </a>
+
+                <form asp-controller="Account" asp-action="Logout" method="post" class="nav-link nav-link--danger">
+                    <button type="submit">
+                        <div class="nav-link-icon">🚪</div>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <div>
+                        <div class="topbar-title">@pageTitle</div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-date">@DateTime.Now.ToString("Thursday, MMM dd, yyyy")</div>
+                </div>
+            </header>
+
+            <section class="dashboard-content">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

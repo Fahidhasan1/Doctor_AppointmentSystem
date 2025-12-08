@@ -12,24 +12,25 @@
 
     var userName = !string.IsNullOrWhiteSpace(fullName)
         ? fullName
-        : (currentUser?.UserName ?? "Doctor");
+        : (currentUser?.UserName ?? "Receptionist");
 
     var firstLetter = string.IsNullOrWhiteSpace(userName)
-        ? "D"
+        ? "R"
         : userName.Trim()[0].ToString().ToUpper();
 
     var profileImagePath = currentUser?.ProfileImagePath;
 
-    var pageTitle = ViewData["Title"] as string ?? "Doctor Dashboard";
+    var pageTitle = ViewData["Title"] as string ?? "Receptionist Dashboard";
 }
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>@(ViewData["Title"] ?? "Doctor Dashboard | Doctor Appointment System")</title>
+    <title>@(ViewData["Title"] ?? "Receptionist Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- same CSS as Admin/Doctor -->
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
 </head>
 <body>
@@ -46,60 +47,59 @@
                     <div class="admin-avatar">@firstLetter</div>
                 }
 
-                <div class="sidebar-role">Receptionist</div>
-
+                <div class="sidebar-role">RECEPTIONIST</div>
                 <div class="sidebar-username">@userName</div>
                 <div class="sidebar-subtitle">Sunshine Hospital</div>
             </div>
 
             <nav class="sidebar-nav">
+                <!-- Dashboard -->
                 <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link active">
                     <div class="nav-link-icon">🏠</div>
                     <span>Dashboard</span>
                 </a>
 
+                <!-- New Booking -->
                 <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">📅</div>
-                    <span>Today's Appointments</span>
+                    <div class="nav-link-icon">➕</div>
+                    <span>New Booking</span>
                 </a>
 
+                <!-- Instant Patient Registration -->
+                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">⚡</div>
+                    <span>Instant Patient Registration</span>
+                </a>
+
+                <!-- Payments & Receipts -->
                 <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
                     <div class="nav-link-icon">💳</div>
-                    <span>Payments</span>
+                    <span>Payments &amp; Receipts</span>
                 </a>
 
-                <div class="nav-dropdown">
-                    <div class="nav-dropdown-toggle" data-dropdown>
-                        <div class="nav-dropdown-toggle-main">
-                            <div class="nav-link-icon">⚙️</div>
-                            <span>Settings</span>
-                        </div>
-                        <span class="nav-dropdown-arrow">▾</span>
-                    </div>
+                <!-- My Profile -->
+                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                    <div class="nav-link-icon">👤</div>
+                    <span>My Profile</span>
+                </a>
 
-                    <div class="nav-submenu">
-                        <a asp-controller="Settings"
-                           asp-action="ChangePassword"
-                           class="nav-link nav-link--sub">
-                            Change Password
-                        </a>
-                        <!-- later you can add: My Profile, etc. -->
-                    </div>
-                </div>
+                <!-- Settings (uses existing Settings controller) -->
+                <a asp-controller="Settings" asp-action="ChangePassword" class="nav-link">
+                    <div class="nav-link-icon">⚙️</div>
+                    <span>Settings</span>
+                </a>
 
-
-                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="nav-link nav-link-button">
+                <!-- Logout -->
+                <form asp-controller="Account" asp-action="Logout" method="post" class="nav-link nav-link--danger">
+                    <button type="submit">
                         <div class="nav-link-icon">🚪</div>
                         <span>Logout</span>
                     </button>
                 </form>
             </nav>
-
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- MAIN CONTENT (identical structure to Doctor/Admin) -->
         <main class="main-content">
             <header class="topbar">
                 <div class="topbar-left">
@@ -109,7 +109,7 @@
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <div class="topbar-date">@DateTime.Now.ToString("Thursday, MMM dd, yyyy")</div>
+                    <div class="topbar-date">@DateTime.Now.ToString("dddd, MMM dd, yyyy")</div>
                 </div>
             </header>
 

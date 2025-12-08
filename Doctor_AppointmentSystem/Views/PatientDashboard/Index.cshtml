@@ -1,1 +1,157 @@
-﻿
+﻿@model Doctor_AppointmentSystem.ViewModels.PatientDashboardViewModel
+
+@{
+    ViewData["Title"] = "Patient Dashboard";
+    Layout = "~/Views/Shared/_Layout_Patient.cshtml";
+}
+
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Upcoming Appointments</div>
+                <div class="stat-value">@Model.UpcomingAppointments</div>
+            </div>
+        </div>
+        <div class="stat-sub">From today onwards</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Completed</div>
+                <div class="stat-value">@Model.CompletedAppointments</div>
+            </div>
+        </div>
+        <div class="stat-sub">All time completed visits</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Cancelled</div>
+                <div class="stat-value">@Model.CancelledAppointments</div>
+            </div>
+        </div>
+        <div class="stat-sub">Cancelled or missed</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Appointments</div>
+                <div class="stat-value">@Model.TotalAppointments</div>
+            </div>
+        </div>
+        <div class="stat-sub">All bookings made</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Pending Payments</div>
+                <div class="stat-value">@Model.PendingPayments</div>
+            </div>
+        </div>
+        <div class="stat-sub">Appointments waiting for payment</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Paid</div>
+                <div class="stat-value">৳@Model.TotalPaid.ToString("0")</div>
+            </div>
+        </div>
+        <div class="stat-sub">All successful payments</div>
+    </div>
+</div>
+
+<div class="charts-grid">
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Next Appointment</h3>
+                <div class="card-title-sub">
+                    @if (Model.NextAppointmentDate.HasValue)
+                    {
+                        @Model.NextAppointmentDate.Value.ToString("dddd, MMM dd yyyy - hh:mm tt")
+                    }
+                    else
+                    {
+                        <span>No upcoming appointments.</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Last Appointment</h3>
+                <div class="card-title-sub">
+                    @if (Model.LastAppointmentDate.HasValue)
+                    {
+                        @Model.LastAppointmentDate.Value.ToString("dddd, MMM dd yyyy - hh:mm tt")
+                    }
+                    else
+                    {
+                        <span>No completed appointments yet.</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="lower-grid">
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Notifications</h3>
+                <div class="card-title-sub">
+                    You have @Model.NotificationCount notification(s) in your account.
+                </div>
+            </div>
+        </div>
+
+        <p style="margin-top: 12px;">
+            Later we can list the latest SMS / email messages here (appointment confirmation,
+            reminders, cancellations, etc.).
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Quick Actions</h3>
+                <div class="card-title-sub">Frequently used patient actions</div>
+            </div>
+        </div>
+
+        <div class="activity-feed">
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--blue"></span>
+                <div class="activity-main">
+                    Book a new appointment
+                    <div class="activity-time"><a href="#" class="link-small">Search doctors</a></div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--green"></span>
+                <div class="activity-main">
+                    View all my appointments
+                    <div class="activity-time"><a href="#" class="link-small">Go to appointment history</a></div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--purple"></span>
+                <div class="activity-main">
+                    Update profile information
+                    <div class="activity-time"><a href="#" class="link-small">Edit my profile</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

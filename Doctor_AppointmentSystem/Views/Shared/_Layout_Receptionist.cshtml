@@ -46,63 +46,48 @@
                     <div class="admin-avatar">@firstLetter</div>
                 }
 
-                <div class="sidebar-role">Doctor</div>
+                <div class="sidebar-role">Receptionist</div>
+
                 <div class="sidebar-username">@userName</div>
                 <div class="sidebar-subtitle">Sunshine Hospital</div>
             </div>
 
             <nav class="sidebar-nav">
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link active">
+                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link active">
                     <div class="nav-link-icon">🏠</div>
                     <span>Dashboard</span>
                 </a>
 
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
                     <div class="nav-link-icon">📅</div>
-                    <span>Today's Schedule</span>
+                    <span>Today's Appointments</span>
                 </a>
 
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">🗓️</div>
-                    <span>Upcoming Appointments</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">⏱️</div>
-                    <span>My Weekly Schedule</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
+                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
                     <div class="nav-link-icon">💳</div>
-                    <span>My Revenue</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">⭐</div>
-                    <span>Reviews</span>
+                    <span>Payments</span>
                 </a>
 
                 <div class="nav-dropdown">
-    <div class="nav-dropdown-toggle" data-dropdown>
-        <div class="nav-dropdown-toggle-main">
-            <div class="nav-link-icon">⚙️</div>
-            <span>Settings</span>
-        </div>
-        <span class="nav-dropdown-arrow">▾</span>
-    </div>
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">⚙️</div>
+                            <span>Settings</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
 
-    <div class="nav-submenu">
-        <a asp-controller="Settings"
-           asp-action="ChangePassword"
-           class="nav-link nav-link--sub">
-            Change Password
-        </a>
-        <!-- later you can add: My Profile, etc. -->
-    </div>
-</div>
+                    <div class="nav-submenu">
+                        <a asp-controller="Settings"
+                           asp-action="ChangePassword"
+                           class="nav-link nav-link--sub">
+                            Change Password
+                        </a>
+                        <!-- later you can add: My Profile, etc. -->
+                    </div>
+                </div>
 
 
-                
                 <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="nav-link nav-link-button">
@@ -111,6 +96,7 @@
                     </button>
                 </form>
             </nav>
+
         </aside>
 
         <!-- MAIN CONTENT -->

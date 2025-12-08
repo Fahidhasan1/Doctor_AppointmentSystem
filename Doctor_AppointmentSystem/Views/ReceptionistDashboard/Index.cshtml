@@ -1,0 +1,123 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.ReceptionistDashboardViewModel
+
+@{
+    ViewData["Title"] = "Receptionist Dashboard";
+    Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
+}
+
+<div class="stats-grid">
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Today's Appointments</div>
+                <div class="stat-value">@Model.TodaysAppointments</div>
+            </div>
+        </div>
+        <div class="stat-sub">All booked for today</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Pending Check-ins</div>
+                <div class="stat-value">@Model.PendingCheckins</div>
+            </div>
+        </div>
+        <div class="stat-sub">Confirmed but not yet completed</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Completed Today</div>
+                <div class="stat-value">@Model.CompletedToday</div>
+            </div>
+        </div>
+        <div class="stat-sub">Visited & finished</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Cancelled Today</div>
+                <div class="stat-value">@Model.CancelledToday</div>
+            </div>
+        </div>
+        <div class="stat-sub">Patient or doctor cancelled</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Cash Collected Today</div>
+                <div class="stat-value">৳@Model.CashCollectedToday.ToString("0")</div>
+            </div>
+        </div>
+        <div class="stat-sub">All paid by cash</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Pending Payments</div>
+                <div class="stat-value">@Model.PendingPaymentsToday</div>
+            </div>
+        </div>
+        <div class="stat-sub">Appointments waiting for payment</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Patients</div>
+                <div class="stat-value">@Model.TotalPatients</div>
+            </div>
+        </div>
+        <div class="stat-sub">Active patient profiles</div>
+    </div>
+
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Doctors</div>
+                <div class="stat-value">@Model.TotalDoctors</div>
+            </div>
+        </div>
+        <div class="stat-sub">Active doctors</div>
+    </div>
+</div>
+
+<div class="lower-grid">
+    <div class="card">
+        <div class="card-title-row">
+            <div>
+                <h3>Quick Booking Actions</h3>
+                <div class="card-title-sub">Shortcuts for front-desk workflow</div>
+            </div>
+        </div>
+
+        <div class="activity-feed">
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--blue"></span>
+                <div class="activity-main">
+                    Book appointment for a patient
+                    <div class="activity-time"><a href="#" class="link-small">Book new appointment</a></div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--green"></span>
+                <div class="activity-main">
+                    Take payment and print receipt
+                    <div class="activity-time"><a href="#" class="link-small">Open payments screen</a></div>
+                </div>
+            </div>
+            <div class="activity-item">
+                <span class="activity-dot activity-dot--purple"></span>
+                <div class="activity-main">
+                    View today's schedule by doctor
+                    <div class="activity-time"><a href="#" class="link-small">View schedule</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

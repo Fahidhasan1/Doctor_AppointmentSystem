@@ -38,18 +38,7 @@
 
 
 
-@* @{
-    Layout = null;
-    var userName = ViewBag.CurrentUserName as string ?? User.Identity?.Name ?? "Admin";
-    var firstLetter = string.IsNullOrWhiteSpace(userName) ? "A" : userName.Trim()[0].ToString().ToUpper();
-    string? profileImagePath = ViewBag.ProfileImagePath as string;
-   
 
-
-    // Dynamic page title / subtitle for top bar
-    var pageTitle = ViewBag.PageTitle as string ?? "Admin Dashboard";
-    var pageSubtitle = ViewBag.PageSubtitle as string ?? "Quick overview of roles, appointments and revenue.";
-} *@
 
 <!DOCTYPE html>
 <html lang="en">

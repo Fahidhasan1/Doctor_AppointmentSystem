@@ -1,13 +1,16 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.DoctorDashboardViewModel
+@using System.Text.Json
 
 @{
     ViewData["Title"] = "Doctor Dashboard";
     Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
 }
 
-<!-- TOP STAT CARDS -->
+<!-- ===== TOP STATS (same structure as Admin) ===== -->
 <div class="stats-grid">
-    <div class="card stat-card">
+    <!-- TODAY'S APPOINTMENTS -->
+    <div class="card stat-card"
+         data-url="@Url.Action("Today", "DoctorAppointments")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Today's Appointments</div>
@@ -17,7 +20,9 @@
         <div class="stat-sub">Scheduled for today</div>
     </div>
 
-    <div class="card stat-card">
+    <!-- UPCOMING APPOINTMENTS -->
+    <div class="card stat-card"
+         data-url="@Url.Action("Upcoming", "DoctorAppointments")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Upcoming</div>
@@ -27,29 +32,9 @@
         <div class="stat-sub">Future confirmed visits</div>
     </div>
 
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Completed (This Month)</div>
-                <div class="stat-value">@Model.CompletedThisMonth</div>
-            </div>
-        </div>
-        <div class="stat-sub">Finished consultations</div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Cancelled / No-Show</div>
-                <div class="stat-value">@(@Model.CancelledThisMonth + @Model.NoShowThisMonth)</div>
-            </div>
-        </div>
-        <div class="stat-sub">
-            @Model.CancelledThisMonth cancelled · @Model.NoShowThisMonth no-show
-        </div>
-    </div>
-
-    <div class="card stat-card">
+    <!-- PATIENTS TREATED -->
+    <div class="card stat-card"
+         data-url="@Url.Action("Index", "DoctorPatients")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Patients Treated</div>
@@ -59,7 +44,9 @@
         <div class="stat-sub">Unique patients (all time)</div>
     </div>
 
-    <div class="card stat-card">
+    <!-- MONTHLY REVENUE -->
+    <div class="card stat-card"
+         data-url="@Url.Action("Index", "DoctorRevenue")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Monthly Revenue</div>
@@ -68,202 +55,273 @@
         </div>
         <div class="stat-sub">Paid appointments this month</div>
     </div>
-
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Average Rating</div>
-                <div class="stat-value">
-                    @Model.AverageRating.ToString("0.0")
-                    <span style="font-size:18px;">★</span>
-                </div>
-            </div>
-        </div>
-        <div class="stat-sub">@Model.TotalReviews review(s)</div>
-    </div>
 </div>
 
-<!-- CHARTS (reuse admin styles/JS) -->
+<!-- ===== CHARTS (same layout classes as Admin) ===== -->
 <div class="charts-grid">
-    <!-- Revenue chart -->
+    <!-- Monthly Revenue Trend -->
     <div class="card">
         <div class="card-title-row">
             <div>
-                <h3>My Revenue Trend</h3>
-                <div class="card-title-sub">Monthly total revenue</div>
+                <h3>Monthly Revenue Trend</h3>
+                <div class="card-title-sub">This doctor's earnings by month</div>
             </div>
+            <span class="revenue-change-badge">Current year</span>
         </div>
         <div class="chart-container">
-            <!-- uses the same IDs so admin-dashboard.js will render charts -->
-            <canvas id="revenueChart"></canvas>
+            <canvas id="doctorRevenueChart"></canvas>
         </div>
     </div>
 
-    <!-- Appointment trend -->
+    <!-- Appointment Status Breakdown -->
     <div class="card">
         <div class="card-title-row">
             <div>
-                <h3>My Appointment Trend</h3>
-                <div class="card-title-sub">Monthly total appointments</div>
+                <h3>Appointment Status Breakdown</h3>
+                <div class="card-title-sub">Today's appointments by status</div>
             </div>
         </div>
         <div class="chart-container">
-            <canvas id="appointmentChart"></canvas>
+            <canvas id="doctorStatusChart"></canvas>
         </div>
     </div>
 </div>
 
-<!-- LOWER GRID: TODAY + UPCOMING + REVIEWS -->
+<!-- ===== LOWER GRID: Today's Appointments + Availability ===== -->
 <div class="lower-grid">
-    <!-- Today's schedule -->
+    <!-- Today's Appointments -->
     <div class="card">
         <div class="card-title-row">
             <div>
-                <h3>Today's Schedule</h3>
-                <div class="card-title-sub">Quick overview of today's patients</div>
+                <h3>Today's Appointments</h3>
+                <div class="card-title-sub">Manage and update appointment status</div>
             </div>
+            <a class="link-small"
+               asp-controller="DoctorAppointments"
+               asp-action="Today">
+                View All
+            </a>
         </div>
+
         <table class="table-simple">
             <thead>
                 <tr>
-                    <th>Time</th>
-                    <th>Patient</th>
-                    <th>Specialty</th>
-                    <th>Status</th>
+                    <th>TIME</th>
+                    <th>PATIENT</th>
+                    <th>REASON</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- For now, demo/static rows. Later we will bind real data. -->
-                <tr>
-                    <td>09:00 AM</td>
-                    <td>Demo Patient</td>
-                    <td>Cardiology</td>
-                    <td><span class="status-pill status-pill--confirmed">Confirmed</span></td>
-                </tr>
-                <tr>
-                    <td>10:30 AM</td>
-                    <td>Demo Patient</td>
-                    <td>Dermatology</td>
-                    <td><span class="status-pill status-pill--completed">Completed</span></td>
-                </tr>
-                <tr>
-                    <td>12:00 PM</td>
-                    <td>Demo Patient</td>
-                    <td>ENT</td>
-                    <td><span class="status-pill status-pill--cancelled">Cancelled</span></td>
-                </tr>
+                @if (Model.TodaysAppointmentsList.Any())
+                {
+                    foreach (var appt in Model.TodaysAppointmentsList)
+                    {
+                        var statusClass = appt.Status switch
+                        {
+                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Completed => "status-pill status-pill--completed",
+                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Cancelled => "status-pill status-pill--cancelled",
+                            Doctor_AppointmentSystem.Enums.AppointmentStatus.NoShow => "status-pill status-pill--noshow",
+                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Rescheduled => "status-pill status-pill--rescheduled",
+                            _ => "status-pill status-pill--confirmed"
+                        };
+
+                        <tr>
+                            <td>@appt.AppointmentDateTime.ToString("hh:mm tt")</td>
+                            <td>@appt.PatientName</td>
+                            <td>@(string.IsNullOrWhiteSpace(appt.VisitType) ? "-" : appt.VisitType)</td>
+                            <td>
+                                <span class="@statusClass">@appt.Status</span>
+                            </td>
+                            <td class="table-actions">
+                                <!-- later hook these to DoctorAppointments actions -->
+                                <a class="btn-pill btn-pill--primary">Complete</a>
+                                <a class="btn-pill btn-pill--danger">Cancel</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-muted">
+                            No appointments scheduled for today.
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 
-    <!-- Upcoming appointments -->
+    <!-- Availability & Off Days -->
     <div class="card">
         <div class="card-title-row">
             <div>
-                <h3>Upcoming Appointments</h3>
-                <div class="card-title-sub">Next few days</div>
+                <h3>Availability &amp; Off Days</h3>
+                <div class="card-title-sub">Time slots and unavailable dates</div>
             </div>
+            <a class="link-small"
+               asp-controller="DoctorSchedule"
+               asp-action="ManageSlots">
+                Edit Slots
+            </a>
         </div>
-        <table class="table-simple">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Patient</th>
-                    <th>Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- static/demo rows for layout -->
-                <tr>
-                    <td>Dec 05</td>
-                    <td>03:00 PM</td>
-                    <td>Demo Patient</td>
-                    <td>Follow-up</td>
-                </tr>
-                <tr>
-                    <td>Dec 06</td>
-                    <td>11:30 AM</td>
-                    <td>Demo Patient</td>
-                    <td>New Consultation</td>
-                </tr>
-                <tr>
-                    <td>Dec 07</td>
-                    <td>02:15 PM</td>
-                    <td>Demo Patient</td>
-                    <td>Follow-up</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
 
-<div class="lower-grid">
-    <!-- Reviews -->
-    <div class="card">
-        <div class="card-title-row">
+        <div class="availability-grid">
+            <!-- Today's Slots -->
             <div>
-                <h3>Recent Reviews</h3>
-                <div class="card-title-sub">Feedback from your patients</div>
-            </div>
-        </div>
+                <div class="activity-revenue-label">Today's Slots</div>
 
-        <div class="activity-feed">
-            <!-- demo reviews – later these will come from DoctorReview table -->
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--green"></span>
-                <div class="activity-main">
-                    “Very helpful and explained everything clearly.”
-                    <div class="activity-time">5 ★ · 2 days ago</div>
-                </div>
+                @if (Model.TodaySlots.Any())
+                {
+                    foreach (var slot in Model.TodaySlots)
+                    {
+                        <div class="slot-row">
+                            <div class="slot-main">
+                                <div class="slot-label">@slot.Label</div>
+                                <div class="slot-time">
+                                    @slot.StartTime.ToString(@"hh\:mm") –
+                                    @slot.EndTime.ToString(@"hh\:mm")
+                                </div>
+                            </div>
+                            <div class="slot-badge">
+                                @slot.SlotsRemaining slots left
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-muted">No schedule defined for today.</div>
+                }
             </div>
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--blue"></span>
-                <div class="activity-main">
-                    “Clinic was a bit crowded, but consultation was great.”
-                    <div class="activity-time">4 ★ · 4 days ago</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Quick actions -->
-    <div class="card">
-        <div class="card-title-row">
-            <div>
-                <h3>Quick Actions</h3>
-                <div class="card-title-sub">Frequently used shortcuts</div>
-            </div>
-        </div>
+            <!-- Upcoming Off Days -->
+            <div class="availability-offdays">
+                <div class="activity-revenue-label">Upcoming Off Days</div>
 
-        <div class="activity-feed">
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--purple"></span>
-                <div class="activity-main">
-                    Update weekly schedule
-                    <div class="activity-time">
-                        <a href="#" class="link-small">Manage schedule</a>
-                    </div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--orange"></span>
-                <div class="activity-main">
-                    Block off upcoming vacation days
-                    <div class="activity-time">
-                        <a href="#" class="link-small">Set unavailability</a>
-                    </div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--green"></span>
-                <div class="activity-main">
-                    Review recent payments
-                    <div class="activity-time">
-                        <a href="#" class="link-small">View revenue</a>
-                    </div>
-                </div>
+                @if (Model.UpcomingOffDays.Any())
+                {
+                    foreach (var off in Model.UpcomingOffDays)
+                    {
+                        <div class="offday-row">
+                            <div class="offday-date">
+                                @off.Date.ToString("dd MMM yyyy")
+                            </div>
+                            <div class="offday-reason">
+                                @(string.IsNullOrWhiteSpace(off.Reason) ? "—" : off.Reason)
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-muted">No upcoming off days configured.</div>
+                }
+
+                <a class="btn-pill btn-pill--outline"
+                   asp-controller="DoctorSchedule"
+                   asp-action="UnavailableDates">
+                    Manage Off Days
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // ===== REVENUE LINE CHART =====
+        const doctorRevLabels = @Html.Raw(JsonSerializer.Serialize(Model.RevenueMonthLabels));
+        const doctorRevValues = @Html.Raw(JsonSerializer.Serialize(Model.RevenueMonthValues));
+
+        const doctorRevCanvas = document.getElementById('doctorRevenueChart');
+        if (doctorRevCanvas && window.Chart) {
+            const ctx = doctorRevCanvas.getContext('2d');
+
+            const maxRev = doctorRevValues.length
+                ? Math.max(...doctorRevValues.map(v => Number(v) || 0))
+                : 0;
+            const yMax = maxRev > 0 ? maxRev * 1.2 : 1;
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 230);
+            gradient.addColorStop(0, 'rgba(79, 125, 255, 0.32)');
+            gradient.addColorStop(1, 'rgba(79, 125, 255, 0.02)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: doctorRevLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: doctorRevValues,
+                        fill: true,
+                        backgroundColor: gradient,
+                        borderColor: 'rgba(79, 125, 255, 1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#7b88b0', font: { size: 11 } }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMin: 0,
+                            suggestedMax: yMax,
+                            grid: { color: 'rgba(123, 136, 176, 0.15)' },
+                            ticks: { color: '#7b88b0', font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== STATUS DONUT CHART =====
+        const statusCanvas = document.getElementById('doctorStatusChart');
+        if (statusCanvas && window.Chart) {
+            const sctx = statusCanvas.getContext('2d');
+
+            new Chart(sctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Accepted', 'Remaining Today', 'Completed', 'Cancelled'],
+                    datasets: [{
+                        data: [
+                            @Model.TodayAcceptedCount,
+                            @Model.TodayRemainingCount,
+                            @Model.TodayCompletedCount,
+                            @Model.TodayCancelledCount
+                        ],
+                        backgroundColor: [
+                            'rgba(79, 125, 255, 0.9)',
+                            'rgba(255, 184, 76, 0.9)',
+                            'rgba(84, 201, 139, 0.9)',
+                            'rgba(255, 104, 120, 0.9)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                boxHeight: 8
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

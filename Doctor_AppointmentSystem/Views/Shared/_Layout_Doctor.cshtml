@@ -30,11 +30,14 @@
     <title>@(ViewData["Title"] ?? "Doctor Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- shared admin layout styles -->
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+    <!-- doctor-specific tweaks (charts etc.) -->
+    <link rel="stylesheet" href="~/css/doctor-dashboard.css" asp-append-version="true" />
 </head>
 <body>
     <div class="admin-layout">
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (unchanged) -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 @if (!string.IsNullOrEmpty(profileImagePath))
@@ -52,57 +55,128 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link active">
-                    <div class="nav-link-icon">🏠</div>
+                <!-- DASHBOARD -->
+                <a asp-controller="DoctorDashboard"
+                   asp-action="Index"
+                   class="nav-link active">
+                    <div class="nav-link-icon">📊</div>
                     <span>Dashboard</span>
                 </a>
 
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">📅</div>
-                    <span>Today's Schedule</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">🗓️</div>
-                    <span>Upcoming Appointments</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">⏱️</div>
-                    <span>My Weekly Schedule</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">💳</div>
-                    <span>My Revenue</span>
-                </a>
-
-                <a asp-controller="DoctorDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">⭐</div>
-                    <span>Reviews</span>
-                </a>
-
+                <!-- APPOINTMENTS DROPDOWN -->
                 <div class="nav-dropdown">
-    <div class="nav-dropdown-toggle" data-dropdown>
-        <div class="nav-dropdown-toggle-main">
-            <div class="nav-link-icon">⚙️</div>
-            <span>Settings</span>
-        </div>
-        <span class="nav-dropdown-arrow">▾</span>
-    </div>
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">📅</div>
+                            <span>Appointments</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
 
-    <div class="nav-submenu">
-        <a asp-controller="Settings"
-           asp-action="ChangePassword"
-           class="nav-link nav-link--sub">
-            Change Password
-        </a>
-        <!-- later you can add: My Profile, etc. -->
-    </div>
-</div>
+                    <div class="nav-submenu">
+                        <a asp-controller="DoctorAppointments"
+                           asp-action="Today"
+                           class="nav-link nav-link--sub">
+                            Today’s Appointments
+                        </a>
 
+                        <a asp-controller="DoctorAppointments"
+                           asp-action="Upcoming"
+                           class="nav-link nav-link--sub">
+                            Upcoming (Date-wise)
+                        </a>
 
-                
+                        <a asp-controller="DoctorAppointments"
+                           asp-action="History"
+                           class="nav-link nav-link--sub">
+                            Appointment History
+                        </a>
+                    </div>
+                </div>
+
+                <!-- SCHEDULE & AVAILABILITY DROPDOWN -->
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">🕒</div>
+                            <span>Schedule &amp; Availability</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
+
+                    <div class="nav-submenu">
+                        <a asp-controller="DoctorSchedule"
+                           asp-action="ManageSlots"
+                           class="nav-link nav-link--sub">
+                            Manage Time Slots
+                        </a>
+
+                        <a asp-controller="DoctorSchedule"
+                           asp-action="UnavailableDates"
+                           class="nav-link nav-link--sub">
+                            Closed / Unavailable Dates
+                        </a>
+
+                        <a asp-controller="DoctorSchedule"
+                           asp-action="MaxAppointmentsPerDay"
+                           class="nav-link nav-link--sub">
+                            Max Appointments Per Day
+                        </a>
+                    </div>
+                </div>
+
+                <!-- MY PATIENTS -->
+                <a asp-controller="DoctorPatients"
+                   asp-action="Index"
+                   class="nav-link">
+                    <div class="nav-link-icon">👥</div>
+                    <span>My Patients</span>
+                </a>
+
+                <!-- PATIENT REVIEWS -->
+                <a asp-controller="DoctorReviews"
+                   asp-action="Index"
+                   class="nav-link">
+                    <div class="nav-link-icon">⭐</div>
+                    <span>Patient Reviews</span>
+                </a>
+
+                <!-- REVENUE & CHARGES -->
+                <a asp-controller="DoctorRevenue"
+                   asp-action="Index"
+                   class="nav-link">
+                    <div class="nav-link-icon">💰</div>
+                    <span>Revenue &amp; Charges</span>
+                </a>
+
+                <!-- MY PROFILE -->
+                <a asp-controller="DoctorProfile"
+                   asp-action="MyProfile"
+                   class="nav-link">
+                    <div class="nav-link-icon">🧑‍⚕️</div>
+                    <span>My Profile</span>
+                </a>
+
+                <!-- SETTINGS -->
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">⚙️</div>
+                            <span>Settings</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
+
+                    <div class="nav-submenu">
+                        <a asp-controller="Settings"
+                           asp-action="ChangePassword"
+                           class="nav-link nav-link--sub">
+                            Change Password
+                        </a>
+                    </div>
+                </div>
+
+                <!-- LOGOUT -->
                 <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="nav-link nav-link-button">
@@ -113,8 +187,8 @@
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
+        <!-- MAIN (identical structure to Admin) -->
+        <main class="main">
             <header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menuToggle">☰</button>
@@ -123,7 +197,7 @@
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <div class="topbar-date">@DateTime.Now.ToString("Thursday, MMM dd, yyyy")</div>
+                    <div class="topbar-date" id="currentDate"></div>
                 </div>
             </header>
 
@@ -134,6 +208,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- same JS used by admin: handles currentDate + sidebar toggle -->
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>

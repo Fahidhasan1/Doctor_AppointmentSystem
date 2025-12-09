@@ -1,4 +1,4 @@
-﻿@model Doctor_AppointmentSystem.ViewModels.ReceptionistDashboardViewModel
+﻿@* @model Doctor_AppointmentSystem.ViewModels.ReceptionistDashboardViewModel
 
 @{
     ViewData["Title"] = "Receptionist Dashboard";
@@ -120,4 +120,64 @@
             </div>
         </div>
     </div>
+</div> *@
+
+@model Doctor_AppointmentSystem.ViewModels.ReceptionistDashboardViewModel
+
+@{
+    ViewData["Title"] = "Receptionist Dashboard";
+    Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
+}
+
+<!-- TOP STATS (same grid/card classes as Admin) -->
+<div class="stats-grid">
+    <!-- Total Appointments -->
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Appointments</div>
+                <div class="stat-value">@Model.TotalAppointments</div>
+            </div>
+            <div class="stat-icon">📊</div>
+        </div>
+        <div class="stat-sub">All-time booked appointments</div>
+    </div>
+
+    <!-- Today's Appointments -->
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Today's Appointments</div>
+                <div class="stat-value">@Model.TodaysAppointments</div>
+            </div>
+            <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-sub">Booked for today</div>
+    </div>
+
+    <!-- Today's Collections -->
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Today's Collections</div>
+                <div class="stat-value">৳ @Model.TodaysCollections.ToString("N0")</div>
+            </div>
+            <div class="stat-icon">💳</div>
+        </div>
+        <div class="stat-sub">bKash / Card / Cash</div>
+    </div>
+
+    <!-- Total Collection in Month -->
+    <div class="card stat-card">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Total Collection in Month</div>
+                <div class="stat-value">৳ @Model.MonthlyCollections.ToString("N0")</div>
+            </div>
+            <div class="stat-icon">📈</div>
+        </div>
+        <div class="stat-sub">Digital &amp; cash payments</div>
+    </div>
 </div>
+
+@* We’ll add the lower sections (tables/charts) next *@

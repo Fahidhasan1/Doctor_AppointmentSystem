@@ -246,7 +246,12 @@ body {
     position: relative;
     overflow: auto; /* keep this – this is the page’s scrollbar */
 }
-
+/*from minhaz              ////////////////////////////////////////////////////////////////////////////////////////
+.main-content {
+    flex: 1;
+    padding: 30px 40px 40px;
+    overflow: visible;
+}*/
 
     .main::before {
         content: "";
@@ -1356,3 +1361,5 @@ h2.page-title {
     color: #e55353;
     font-size: 12px;
 }
+
+ 

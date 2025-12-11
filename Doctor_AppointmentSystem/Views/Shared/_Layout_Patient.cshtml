@@ -12,29 +12,34 @@
 
     var userName = !string.IsNullOrWhiteSpace(fullName)
         ? fullName
-        : (currentUser?.UserName ?? "Doctor");
+        : (currentUser?.UserName ?? "Patient");
 
     var firstLetter = string.IsNullOrWhiteSpace(userName)
-        ? "D"
+        ? "P"
         : userName.Trim()[0].ToString().ToUpper();
 
     var profileImagePath = currentUser?.ProfileImagePath;
 
-    var pageTitle = ViewData["Title"] as string ?? "Doctor Dashboard";
+    var pageTitle = ViewData["Title"] as string ?? "Patient Dashboard";
 }
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>@(ViewData["Title"] ?? "Doctor Dashboard | Doctor Appointment System")</title>
+    <title>@(ViewData["Title"] ?? "Patient Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- shared admin layout styles (sidebar, cards, grids etc.) -->
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+
+    <!-- patient-specific dashboard content styles -->
+    <link rel="stylesheet" href="~/css/patient-dashboard.css" asp-append-version="true" />
 </head>
 <body>
     <div class="admin-layout">
-        <!-- SIDEBAR -->
+        <!-- SIDEBAR (same structure as Doctor/Admin) -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 @if (!string.IsNullOrEmpty(profileImagePath))
@@ -46,27 +51,53 @@
                     <div class="admin-avatar">@firstLetter</div>
                 }
 
-                <div class="sidebar-role">Patient</div>
+                <div class="sidebar-role">PATIENT</div>
                 <div class="sidebar-username">@userName</div>
-                <div class="sidebar-subtitle">Sunshine Hospital</div>
+                <div class="sidebar-subtitle">Doctor Appointment System</div>
             </div>
 
             <nav class="sidebar-nav">
-                <a asp-controller="PatientDashboard" asp-action="Index" class="nav-link active">
-                    <div class="nav-link-icon">🏠</div>
+                <!-- DASHBOARD -->
+                <a asp-controller="PatientDashboard"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientDashboard" ? "active" : "")">
+                    <div class="nav-link-icon">📊</div>
                     <span>Dashboard</span>
                 </a>
 
-                <a asp-controller="PatientDashboard" asp-action="Index" class="nav-link">
+                <!-- BOOK APPOINTMENT -->
+                <a asp-controller="DoctorAppointments"
+                   asp-action="FindDoctor"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "DoctorAppointments" ? "active" : "")">
                     <div class="nav-link-icon">📅</div>
+                    <span>Book Appointment</span>
+                </a>
+
+                <!-- MY APPOINTMENTS -->
+                <a asp-controller="PatientAppointments"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientAppointments" ? "active" : "")">
+                    <div class="nav-link-icon">📆</div>
                     <span>My Appointments</span>
                 </a>
 
-                <a asp-controller="PatientDashboard" asp-action="Index" class="nav-link">
-                    <div class="nav-link-icon">💳</div>
-                    <span>Payments</span>
+                <!-- NOTIFICATIONS -->
+                <a asp-controller="PatientNotifications"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientNotifications" ? "active" : "")">
+                    <div class="nav-link-icon">🔔</div>
+                    <span>Notifications</span>
                 </a>
 
+                <!-- PROFILE -->
+                <a asp-controller="PatientProfile"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientProfile" ? "active" : "")">
+                    <div class="nav-link-icon">👤</div>
+                    <span>My Profile</span>
+                </a>
+
+                <!-- SETTINGS DROPDOWN -->
                 <div class="nav-dropdown">
                     <div class="nav-dropdown-toggle" data-dropdown>
                         <div class="nav-dropdown-toggle-main">
@@ -78,26 +109,37 @@
 
                     <div class="nav-submenu">
                         <a asp-controller="Settings"
+                           asp-action="Index"
+                           class="nav-link nav-link--sub">
+                            General Settings
+                        </a>
+
+                        <a asp-controller="Settings"
                            asp-action="ChangePassword"
                            class="nav-link nav-link--sub">
                             Change Password
                         </a>
-                        <!-- later you can add: My Profile, etc. -->
                     </div>
                 </div>
 
-                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
-                    @Html.AntiForgeryToken()
-                    <button type="submit" class="nav-link nav-link-button">
-                        <div class="nav-link-icon">🚪</div>
-                        <span>Logout</span>
-                    </button>
-                </form>
+                <!-- LOGOUT -->
+                @if (User?.Identity?.IsAuthenticated ?? false)
+                {
+                    <form asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          method="post">
+                        <button type="submit" class="nav-link nav-link-button">
+                            <div class="nav-link-icon">↩</div>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                }
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
+        <!-- MAIN (identical structure to Admin/Doctor) -->
+        <main class="main">
             <header class="topbar">
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menuToggle">☰</button>
@@ -106,7 +148,7 @@
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <div class="topbar-date">@DateTime.Now.ToString("Thursday, MMM dd, yyyy")</div>
+                    <div class="topbar-date" id="currentDate"></div>
                 </div>
             </header>
 
@@ -117,7 +159,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- shared JS used by admin/doctor: handles currentDate & sidebar toggle -->
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>

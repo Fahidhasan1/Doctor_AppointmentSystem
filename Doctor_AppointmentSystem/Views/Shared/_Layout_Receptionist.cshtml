@@ -29,13 +29,19 @@
     <meta charset="utf-8" />
     <title>@(ViewData["Title"] ?? "Receptionist Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Google font (same as admin/doctor) -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <!-- same CSS as Admin/Doctor -->
+
+    <!-- Shared admin/doctor layout & card styles -->
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
+
+    <!-- Receptionist-specific tweaks (grids, spacing, etc.) -->
+    <link rel="stylesheet" href="~/css/receptionist-dashboard.css" asp-append-version="true" />
 </head>
 <body>
     <div class="admin-layout">
-        <!-- SIDEBAR -->
+        <!-- ===== SIDEBAR ===== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 @if (!string.IsNullOrEmpty(profileImagePath))
@@ -48,50 +54,89 @@
                 }
 
                 <div class="sidebar-role">RECEPTIONIST</div>
-                <div class="sidebar-username">@userName</div>
-                <div class="sidebar-subtitle">Sunshine Hospital</div>
+
+                <div class="sidebar-username">
+                    @userName
+                </div>
+
+                <div class="sidebar-subtitle">
+                    Sunshine Hospital
+                </div>
             </div>
 
             <nav class="sidebar-nav">
-                <!-- Dashboard -->
-                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link active">
+                <!-- DASHBOARD -->
+                <a asp-controller="ReceptionistDashboard"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ReceptionistDashboard" ? "active" : "")">
                     <div class="nav-link-icon">🏠</div>
                     <span>Dashboard</span>
                 </a>
 
-                <!-- New Booking -->
-                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                <!-- NEW BOOKING -->
+                <a asp-controller="ReceptionistBooking"
+                   asp-action="Index"
+                   class="nav-link">
                     <div class="nav-link-icon">➕</div>
                     <span>New Booking</span>
                 </a>
 
-                <!-- Instant Patient Registration -->
-                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                <!-- INSTANT PATIENT REGISTRATION -->
+                <a asp-controller="ReceptionistPatient"
+                   asp-action="InstantRegistration"
+                   class="nav-link">
                     <div class="nav-link-icon">⚡</div>
                     <span>Instant Patient Registration</span>
                 </a>
 
-                <!-- Payments & Receipts -->
-                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                <!-- PAYMENTS & RECEIPTS -->
+                <a asp-controller="ReceptionistPayments"
+                   asp-action="Index"
+                   class="nav-link">
                     <div class="nav-link-icon">💳</div>
                     <span>Payments &amp; Receipts</span>
                 </a>
 
-                <!-- My Profile -->
-                <a asp-controller="ReceptionistDashboard" asp-action="Index" class="nav-link">
+                <!-- MY PROFILE -->
+                <a asp-controller="ReceptionistProfile"
+                   asp-action="MyProfile"
+                   class="nav-link">
                     <div class="nav-link-icon">👤</div>
                     <span>My Profile</span>
                 </a>
 
-                <!-- Settings (uses existing Settings controller) -->
-                <a asp-controller="Settings" asp-action="ChangePassword" class="nav-link">
-                    <div class="nav-link-icon">⚙️</div>
-                    <span>Settings</span>
-                </a>
+                <!-- SETTINGS DROPDOWN (similar to doctor/admin) -->
+                <div class="nav-dropdown">
+                    <div class="nav-dropdown-toggle" data-dropdown>
+                        <div class="nav-dropdown-toggle-main">
+                            <div class="nav-link-icon">⚙️</div>
+                            <span>Settings</span>
+                        </div>
+                        <span class="nav-dropdown-arrow">▾</span>
+                    </div>
 
-                <!-- Logout -->
-                <form asp-controller="Account" asp-action="Logout" method="post" class="nav-link nav-link--danger">
-                    <button type="submit">
+                    <div class="nav-submenu">
+                        <a asp-controller="Settings"
+                           asp-action="ChangePassword"
+                           class="nav-link nav-link--sub">
+                            Change Password
+                        </a>
+
+                        <a asp-controller="Settings"
+                           asp-action="NotificationPreferences"
+                           class="nav-link nav-link--sub">
+                            Notification Preferences
+                        </a>
+                    </div>
+                </div>
+
+                <!-- LOGOUT -->
+                <form asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="~/"
+                      method="post"
+                      class="sidebar-logout">
+                    <button type="submit" class="nav-link nav-link--logout">
                         <div class="nav-link-icon">🚪</div>
                         <span>Logout</span>
                     </button>
@@ -99,17 +144,17 @@
             </nav>
         </aside>
 
-        <!-- MAIN CONTENT (identical structure to Doctor/Admin) -->
-        <main class="main-content">
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main">
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="menu-toggle" id="menuToggle">☰</button>
-                    <div>
-                        <div class="topbar-title">@pageTitle</div>
-                    </div>
+                    <button id="menuToggle" class="menu-toggle" type="button">
+                        ☰
+                    </button>
+                    <div class="topbar-title">@pageTitle</div>
                 </div>
                 <div class="topbar-right">
-                    <div class="topbar-date">@DateTime.Now.ToString("dddd, MMM dd, yyyy")</div>
+                    <div class="topbar-date" id="currentDate"></div>
                 </div>
             </header>
 
@@ -119,7 +164,7 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Same JS used by admin/doctor: handles current date + sidebar toggles -->
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>

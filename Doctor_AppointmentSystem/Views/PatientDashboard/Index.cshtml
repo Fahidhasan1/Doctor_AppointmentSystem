@@ -5,153 +5,454 @@
     Layout = "~/Views/Shared/_Layout_Patient.cshtml";
 }
 
+<!-- ============ TOP STATS (same structure as Admin/Doctor) ============ -->
 <div class="stats-grid">
+    <!-- UPCOMING APPOINTMENTS -->
     <div class="card stat-card">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Upcoming Appointments</div>
                 <div class="stat-value">@Model.UpcomingAppointments</div>
             </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-calendar"></i>
+            </div>
         </div>
-        <div class="stat-sub">From today onwards</div>
+        <div class="stat-sub">Within next 7 days</div>
     </div>
 
+    <!-- COMPLETED VISITS -->
     <div class="card stat-card">
         <div class="stat-card-header">
             <div>
-                <div class="stat-title">Completed</div>
-                <div class="stat-value">@Model.CompletedAppointments</div>
+                <div class="stat-title">Completed Visits</div>
+                <div class="stat-value">@Model.CompletedVisits</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-circle-check"></i>
             </div>
         </div>
-        <div class="stat-sub">All time completed visits</div>
+        <div class="stat-sub">All time completed</div>
     </div>
 
+    <!-- CANCELLED / MISSED -->
     <div class="card stat-card">
         <div class="stat-card-header">
             <div>
-                <div class="stat-title">Cancelled</div>
-                <div class="stat-value">@Model.CancelledAppointments</div>
+                <div class="stat-title">Cancelled / Missed</div>
+                <div class="stat-value">@Model.CancelledOrMissed</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
-        <div class="stat-sub">Cancelled or missed</div>
+        <div class="stat-sub">Cancelled or no-show</div>
     </div>
 
+    <!-- DIGITAL PAYMENTS -->
     <div class="card stat-card">
         <div class="stat-card-header">
             <div>
-                <div class="stat-title">Total Appointments</div>
-                <div class="stat-value">@Model.TotalAppointments</div>
+                <div class="stat-title">Digital Payments</div>
+                <div class="stat-value">৳@Model.DigitalPaymentsTotal.ToString("0")</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-credit-card"></i>
             </div>
         </div>
-        <div class="stat-sub">All bookings made</div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Pending Payments</div>
-                <div class="stat-value">@Model.PendingPayments</div>
-            </div>
-        </div>
-        <div class="stat-sub">Appointments waiting for payment</div>
-    </div>
-
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Total Paid</div>
-                <div class="stat-value">৳@Model.TotalPaid.ToString("0")</div>
-            </div>
-        </div>
-        <div class="stat-sub">All successful payments</div>
+        <div class="stat-sub">Paid via bKash &amp; cards</div>
     </div>
 </div>
 
-<div class="charts-grid">
-    <div class="card">
-        <div class="card-title-row">
-            <div>
-                <h3>Next Appointment</h3>
-                <div class="card-title-sub">
-                    @if (Model.NextAppointmentDate.HasValue)
-                    {
-                        @Model.NextAppointmentDate.Value.ToString("dddd, MMM dd yyyy - hh:mm tt")
-                    }
-                    else
-                    {
-                        <span>No upcoming appointments.</span>
-                    }
+<!-- ============ FIND YOUR DOCTOR (like your demo) ============ -->
+<div class="patient-find-doctor-section mt-4">
+    <div class="section-heading-centered">
+        <h2>Find Your Doctor</h2>
+        <p>Search and filter doctors, then book an appointment in just a few clicks.</p>
+    </div>
+
+    <!-- Filter Bar Card -->
+    <div class="card patient-filters-card">
+        <form asp-action="Index" method="get" id="doctorFilterForm" class="doctor-filter-form">
+            <div class="doctor-filter-grid">
+                <div class="filter-item">
+                    <label class="form-label">Doctor Name</label>
+                    <input type="text"
+                           name="doctorNameFilter"
+                           value="@Model.DoctorNameFilter"
+                           class="form-control"
+                           placeholder="e.g. Rahman" />
+                </div>
+
+                <div class="filter-item">
+                    <label class="form-label">Specialty</label>
+                    <select name="specialtyIdFilter" class="form-select">
+                        @foreach (var opt in Model.SpecialtyOptions)
+                        {
+                            <option value="@opt.Value" selected="@(opt.Selected)">
+                                @opt.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label class="form-label">Experience</label>
+                    <select name="experienceFilter" class="form-select">
+                        @foreach (var opt in Model.ExperienceOptions)
+                        {
+                            <option value="@opt.Value" selected="@(opt.Selected)">
+                                @opt.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-reset">
+                    <a asp-action="Index" class="btn btn-outline-light reset-filters-btn">
+                        Reset Filters
+                    </a>
                 </div>
             </div>
+        </form>
+    </div>
+
+    <!-- Doctor Cards Grid -->
+    <div class="doctor-cards-wrapper">
+        @if (Model.Doctors != null && Model.Doctors.Count > 0)
+        {
+            <div class="doctor-card-grid">
+                @foreach (var doctor in Model.Doctors)
+                {
+                    var initials = string.IsNullOrWhiteSpace(doctor.FullName)
+                    ? "?"
+                    : doctor.FullName.Trim()[0].ToString().ToUpper();
+
+                    <div class="card doctor-card">
+                        <div class="doctor-card-inner">
+                            <div class="doctor-avatar">
+                                @if (!string.IsNullOrWhiteSpace(doctor.ProfileImagePath))
+                                {
+                                    <img src="@Url.Content(doctor.ProfileImagePath)"
+                                         alt="@doctor.FullName"
+                                         class="avatar-img" />
+                                }
+                                else
+                                {
+                                    <div class="avatar-initial-circle">
+                                        <span>@initials</span>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="doctor-info">
+                                <div class="doctor-name">@doctor.FullName</div>
+                                <div class="doctor-specialty">@doctor.PrimarySpecialty</div>
+                                <div class="doctor-experience">@doctor.ExperienceText</div>
+                                @* Clinic/hospital info is optional *@
+                                @if (!string.IsNullOrWhiteSpace(doctor.ClinicInfo))
+                                {
+                                    <div class="doctor-clinic">@doctor.ClinicInfo</div>
+                                }
+
+                                <div class="doctor-rating">
+                                    <span class="rating-star">★</span>
+                                    <span class="rating-value">
+                                        @doctor.AverageRating.ToString("0.0")
+                                    </span>
+                                    <span class="rating-reviews">
+                                        (@doctor.ReviewCount @("reviews"))
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="doctor-card-footer">
+                                <a asp-controller="DoctorAppointments"
+                                   asp-action="AvailableSlots"
+                                   asp-route-doctorProfileId="@doctor.DoctorProfileId"
+                                   class="btn doctor-view-slots-btn">
+                                    View Slots
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination like your demo -->
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="doctor-pagination">
+                    <ul class="pagination justify-content-center">
+                        @{
+                            var current = Model.CurrentPage;
+                            var total = Model.TotalPages;
+                        }
+
+                        <li class="page-item @(current == 1 ? "disabled" : "")">
+                            <a class="page-link page-link-arrow"
+                               asp-action="Index"
+                               asp-route-page="@(current - 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter">
+                                ‹
+                            </a>
+                        </li>
+
+                        @for (int i = 1; i <= Model.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == current ? "active" : "")">
+                                <a class="page-link page-link-circle"
+                                   asp-action="Index"
+                                   asp-route-page="@i"
+                                   asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                                   asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                                   asp-route-experienceFilter="@Model.ExperienceFilter">
+                                    @i
+                                </a>
+                            </li>
+                        }
+
+                        <li class="page-item @(current == total ? "disabled" : "")">
+                            <a class="page-link page-link-arrow"
+                               asp-action="Index"
+                               asp-route-page="@(current + 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter">
+                                ›
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="no-data-message">
+                No doctors found for the selected filters.
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ============ LOWER GRID: APPOINTMENTS + NOTIFICATIONS (demo style) ============ -->
+<div class="lower-grid patient-lower-grid mt-4">
+    <!-- My Appointments preview -->
+    <div class="card patient-appointments-card">
+        <div class="card-title-row">
+            <div>
+                <h3>My Appointments</h3>
+                <div class="card-title-sub">
+                    View upcoming, completed and cancelled appointments with payment status.
+                </div>
+            </div>
+            <div class="appointments-tabs">
+                <span class="badge filter-pill active">All</span>
+                <span class="badge filter-pill">Upcoming</span>
+                <span class="badge filter-pill">Completed</span>
+                <span class="badge filter-pill">Cancelled</span>
+            </div>
+        </div>
+
+        @if (Model.Appointments != null && Model.Appointments.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Specialty</th>
+                            <th>Date &amp; Time</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Receipt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var appt in Model.Appointments)
+                        {
+                            <tr>
+                                <td>@appt.DoctorName</td>
+                                <td>@appt.SpecialtyName</td>
+                                <td>@appt.AppointmentDateTime.ToString("dd MMM yyyy, h:mm tt")</td>
+                                <td>
+                                    <span class="status-pill status-@appt.Status.ToString().ToLower()">
+                                        @appt.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (appt.IsRefunded)
+                                    {
+                                        <span class="payment-pill payment-refunded">
+                                            Refunded
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="payment-pill payment-@appt.PaymentStatus.ToString().ToLower()">
+                                            @appt.PaymentStatus
+                                            @if (appt.PaymentMethod.HasValue)
+                                            {
+                                                <span> (@appt.PaymentMethod)</span>
+                                            }
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="actions-column">
+                                        @if (appt.CanViewReceipt)
+                                        {
+                                            <a asp-controller="Payments"
+                                               asp-action="ViewReceipt"
+                                               asp-route-appointmentId="@appt.AppointmentId"
+                                               class="table-link">
+                                                View Receipt
+                                            </a>
+                                        }
+                                        @if (appt.CanPayNow)
+                                        {
+                                            <a asp-controller="Payments"
+                                               asp-action="PayNow"
+                                               asp-route-appointmentId="@appt.AppointmentId"
+                                               class="table-link">
+                                                Pay Now
+                                            </a>
+                                        }
+                                        @if (appt.CanDownloadReceipt)
+                                        {
+                                            <a asp-controller="Payments"
+                                               asp-action="DownloadReceipt"
+                                               asp-route-appointmentId="@appt.AppointmentId"
+                                               class="table-link">
+                                                Download
+                                            </a>
+                                        }
+                                        @if (appt.CanViewDetails)
+                                        {
+                                            <a asp-controller="PatientAppointments"
+                                               asp-action="Details"
+                                               asp-route-id="@appt.AppointmentId"
+                                               class="table-link">
+                                                View Details
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="no-data-message">
+                You don't have any appointments to show here yet.
+            </div>
+        }
+
+        <div class="card-footer-link">
+            <a asp-controller="PatientAppointments"
+               asp-action="Index"
+               class="view-all-link">
+                View all appointments →
+            </a>
         </div>
     </div>
 
-    <div class="card">
+    <!-- Notifications preview -->
+    <div class="card patient-notifications-card">
         <div class="card-title-row">
             <div>
-                <h3>Last Appointment</h3>
+                <h3>Notifications &amp; Reminders</h3>
                 <div class="card-title-sub">
-                    @if (Model.LastAppointmentDate.HasValue)
-                    {
-                        @Model.LastAppointmentDate.Value.ToString("dddd, MMM dd yyyy - hh:mm tt")
-                    }
-                    else
-                    {
-                        <span>No completed appointments yet.</span>
-                    }
+                    Email and SMS alerts for bookings, cancellations and payments.
                 </div>
             </div>
+        </div>
+
+        @if (Model.Notifications != null && Model.Notifications.Count > 0)
+        {
+            <div class="notifications-list">
+                @foreach (var note in Model.Notifications)
+                {
+                    <div class="notification-item">
+                        <div class="notification-icon-bubble">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="notification-main">
+                            <div class="notification-title">@note.Title</div>
+                            <div class="notification-message">@note.Message</div>
+                            <div class="notification-meta">
+                                @note.CreatedAt.ToString("dd MMM yyyy, h:mm tt")
+                            </div>
+                        </div>
+                        <div class="notification-badge">
+                            @{
+                                var isNew = (DateTime.Now - note.CreatedAt).TotalHours < 24;
+                            }
+
+                            @if (note.IsImportant)
+                            {
+                                <span class="badge notification-pill pill-important">Important</span>
+                            }
+                            else if (isNew)
+                            {
+                                <span class="badge notification-pill pill-new">New</span>
+                            }
+                            else
+                            {
+                                <span class="badge notification-pill pill-viewed">Viewed</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="no-data-message">
+                No notifications yet. We'll show your alerts here.
+            </div>
+        }
+
+        <div class="card-footer-link">
+            <a asp-controller="PatientNotifications"
+               asp-action="Index"
+               class="view-all-link">
+                View all notifications →
+            </a>
         </div>
     </div>
 </div>
 
-<div class="lower-grid">
-    <div class="card">
-        <div class="card-title-row">
-            <div>
-                <h3>Notifications</h3>
-                <div class="card-title-sub">
-                    You have @Model.NotificationCount notification(s) in your account.
-                </div>
-            </div>
-        </div>
+@section Scripts {
+    <!-- Live search & auto filter submit -->
+    <script>
+        (function () {
+            const form = document.getElementById("doctorFilterForm");
+            if (!form) return;
 
-        <p style="margin-top: 12px;">
-            Later we can list the latest SMS / email messages here (appointment confirmation,
-            reminders, cancellations, etc.).
-        </p>
-    </div>
+            const nameInput = form.querySelector("input[name='doctorNameFilter']");
+            const selects = form.querySelectorAll("select[name='specialtyIdFilter'], select[name='experienceFilter']");
+            let typingTimer;
 
-    <div class="card">
-        <div class="card-title-row">
-            <div>
-                <h3>Quick Actions</h3>
-                <div class="card-title-sub">Frequently used patient actions</div>
-            </div>
-        </div>
+            if (nameInput) {
+                nameInput.addEventListener("input", function () {
+                    clearTimeout(typingTimer);
+                    typingTimer = setTimeout(function () {
+                        form.submit();
+                    }, 400); // live search delay
+                });
+            }
 
-        <div class="activity-feed">
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--blue"></span>
-                <div class="activity-main">
-                    Book a new appointment
-                    <div class="activity-time"><a href="#" class="link-small">Search doctors</a></div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--green"></span>
-                <div class="activity-main">
-                    View all my appointments
-                    <div class="activity-time"><a href="#" class="link-small">Go to appointment history</a></div>
-                </div>
-            </div>
-            <div class="activity-item">
-                <span class="activity-dot activity-dot--purple"></span>
-                <div class="activity-main">
-                    Update profile information
-                    <div class="activity-time"><a href="#" class="link-small">Edit my profile</a></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+            selects.forEach(function (sel) {
+                sel.addEventListener("change", function () {
+                    form.submit();
+                });
+            });
+        })();
+    </script>
+}

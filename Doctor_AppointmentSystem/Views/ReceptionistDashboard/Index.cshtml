@@ -10,56 +10,48 @@
 <!-- ====== TOP STATS ROW (same structure as Admin/Doctor) ====== -->
 <div class="stats-grid">
     <!-- Total Appointments -->
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div class="stat-title">Total Appointments</div>
-            <div class="stat-value">@Model.TotalAppointments</div>
-        </div>
+    <div class="card stat-card rcp-stat-card">
+        <div class="stat-title">Total Appointments</div>
+        <div class="stat-value">@Model.TotalAppointments</div>
         <div class="stat-sub">All-time booked appointments</div>
     </div>
 
     <!-- Today's Appointments -->
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div class="stat-title">Today's Appointments</div>
-            <div class="stat-value">@Model.TodaysAppointments</div>
-        </div>
+    <div class="card stat-card rcp-stat-card">
+        <div class="stat-title">Today's Appointments</div>
+        <div class="stat-value">@Model.TodaysAppointments</div>
         <div class="stat-sub">Booked for today</div>
     </div>
 
     <!-- Today's Collections -->
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div class="stat-title">Today's Collections</div>
-            <div class="stat-value">৳ @Model.TodaysCollections.ToString("N0")</div>
-        </div>
+    <div class="card stat-card rcp-stat-card">
+        <div class="stat-title">Today's Collections</div>
+        <div class="stat-value">৳ @Model.TodaysCollections.ToString("N0")</div>
         <div class="stat-sub">bKash / Card / Cash</div>
     </div>
 
     <!-- Monthly Collections -->
-    <div class="card stat-card">
-        <div class="stat-card-header">
-            <div class="stat-title">Total Collection in Month</div>
-            <div class="stat-value">৳ @Model.MonthlyCollections.ToString("N0")</div>
-        </div>
-        <div class="stat-sub">Digital &amp; cash payments this month</div>
+    <div class="card stat-card rcp-stat-card">
+        <div class="stat-title">Total Collection</div>
+        <div class="stat-value">৳ @Model.MonthlyCollections.ToString("N0")</div>
+        <div class="stat-sub">Digital &amp; cash payments</div>
     </div>
 </div>
 
 
 <!-- ====== FIND YOUR DOCTOR SECTION (matches demo design) ====== -->
+<!-- ====== FIND YOUR DOCTOR SECTION ====== -->
 <section class="doctor-search-section">
-    <h2 class="doctor-search-title">Find Your Doctor</h2>
+    <h2 class="doctor-search-title text-center">Find Your Doctor</h2>
 
     <!-- FILTER BAR -->
     <div class="doctor-search-card">
         <form asp-action="Index"
-              asp-controller="ReceptionistDashboard"
               method="get"
               class="doctor-search-form"
               id="doctorFilterForm">
 
-            <!-- Doctor Name -->
+            <!-- Doctor Name (live search) -->
             <div class="doctor-search-field">
                 <label>Doctor Name</label>
                 <input type="text"
@@ -72,7 +64,13 @@
             <div class="doctor-search-field">
                 <label>Specialty</label>
                 <select name="specialtyId"
-                        asp-items="Model.SpecialtyOptions">
+                        onchange="document.getElementById('doctorFilterForm').submit()">
+                    @foreach (var option in Model.SpecialtyOptions)
+                    {
+                        <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
+                            @option.Text
+                        </option>
+                    }
                 </select>
             </div>
 
@@ -80,7 +78,13 @@
             <div class="doctor-search-field">
                 <label>Experience</label>
                 <select name="experience"
-                        asp-items="Model.ExperienceOptions">
+                        onchange="document.getElementById('doctorFilterForm').submit()">
+                    @foreach (var option in Model.ExperienceOptions)
+                    {
+                        <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
+                            @option.Text
+                        </option>
+                    }
                 </select>
             </div>
 
@@ -88,55 +92,63 @@
             <div class="doctor-search-field doctor-search-actions">
                 <label>&nbsp;</label>
                 <a asp-action="Index"
-                   asp-controller="ReceptionistDashboard"
                    class="btn-reset btn-reset-full">
                     Reset Filters
                 </a>
             </div>
         </form>
-
     </div>
 
-    <!-- DOCTOR CARDS -->
-    <div class="doctor-card-grid">
+    <!-- DOCTOR CARDS – 3 per row, 2 rows (controller should page to 6) -->
+    <div class="doctor-card-grid doctor-card-grid-three">
         @if (Model.Doctors != null && Model.Doctors.Any())
         {
             foreach (var d in Model.Doctors)
             {
-                <div class="doctor-card">
-                    <div class="doctor-card-header">
-                        <div class="doctor-avatar-wrap">
-                            @if (!string.IsNullOrEmpty(d.ProfileImagePath))
-                            {
-                                <img src="@d.ProfileImagePath"
-                                     alt="@d.FullName"
-                                     class="doctor-avatar-img" />
-                            }
-                            else
-                            {
-                                var initial = string.IsNullOrWhiteSpace(d.FullName)
-                                ? "?"
-                                : d.FullName.Trim()[0].ToString().ToUpper();
+                <div class="doctor-card doctor-card-large">
+                    <!-- Photo -->
+                    <div class="doctor-card-photo">
+                        @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                        {
+                            <img src="@Url.Content(d.ProfileImagePath)"
+                                 alt="@d.FullName" />
+                        }
+                        else
+                        {
+                            var initial = string.IsNullOrWhiteSpace(d.FullName)
+                            ? "?"
+                            : d.FullName.Trim()[0].ToString().ToUpper();
 
-                                <div class="doctor-avatar-placeholder">
-                                    @initial
-                                </div>
-                            }
-                        </div>
-
-                        <div class="doctor-info">
-                            <h3 class="doctor-name">@d.FullName</h3>
-                            <div class="doctor-specialty">@d.PrimarySpecialty</div>
-                            <div class="doctor-meta">@d.ExperienceText</div>
-                            <div class="doctor-meta">@d.ClinicInfo</div>
-                        </div>
+                            <div class="doctor-photo-fallback">
+                                @initial
+                            </div>
+                        }
                     </div>
 
-                    @if (!string.IsNullOrWhiteSpace(d.Bio))
-                    {
-                        <p class="doctor-bio">@d.Bio</p>
-                    }
+                    <div class="doctor-info">
+                        <h3 class="doctor-name">@d.FullName</h3>
+                        <div class="doctor-specialty">@d.PrimarySpecialty</div>
 
+                        <div class="doctor-meta">
+                            @d.ExperienceText
+                        </div>
+
+                        <div class="doctor-meta">
+                            @d.ClinicInfo
+                        </div>
+
+                        @* NEW: show Qualification instead of Bio *@
+                        @if (!string.IsNullOrWhiteSpace(d.Qualification))
+                        {
+                            <div class="doctor-qualification">
+                                @d.Qualification
+                            </div>
+                        }
+                    </div>
+
+
+
+                    <!-- Rating + action -->
                     <div class="doctor-card-footer">
                         <div class="doctor-rating">
                             <span class="doctor-rating-star">★</span>
@@ -184,15 +196,15 @@
                     </li>
                 }
 
-                @for (int i = 1; i <= Model.TotalPages; i++)
+                @for (int p = 1; p <= Model.TotalPages; p++)
                 {
-                    <li class="@(Model.CurrentPage == i ? "active" : "")">
+                    <li class="@(Model.CurrentPage == p ? "active" : "")">
                         <a asp-action="Index"
-                           asp-route-page="@i"
+                           asp-route-page="@p"
                            asp-route-doctorName="@Model.DoctorNameFilter"
                            asp-route-specialtyId="@Model.SpecialtyIdFilter"
                            asp-route-experience="@Model.ExperienceFilter">
-                            @i
+                            @p
                         </a>
                     </li>
                 }
@@ -213,6 +225,7 @@
         </nav>
     }
 </section>
+
 
 <!-- ====== BOTTOM SECTION: TODAY'S APPOINTMENTS + ALERTS ====== -->
 <section class="bottom-section">

@@ -50,15 +50,31 @@ namespace Doctor_AppointmentSystem.ViewModels
         public class DoctorCardItem
         {
             public int DoctorProfileId { get; set; }
+
             public string FullName { get; set; } = string.Empty;
+
             public string PrimarySpecialty { get; set; } = string.Empty;
+
             public string ExperienceText { get; set; } = string.Empty;
-            public string ClinicInfo { get; set; } = string.Empty;
-            public string Bio { get; set; } = string.Empty;
-            public string ProfileImagePath { get; set; } = string.Empty;
+
+            public string? ClinicInfo { get; set; }
+
+            /// <summary>
+            /// NEW: Doctor academic / professional qualification.
+            /// Comes from DoctorProfile.Qualification
+            /// </summary>
+            public string? Qualification { get; set; }
+
+            public string? Bio { get; set; }
+
+            public string? ProfileImagePath { get; set; }
+
             public double AverageRating { get; set; }
+
             public int ReviewCount { get; set; }
         }
+
+
 
         public class TodaysAppointmentRow
         {

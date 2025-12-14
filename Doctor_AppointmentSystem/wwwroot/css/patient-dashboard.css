@@ -7,275 +7,323 @@
     padding-bottom: 32px;
 }
 
-/* ---------- Section Heading (centered "Find Your Doctor") ---------- */
+/* ============================================================
+   PATIENT DASHBOARD — FIND YOUR DOCTOR (same as receptionist)
+   Only affects the Find Doctor portion
+   ============================================================ */
 
-.patient-find-doctor-section {
-    margin-top: 24px;
+/* Section spacing */
+.doctor-search-section {
+    margin-top: 40px;
 }
 
-    .patient-find-doctor-section .section-heading-centered {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-.section-heading-centered h2 {
-    font-size: 1.4rem;
+/* Centered title */
+.doctor-search-title {
+    font-size: 26px;
     font-weight: 700;
-    color: #111827;
-    margin-bottom: 4px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
-.section-heading-centered p {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-/* ---------- Filter Bar Card ---------- */
-
-.patient-filters-card {
+/* Filter container */
+.doctor-search-card {
+    background: #ffffff;
     border-radius: 24px;
-    /* extra softness like your demo */
+    padding: 26px;
+    box-shadow: 0 16px 36px rgba(105, 123, 180, 0.14);
+    border: 1px solid rgba(220, 225, 255, 0.9);
 }
 
-.doctor-filter-form {
-    padding: 20px 26px;
-}
-
-.doctor-filter-grid {
+/* 4 evenly-spaced filter columns */
+.doctor-search-form {
     display: grid;
-    grid-template-columns: 1.6fr 1.2fr 1.2fr auto; /* proportioned like demo */
-    column-gap: 24px;
-    row-gap: 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
     align-items: flex-end;
 }
 
-.doctor-filter-form .form-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #4b5563;
-    margin-bottom: 6px;
+/* field */
+.doctor-search-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.doctor-filter-form .form-control,
-.doctor-filter-form .form-select {
+    /* label centered above input */
+    .doctor-search-field label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #7c84a0;
+        letter-spacing: 0.03em;
+        text-align: center;
+        display: block;
+    }
+
+    /* inputs */
+    .doctor-search-field input,
+    .doctor-search-field select {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px solid #e4e7f5;
+        padding: 10px 16px;
+        font-size: 14px;
+        color: #111827;
+        background: #ffffff;
+        outline: none;
+    }
+
+        .doctor-search-field input:focus,
+        .doctor-search-field select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+        }
+
+/* Reset button (no underline) */
+.btn-reset-full {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 999px;
-    font-size: 0.9rem;
-    padding: 10px 16px;
-}
-
-.filter-reset {
-    text-align: right;
-}
-
-.reset-filters-btn {
-    border-radius: 999px;
-    font-size: 0.9rem;
+    border: 1px solid #cad0f5;
+    padding: 10px 0;
+    width: 100%;
+    font-size: 14px;
     font-weight: 600;
-    padding: 10px 18px;
-    border: 1px solid #d1d5db;
+    color: #4f46e5;
     background: #ffffff;
-    white-space: nowrap;
+    text-decoration: none;
 }
 
-/* ---------- Doctor Cards Grid (4 x 2 like demo) ---------- */
+    .btn-reset-full:hover {
+        background: #eff1ff;
+        text-decoration: none;
+    }
 
-.doctor-cards-wrapper {
-    margin-top: 18px;
-}
+
+/* ============================================================
+   DOCTOR GRID — 3 per row (6 per page recommended)
+   ============================================================ */
 
 .doctor-card-grid {
+    margin-top: 28px;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)); /* 4 per row on desktop */
-    gap: 18px;
+    gap: 24px;
 }
 
-/* responsive column counts */
-@media (max-width: 1200px) {
-    .doctor-card-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+.doctor-card-grid-three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-@media (max-width: 992px) {
-    .doctor-card-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
 
-@media (max-width: 576px) {
-    .doctor-card-grid {
-        grid-template-columns: 1fr;
-    }
-}
+/* ============================================================
+   DOCTOR CARD — centered layout
+   ============================================================ */
 
-.doctor-card {
-    border-radius: 22px;
-}
-
-/* KEY FIX: give more height + spacing so text never crowds the avatar */
-.doctor-card-inner {
-    padding: 22px 18px 18px;
+.doctor-card-large {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 26px 24px 22px;
+    box-shadow: 0 18px 42px rgba(105, 123, 180, 0.16);
+    border: 1px solid rgba(215, 222, 255, 0.9);
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    justify-content: flex-start;
-    min-height: 240px; /* more breathing room */
 }
 
-.doctor-avatar {
+/* Photo circle */
+.doctor-card-photo {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    border: 3px solid #e8ebff;
+    background: #f5f6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
     margin-bottom: 16px;
 }
 
-    .doctor-avatar .avatar-img {
-        width: 64px;
-        height: 64px;
-        border-radius: 999px;
+    .doctor-card-photo img {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
     }
 
-    .doctor-avatar .avatar-initial-circle {
-        width: 64px;
-        height: 64px;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #4f46e5, #2563eb);
-        color: #ffffff;
-        font-weight: 700;
-        font-size: 1.2rem;
-    }
-
-.doctor-info {
-    max-width: 90%;
+.doctor-photo-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: 700;
 }
 
-    .doctor-info .doctor-name {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 2px;
-    }
+/* Text area */
+.doctor-info {
+    width: 100%;
+}
 
-    .doctor-info .doctor-specialty {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #2563eb;
-        margin-bottom: 2px;
-    }
+.doctor-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
 
-    .doctor-info .doctor-experience,
-    .doctor-info .doctor-clinic {
-        font-size: 0.84rem;
-        color: #6b7280;
-        line-height: 1.4;
-    }
+.doctor-specialty {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2563eb;
+    margin-bottom: 6px;
+}
 
-    .doctor-info .doctor-clinic {
-        margin-top: 2px;
-    }
+.doctor-meta {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+/* Qualification line (after experience) */
+.doctor-qualification {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #4b5563;
+}
+
+
+/* Footer */
+.doctor-card-footer {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    gap: 8px;
+}
 
 .doctor-rating {
-    margin-top: 8px;
-    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
     color: #6b7280;
 }
 
-    .doctor-rating .rating-star {
-        color: #facc15;
-        margin-right: 2px;
-    }
-
-    .doctor-rating .rating-value {
-        font-weight: 600;
-        color: #111827;
-        margin-right: 3px;
-    }
-
-.doctor-card-footer {
-    margin-top: auto; /* button always stays near bottom */
-    width: 100%;
-    padding-top: 10px;
+.doctor-rating-star {
+    color: #f59e0b;
+    font-size: 16px;
 }
 
-.doctor-view-slots-btn {
-    width: 100%;
-    border-radius: 999px;
-    font-size: 0.9rem;
+.doctor-rating-value {
     font-weight: 600;
+    color: #111827;
 }
 
-/* ---------- Pagination styled like demo ---------- */
+.doctor-rating-count {
+    color: #9ca3af;
+}
+
+.doctor-card-button {
+    background: #2563eb;
+    color: white;
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+}
+
+    .doctor-card-button:hover {
+        background: #1e44ce;
+    }
+
+
+/* Empty state */
+.doctor-empty {
+    grid-column: span 3;
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+
+/* ============================================================
+   Pagination (matches your existing styles)
+   ============================================================ */
 
 .doctor-pagination {
-    margin-top: 24px;
-    text-align: center;
+    margin-top: 22px;
+    display: flex;
+    justify-content: center;
 }
 
-    /* remove bullets + center horizontally */
-    .doctor-pagination ul {
-        list-style: none;
-        padding-left: 0;
-        margin: 0;
+.doctor-pagination-list {
+    list-style: none;
+    display: flex;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+}
+
+    .doctor-pagination-list li a {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-    }
-
-    .doctor-pagination .page-item {
-        margin: 0;
-    }
-
-    /* base style */
-    .doctor-pagination .page-link {
+        min-width: 34px;
+        padding: 7px 12px;
         border-radius: 999px;
-        border: none;
-        font-size: 0.85rem;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #4b5563;
+        border: 1px solid #e5e7f5;
         background: #ffffff;
-        box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+        font-size: 12px;
+        color: #4b5563;
         text-decoration: none;
     }
 
-/* numbered circles */
-.page-link-circle {
+    .doctor-pagination-list li.active a {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: #ffffff;
+    }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 1199px) {
+    .doctor-card-grid-three {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
-/* arrows */
-.page-link-arrow {
-    font-size: 1rem;
+@media (max-width: 768px) {
+    .doctor-card-grid-three {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .doctor-search-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
-/* active page */
-.doctor-pagination .page-item.active .page-link {
-    background: #2563eb;
-    color: #ffffff;
+@media (max-width: 480px) {
+    .doctor-search-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
-/* disabled arrows */
-.doctor-pagination .page-item.disabled .page-link {
-    opacity: 0.35;
-    box-shadow: none;
-    cursor: default;
-}
 
-/* ---------- Generic "no data" ---------- */
-
-.no-data-message {
-    padding: 18px 0;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #6b7280;
-}
 
 /* ---------- Lower Grid: Appointments + Notifications ---------- */
 

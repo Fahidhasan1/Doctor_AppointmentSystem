@@ -30,11 +30,16 @@
     <title>@(ViewData["Title"] ?? "Doctor Dashboard | Doctor Appointment System")</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
     <!-- shared admin layout styles -->
     <link rel="stylesheet" href="~/css/admin-dashboard.css" asp-append-version="true" />
     <!-- doctor-specific tweaks (charts etc.) -->
     <link rel="stylesheet" href="~/css/doctor-dashboard.css" asp-append-version="true" />
+
+    <!-- ✅ Toast/Alert styles in separate file -->
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
 </head>
+
 <body>
     <div class="admin-layout">
         <!-- SIDEBAR (unchanged) -->
@@ -105,22 +110,18 @@
                     </div>
 
                     <div class="nav-submenu">
+                        <!-- Manage Time Slots -->
                         <a asp-controller="DoctorSchedule"
-                           asp-action="ManageSlots"
-                           class="nav-link nav-link--sub">
+                           asp-action="ManageTimeSlots"
+                           class="nav-link nav-link--sub @(ViewContext.RouteData.Values["action"]?.ToString() == "ManageTimeSlots" ? "active" : "")">
                             Manage Time Slots
                         </a>
 
-                        <a asp-controller="DoctorSchedule"
-                           asp-action="UnavailableDates"
-                           class="nav-link nav-link--sub">
+                        <!-- Closed / Unavailable Dates -->
+                        <a asp-controller="DoctorUnavailability"
+                           asp-action="Index"
+                           class="nav-link nav-link--sub @(ViewContext.RouteData.Values["controller"]?.ToString() == "DoctorUnavailability" ? "active" : "")">
                             Closed / Unavailable Dates
-                        </a>
-
-                        <a asp-controller="DoctorSchedule"
-                           asp-action="MaxAppointmentsPerDay"
-                           class="nav-link nav-link--sub">
-                            Max Appointments Per Day
                         </a>
                     </div>
                 </div>
@@ -187,7 +188,7 @@
             </nav>
         </aside>
 
-        <!-- MAIN (identical structure to Admin) -->
+        <!-- MAIN -->
         <main class="main">
             <header class="topbar">
                 <div class="topbar-left">
@@ -202,13 +203,50 @@
             </header>
 
             <section class="dashboard-content">
+
+                @{
+                    var successMessage = TempData["SuccessMessage"] as string;
+                    var errorMessage = TempData["ErrorMessage"] as string;
+                }
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-success" id="pageToast">
+                            @successMessage
+                        </div>
+                    </div>
+
+                    <script>
+                        setTimeout(function () {
+                            var el = document.getElementById('pageToast');
+                            if (el) el.classList.add('toast-hide');
+                        }, 4000);
+                    </script>
+                }
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-error" id="pageToast">
+                            @errorMessage
+                        </div>
+                    </div>
+
+                    <script>
+                        setTimeout(function () {
+                            var el = document.getElementById('pageToast');
+                            if (el) el.classList.add('toast-hide');
+                        }, 4000);
+                    </script>
+                }
+
                 @RenderBody()
             </section>
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- same JS used by admin: handles currentDate + sidebar toggle -->
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>

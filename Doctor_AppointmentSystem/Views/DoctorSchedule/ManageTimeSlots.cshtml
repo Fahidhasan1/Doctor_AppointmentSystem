@@ -1,0 +1,193 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorManageTimeSlotsViewModel
+
+@{
+    ViewData["Title"] = "Manage Time Slots";
+    Layout = "_Layout_Doctor";
+}
+
+<link rel="stylesheet" href="~/css/doctor-timeslots.css" asp-append-version="true" />
+
+<div class="timeslot-page">
+    <div class="timeslot-card">
+
+        <!-- HEADER -->
+        <div class="timeslot-header">
+            <div>
+                <h3 class="timeslot-title">Manage Time Slots</h3>
+                <p class="timeslot-subtitle">
+                    Define your weekly availability. You can add multiple time blocks per day.
+                </p>
+            </div>
+
+            @* <a asp-controller="DoctorDashboard"
+               asp-action="Index"
+               class="btn btn-outline-secondary back-btn">
+                ← Back
+            </a> *@
+        </div>
+
+        <form asp-action="ManageTimeSlots" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- SLOT SETTINGS -->
+            <div class="slot-settings mb-4">
+                <label class="form-label">Slot Duration (minutes)</label>
+                <input asp-for="SlotDurationMinutes"
+                       type="number"
+                       min="5"
+                       max="240"
+                       class="form-control slot-duration-input" />
+            </div>
+
+            <!-- WEEKLY SCHEDULE -->
+            @foreach (DayOfWeek day in Enum.GetValues(typeof(DayOfWeek)))
+            {
+                var rows = Model.Days
+                .Select((d, i) => new { d, i })
+                .Where(x => x.d.DayOfWeek == day)
+                .ToList();
+
+                var isAvailable = rows.Any() && rows.Any(x => x.d.IsAvailable);
+
+                <div class="day-section" data-day="@day">
+
+                    <!-- DAY HEADER -->
+                    <div class="day-header">
+                        <h5>@day</h5>
+
+                        <div class="form-check">
+                            <input type="checkbox"
+                                   class="form-check-input day-toggle"
+                                   @(isAvailable ? "checked" : "") />
+                            <label class="form-check-label">Available</label>
+                        </div>
+                    </div>
+
+                    <!-- DAY BODY -->
+                    <div class="day-body @(isAvailable ? "" : "disabled")">
+
+                        @foreach (var row in rows)
+                        {
+                            <div class="time-row">
+                                <input type="hidden" name="Days[@row.i].DayOfWeek" value="@day" />
+                                <input type="hidden"
+                                       class="is-available"
+                                       name="Days[@row.i].IsAvailable"
+                                       value="@isAvailable" />
+
+                                <input type="time"
+                                       class="form-control time-input"
+                                       name="Days[@row.i].StartTime"
+                                       value="@row.d.StartTime"
+                                       @(isAvailable ? "" : "disabled") />
+
+                                <span class="to-text">to</span>
+
+                                <input type="time"
+                                       class="form-control time-input"
+                                       name="Days[@row.i].EndTime"
+                                       value="@row.d.EndTime"
+                                       @(isAvailable ? "" : "disabled") />
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm remove-row">
+                                    ✕
+                                </button>
+                            </div>
+                        }
+
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm add-row">
+                            + Add Time Block
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- ACTIONS -->
+            <div class="form-actions">
+                <a asp-controller="DoctorDashboard"
+                   asp-action="Index"
+                   class="btn btn-light btn-cancel">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn-save">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+
+            function reindexAll() {
+                document.querySelectorAll(".time-row").forEach((row, index) => {
+                    row.querySelectorAll("input").forEach(input => {
+                        if (input.name) {
+                            input.name = input.name.replace(/Days\[\d+\]/g, `Days[${index}]`);
+                        }
+                    });
+                });
+            }
+
+            document.querySelectorAll(".day-toggle").forEach(toggle => {
+                toggle.addEventListener("change", function () {
+                    const section = toggle.closest(".day-section");
+                    const body = section.querySelector(".day-body");
+                    const enabled = toggle.checked;
+
+                    body.classList.toggle("disabled", !enabled);
+
+                    body.querySelectorAll(".time-input").forEach(i => {
+                        i.disabled = !enabled;
+                        if (!enabled) i.value = "";
+                    });
+
+                    body.querySelectorAll(".is-available").forEach(h => {
+                        h.value = enabled ? "true" : "false";
+                    });
+
+                    if (enabled && body.querySelectorAll(".time-row").length === 0) {
+                        body.querySelector(".add-row").click();
+                    }
+                });
+            });
+
+            document.querySelectorAll(".add-row").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const body = btn.closest(".day-body");
+                    const day = btn.closest(".day-section").dataset.day;
+                    const index = document.querySelectorAll(".time-row").length;
+
+                    const row = document.createElement("div");
+                    row.className = "time-row";
+                    row.innerHTML = `
+                        <input type="hidden" name="Days[${index}].DayOfWeek" value="${day}" />
+                        <input type="hidden" class="is-available" name="Days[${index}].IsAvailable" value="true" />
+
+                        <input type="time" class="form-control time-input" name="Days[${index}].StartTime" />
+                        <span class="to-text">to</span>
+                        <input type="time" class="form-control time-input" name="Days[${index}].EndTime" />
+
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row">✕</button>
+                    `;
+
+                    body.insertBefore(row, btn);
+                    reindexAll();
+                });
+            });
+
+            document.addEventListener("click", function (e) {
+                if (e.target.classList.contains("remove-row")) {
+                    e.target.closest(".time-row").remove();
+                    reindexAll();
+                }
+            });
+
+        })();
+    </script>
+}

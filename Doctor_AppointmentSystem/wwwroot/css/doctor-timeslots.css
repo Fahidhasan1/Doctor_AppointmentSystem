@@ -1,0 +1,119 @@
+﻿/* ===== Container ===== */
+.timeslot-page {
+    padding: 24px;
+}
+
+/* ===== Card (match Add Doctor form) ===== */
+.timeslot-card {
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    padding: 28px;
+}
+
+/* ===== Header ===== */
+.timeslot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.timeslot-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.timeslot-subtitle {
+    font-size: 15px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* ===== Back button ===== */
+.back-btn {
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+
+/* ===== Slot settings ===== */
+.slot-settings label {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.slot-duration-input {
+    max-width: 140px;
+    font-size: 15px;
+}
+
+/* ===== Day section ===== */
+.day-section {
+    padding: 18px 0;
+    border-top: 1px solid #e5e7eb;
+}
+
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .day-header h5 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+/* ===== Time rows ===== */
+.time-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0;
+}
+
+.time-input {
+    width: 150px;
+    font-size: 14px;
+}
+
+.to-text {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* ===== Disabled day ===== */
+.day-body.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* ===== Action buttons ===== */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.btn-save {
+    background-color: #4f46e5;
+    color: #fff;
+    padding: 10px 22px;
+    font-weight: 600;
+    border-radius: 22px;
+    border: none;
+}
+
+    .btn-save:hover {
+        background-color: #4338ca;
+    }
+
+.btn-cancel {
+    padding: 10px 18px;
+    border-radius: 22px;
+    font-weight: 500;
+}

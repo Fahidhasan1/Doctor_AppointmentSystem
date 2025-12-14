@@ -19,7 +19,7 @@ namespace Doctor_AppointmentSystem.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        private const int DoctorPageSize = 8;
+        private const int DoctorPageSize = 6;
 
         public PatientDashboardController(
             ApplicationDbContext context,
@@ -120,6 +120,9 @@ namespace Doctor_AppointmentSystem.Controllers
             // ----------------------------
             // 3. Doctor filter dropdowns (Specialties + Experience)
             // ----------------------------
+            // ----------------------------
+            // 3. Doctor filter dropdowns (Specialties + Experience)
+            // ----------------------------
             var specialties = await _context.Specialties
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Name)
@@ -145,31 +148,31 @@ namespace Doctor_AppointmentSystem.Controllers
             // Experience dropdown values – matches the UI text
             var experienceOptions = new[]
             {
-                new SelectListItem
-                {
-                    Value = "",
-                    Text = "Any Experience",
-                    Selected = string.IsNullOrWhiteSpace(experienceFilter)
-                },
-                new SelectListItem
-                {
-                    Value = "0-3",
-                    Text = "0 - 3 years",
-                    Selected = experienceFilter == "0-3"
-                },
-                new SelectListItem
-                {
-                    Value = "4-7",
-                    Text = "4 - 7 years",
-                    Selected = experienceFilter == "4-7"
-                },
-                new SelectListItem
-                {
-                    Value = "8+",
-                    Text = "8+ years",
-                    Selected = experienceFilter == "8+"
-                }
-            }.ToList();
+    new SelectListItem
+    {
+        Value = "",
+        Text = "Any Experience",
+        Selected = string.IsNullOrWhiteSpace(experienceFilter)
+    },
+    new SelectListItem
+    {
+        Value = "0-3",
+        Text = "0 - 3 years",
+        Selected = experienceFilter == "0-3"
+    },
+    new SelectListItem
+    {
+        Value = "4-7",
+        Text = "4 - 7 years",
+        Selected = experienceFilter == "4-7"
+    },
+    new SelectListItem
+    {
+        Value = "8+",
+        Text = "8+ years",
+        Selected = experienceFilter == "8+"
+    }
+}.ToList();
 
             // ----------------------------
             // 4. Base doctor query (for "Find Your Doctor")
@@ -270,6 +273,10 @@ namespace Doctor_AppointmentSystem.Controllers
                         ClinicInfo = !string.IsNullOrWhiteSpace(d.RoomNo)
                             ? $"Room {d.RoomNo}"
                             : null,
+
+                        // NEW: map qualification so it shows on the card
+                        Qualification = d.Qualification,
+
                         Bio = d.Description,
                         ProfileImagePath = d.User.ProfileImagePath,
                         AverageRating = Math.Round(averageRating, 1),
@@ -288,6 +295,14 @@ namespace Doctor_AppointmentSystem.Controllers
                 CompletedVisits = completedVisits,
                 CancelledOrMissed = cancelledOrMissed,
                 DigitalPaymentsTotal = digitalPaymentsTotal,
+                TotalAppointments = totalAppointments,
+                PendingPaymentsCount = 0,          // keep your existing values if you set them
+                NextAppointmentDate = null,
+                LastAppointmentDate = null,
+
+                // sidebar badges
+                MyAppointmentsBadge = upcomingAppointments,
+                NotificationBadge = 0,             // or your existing value
 
                 // filters (preserve current filter state)
                 DoctorNameFilter = doctorNameFilter,
@@ -300,10 +315,12 @@ namespace Doctor_AppointmentSystem.Controllers
                 Doctors = doctorCards,
                 CurrentPage = page,
                 TotalPages = totalPages,
-                TotalDoctors = totalDoctors
+                TotalDoctors = totalDoctors,
+                PageSize = DoctorPageSize
             };
 
             return View(vm);
+
         }
 
         // Later you’ll create separate controllers like:

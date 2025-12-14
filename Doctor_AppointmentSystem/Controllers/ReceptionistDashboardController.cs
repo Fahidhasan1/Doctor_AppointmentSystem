@@ -17,7 +17,7 @@ namespace Doctor_AppointmentSystem.Controllers
     public class ReceptionistDashboardController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private const int PageSize = 8;
+        private const int PageSize = 6;
 
         public ReceptionistDashboardController(ApplicationDbContext context)
         {
@@ -105,10 +105,10 @@ namespace Doctor_AppointmentSystem.Controllers
             // ==========================
 
             var doctorsQuery = _context.DoctorProfiles
-                .Include(d => d.User)
-                .Include(d => d.DoctorSpecialties)
-                    .ThenInclude(ds => ds.Specialty)
-                .Where(d => d.IsActive && d.User.IsActive);
+    .Include(d => d.User)
+    .Include(d => d.DoctorSpecialties)
+        .ThenInclude(ds => ds.Specialty)
+    .Where(d => d.IsActive && d.User.IsActive);
 
             if (!string.IsNullOrWhiteSpace(doctorName))
             {
@@ -165,18 +165,25 @@ namespace Doctor_AppointmentSystem.Controllers
                             .Select(ds => ds.Specialty.Name)
                             .FirstOrDefault()
                         ?? "General Physician",
+
                     ExperienceText = d.Experience > 0
                         ? $"{d.Experience}+ years experience"
                         : "Experience not set",
+
                     ClinicInfo = string.IsNullOrWhiteSpace(d.RoomNo)
                         ? "Room not set"
                         : $"Room {d.RoomNo}",
+
+                    // NEW: map qualification from DoctorProfile
+                    Qualification = d.Qualification ?? string.Empty,
+
                     Bio = d.Description ?? string.Empty,
                     ProfileImagePath = d.User.ProfileImagePath ?? string.Empty,
                     AverageRating = d.Rating ?? 0.0,
                     ReviewCount = d.TotalReviews ?? 0
                 })
                 .ToListAsync();
+
 
             // ==========================
             // 4. TODAY'S APPOINTMENTS

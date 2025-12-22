@@ -3,7 +3,6 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-
 namespace Doctor_AppointmentSystem.Models
 {
     public class Appointment
@@ -18,11 +17,16 @@ namespace Doctor_AppointmentSystem.Models
         [ForeignKey(nameof(DoctorProfileId))]
         public DoctorProfile Doctor { get; set; } = null!;
 
-        [Required]
-        public int PatientProfileId { get; set; }
+        // ✅ IMPORTANT CHANGE:
+        // PatientProfileId is now OPTIONAL because receptionist can book for unregistered patients.
+        public int? PatientProfileId { get; set; }
 
         [ForeignKey(nameof(PatientProfileId))]
-        public PatientProfile Patient { get; set; } = null!;
+        public PatientProfile? Patient { get; set; }
+
+        // ✅ NEW: store typed patient name for unregistered patient booking
+        [StringLength(120)]
+        public string? UnregisteredPatientName { get; set; }
 
         // Schedule Information
         [Required]
@@ -40,6 +44,7 @@ namespace Doctor_AppointmentSystem.Models
         public string? CancellationReason { get; set; }
         public bool IsFirstVisit { get; set; } = false;
 
+        // ✅ Will store receptionist user id when receptionist books
         public string? BookedByUserId { get; set; }
         public string? LastStatusChangedByUserId { get; set; }
 

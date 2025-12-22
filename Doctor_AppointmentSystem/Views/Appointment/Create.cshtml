@@ -69,18 +69,20 @@
 
             @if (User.IsInRole("Receptionist"))
             {
+                <!-- ✅ Receptionist: type unregistered patient name -->
                 <div class="field">
-                    <label class="label" asp-for="PatientProfileId">Patient</label>
-                    <select class="input" asp-for="PatientProfileId">
-                        <option value="">-- Select Patient --</option>
-                        @foreach (var p in Model.Patients)
-                        {
-                            <option value="@p.PatientProfileId">
-                                @p.PatientName
-                            </option>
-                        }
-                    </select>
-                    <span class="text-danger" asp-validation-for="PatientProfileId"></span>
+                    <label class="label">Patient Name</label>
+                    <input class="input"
+                           type="text"
+                           name="UnregisteredPatientName"
+                           value="@(ViewBag.UnregisteredPatientName ?? "")"
+                           placeholder="Type patient full name..."
+                           required />
+
+                    <!-- Keep PatientProfileId empty for receptionist booking -->
+                    <input type="hidden" asp-for="PatientProfileId" value="" />
+
+                    <span class="text-danger"></span>
                 </div>
             }
             else

@@ -41,7 +41,7 @@ namespace Doctor_AppointmentSystem.ViewModels
 
     // =========================
     // 3) Patient dropdown option
-    // (needed for receptionist/admin booking)
+    // (kept for any future use, but receptionist booking now uses typed name)
     // =========================
     public class AppointmentPatientOptionViewModel
     {
@@ -72,10 +72,16 @@ namespace Doctor_AppointmentSystem.ViewModels
         [Display(Name = "Doctor")]
         public int DoctorProfileId { get; set; }
 
-        // Receptionist must pick patient, Patient role will be set by controller
-        [Required]
+        // ✅ IMPORTANT CHANGE:
+        // This is now nullable because receptionist booking does NOT require a registered patient.
+        // Patient role will still set this automatically in controller POST.
         [Display(Name = "Patient")]
-        public int PatientProfileId { get; set; }
+        public int? PatientProfileId { get; set; }
+
+        // ✅ NEW: receptionist typed patient name (unregistered patient)
+        [StringLength(120)]
+        [Display(Name = "Patient Name")]
+        public string? UnregisteredPatientName { get; set; }
 
         // Date only (UI picks date, then slot time separately)
         [Required]
@@ -113,6 +119,8 @@ namespace Doctor_AppointmentSystem.ViewModels
         public int Id { get; set; }
 
         public string DoctorName { get; set; } = string.Empty;
+
+        // This will be filled from Patient profile name OR UnregisteredPatientName
         public string PatientName { get; set; } = string.Empty;
 
         public DateTime AppointmentDateTime { get; set; }

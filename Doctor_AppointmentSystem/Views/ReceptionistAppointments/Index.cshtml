@@ -1,0 +1,142 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.ReceptionistAppointmentViewModel
+
+@{
+    ViewData["Title"] = "Appointments";
+    Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
+    var active = (Model.Filter ?? "all").ToLower();
+}
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+        <div>
+            <h2 style="margin:0;">Appointments</h2>
+            <div style="margin-top:6px;">Showing appointments booked by you.</div>
+
+            <div style="margin-top:10px;">
+                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="all"
+                   style="@(active == "all" ? "font-weight:600;" : "")">All</a>
+                <span> | </span>
+                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="today"
+                   style="@(active == "today" ? "font-weight:600;" : "")">Today</a>
+                <span> | </span>
+                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="upcoming"
+                   style="@(active == "upcoming" ? "font-weight:600;" : "")">Upcoming</a>
+                <span> | </span>
+                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="cancelled"
+                   style="@(active == "cancelled" ? "font-weight:600;" : "")">Cancelled</a>
+            </div>
+        </div>
+
+        <div>
+            <a asp-controller="ReceptionistDashboard"
+               asp-action="Index"
+               asp-fragment="find-doctor"
+               class="btn-reset-full">
+                + New Booking
+            </a>
+        </div>
+    </div>
+
+    <div style="margin-top:18px; overflow-x:auto;">
+        <table style="width:100%; border-collapse:separate; border-spacing:0 10px;">
+            <thead>
+                <tr style="text-align:left;">
+                    <th style="padding:8px 10px;">Date &amp; Time</th>
+                    <th style="padding:8px 10px;">Doctor</th>
+                    <th style="padding:8px 10px;">Patient</th>
+                    <th style="padding:8px 10px;">Status</th>
+                    <th style="padding:8px 10px;">Payment</th>
+                    <th style="padding:8px 10px;">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Appointments == null || !Model.Appointments.Any())
+                {
+                    <tr>
+                        <td colspan="6" style="padding:14px 10px;">
+                            No appointments found.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var a in Model.Appointments)
+                    {
+                        <tr style="background:#fff; border-radius:12px;">
+                            <td style="padding:10px;">
+                                @a.AppointmentDateTime.ToString("ddd, MMM dd, yyyy")
+                                <span style="opacity:.7;">•</span>
+                                @a.AppointmentDateTime.ToString("hh:mm tt")
+                            </td>
+
+                            <td style="padding:10px; white-space:nowrap;">
+                                @a.DoctorName
+                            </td>
+
+                            <td style="padding:10px; white-space:nowrap;">
+                                @a.PatientName
+                            </td>
+
+                            <td style="padding:10px;">
+                                @a.StatusText
+                            </td>
+
+                            <td style="padding:10px; white-space:nowrap;">
+                                @a.PaymentSummary
+                            </td>
+
+                            <td style="padding:10px; white-space:nowrap;">
+                                @if (!a.CanShowActions)
+                                {
+                                    <span style="opacity:.6;">—</span>
+                                }
+                                else
+                                {
+                                    <details>
+                                        <summary style="cursor:pointer; user-select:none;">
+                                            Actions ▾
+                                        </summary>
+
+                                        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                                            @if (a.CanCollectCash)
+                                            {
+                                                <form asp-action="CollectCash" asp-controller="ReceptionistAppointments" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@a.AppointmentId" />
+                                                    <input type="hidden" name="filter" value="@Model.Filter" />
+                                                    <button type="submit" class="btn-reset-full">Collect Cash</button>
+                                                </form>
+                                            }
+
+                                            @if (a.CanConfirmMobileBanking)
+                                            {
+                                                <form asp-action="ConfirmMobileBanking" asp-controller="ReceptionistAppointments" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@a.AppointmentId" />
+                                                    <input type="hidden" name="filter" value="@Model.Filter" />
+                                                    <button type="submit" class="btn-reset-full">Confirm Mobile</button>
+                                                </form>
+                                            }
+
+                                            @if (a.CanCancel)
+                                            {
+                                                <form asp-action="Cancel" asp-controller="ReceptionistAppointments" method="post"
+                                                      onsubmit="return confirm('Cancel this appointment?');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@a.AppointmentId" />
+                                                    <input type="hidden" name="filter" value="@Model.Filter" />
+                                                    <button type="submit" class="btn-reset-full">Cancel</button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </details>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

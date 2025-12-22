@@ -21,6 +21,13 @@
     var profileImagePath = currentUser?.ProfileImagePath;
 
     var pageTitle = ViewData["Title"] as string ?? "Receptionist Dashboard";
+
+    // ✅ Toast messages
+    var successMessage = TempData["SuccessMessage"] as string;
+    var errorMessage = TempData["ErrorMessage"] as string;
+
+    // ✅ Active controller (for sidebar highlight)
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
 }
 
 <!DOCTYPE html>
@@ -38,6 +45,9 @@
 
     <!-- Receptionist-specific tweaks (grids, spacing, etc.) -->
     <link rel="stylesheet" href="~/css/receptionist-dashboard.css" asp-append-version="true" />
+
+    <!-- ✅ Toast styles -->
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
 </head>
 <body>
     <div class="admin-layout">
@@ -68,31 +78,58 @@
                 <!-- DASHBOARD -->
                 <a asp-controller="ReceptionistDashboard"
                    asp-action="Index"
-                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ReceptionistDashboard" ? "active" : "")">
+                   class="nav-link @(currentController == "ReceptionistDashboard" ? "active" : "")">
                     <div class="nav-link-icon">🏠</div>
                     <span>Dashboard</span>
                 </a>
 
-                <!-- NEW BOOKING -->
-                <a asp-controller="ReceptionistBooking"
+                <!-- ✅ NEW BOOKING -> Dashboard Find Doctor section -->
+                <a asp-controller="ReceptionistDashboard"
                    asp-action="Index"
+                   asp-fragment="find-doctor"
                    class="nav-link">
                     <div class="nav-link-icon">➕</div>
                     <span>New Booking</span>
                 </a>
 
-                <!-- INSTANT PATIENT REGISTRATION -->
-                <a asp-controller="ReceptionistPatient"
-                   asp-action="InstantRegistration"
-                   class="nav-link">
-                    <div class="nav-link-icon">⚡</div>
-                    <span>Instant Patient Registration</span>
+                @* <!-- ✅ APPOINTMENTS -->
+                <a asp-controller="ReceptionistAppointments"
+                   asp-action="Index"
+                   asp-route-filter="all"
+                   class="nav-link @(currentController == "ReceptionistAppointments" ? "active" : "")">
+                    <div class="nav-link-icon">📅</div>
+                    <span>Appointments</span>
                 </a>
+
+                <!-- ✅ NOTIFICATIONS -->
+                <a asp-controller="ReceptionistNotifications"
+                   asp-action="Index"
+                   class="nav-link @(currentController == "ReceptionistNotifications" ? "active" : "")">
+                    <div class="nav-link-icon">🔔</div>
+                    <span>Notifications</span>
+                </a> *@
+
+                <!-- APPOINTMENTS -->
+                <a asp-controller="ReceptionistAppointments"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ReceptionistAppointments" ? "active" : "")">
+                    <div class="nav-link-icon">📅</div>
+                    <span>Appointments</span>
+                </a>
+
+                <!-- NOTIFICATIONS -->
+                <a asp-controller="ReceptionistNotifications"
+                   asp-action="Index"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ReceptionistNotifications" ? "active" : "")">
+                    <div class="nav-link-icon">🔔</div>
+                    <span>Notifications</span>
+                </a>
+
 
                 <!-- PAYMENTS & RECEIPTS -->
                 <a asp-controller="ReceptionistPayments"
                    asp-action="Index"
-                   class="nav-link">
+                   class="nav-link @(currentController == "ReceptionistPayments" ? "active" : "")">
                     <div class="nav-link-icon">💳</div>
                     <span>Payments &amp; Receipts</span>
                 </a>
@@ -100,7 +137,7 @@
                 <!-- MY PROFILE -->
                 <a asp-controller="ReceptionistProfile"
                    asp-action="MyProfile"
-                   class="nav-link">
+                   class="nav-link @(currentController == "ReceptionistProfile" ? "active" : "")">
                     <div class="nav-link-icon">👤</div>
                     <span>My Profile</span>
                 </a>
@@ -159,6 +196,26 @@
             </header>
 
             <section class="dashboard-content">
+
+                <!-- ✅ Toast inside content -->
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-success" id="successToast">
+                            @successMessage
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-error" id="errorToast">
+                            @errorMessage
+                        </div>
+                    </div>
+                }
+
                 @RenderBody()
             </section>
         </main>
@@ -166,6 +223,18 @@
 
     <!-- Same JS used by admin/doctor: handles current date + sidebar toggles -->
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
+
+    <!-- ✅ Auto-hide toast -->
+    <script>
+        setTimeout(() => {
+            const success = document.getElementById('successToast');
+            const error = document.getElementById('errorToast');
+
+            if (success) success.classList.add('toast-hide');
+            if (error) error.classList.add('toast-hide');
+        }, 4000);
+    </script>
+
     @RenderSection("Scripts", required: false)
 </body>
 </html>

@@ -7,51 +7,101 @@
     Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
 }
 
-<!-- ====== TOP STATS ROW (same structure as Admin/Doctor) ====== -->
+<!-- ============ TOP STATS (now clickable like buttons) ============ -->
 <div class="stats-grid">
-    <!-- Total Appointments -->
-    <div class="card stat-card rcp-stat-card">
-        <div class="stat-title">Total Appointments</div>
-        <div class="stat-value">@Model.TotalAppointments</div>
-        <div class="stat-sub">All-time booked appointments</div>
+
+    <!-- MY TOTAL BOOKED -->
+    <div class="card stat-card stat-card-button"
+         role="button"
+         tabindex="0"
+         data-url="@Url.Action("Index", "Appointments", new { filter = "all" })">
+         @* data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "all" })" *@
+
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">MY TOTAL BOOKED</div>
+                <div class="stat-value">@Model.TotalAppointments</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-calendar"></i>
+            </div>
+        </div>
+        <div class="stat-sub">Booked by you (all time)</div>
     </div>
 
-    <!-- Today's Appointments -->
-    <div class="card stat-card rcp-stat-card">
-        <div class="stat-title">Today's Appointments</div>
-        <div class="stat-value">@Model.TodaysAppointments</div>
-        <div class="stat-sub">Booked for today</div>
+    <!-- MY TODAY'S BOOKED -->
+    <div class="card stat-card stat-card-button"
+         role="button"
+         tabindex="0"
+         data-url="@Url.Action("Index", "Appointments", new { filter = "today" })">
+         @* data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "today" })" *@
+
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">MY TODAY'S BOOKED</div>
+                <div class="stat-value">@Model.TodaysAppointments</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-circle-check"></i>
+            </div>
+        </div>
+        <div class="stat-sub">Booked by you today</div>
     </div>
 
-    <!-- Today's Collections -->
-    <div class="card stat-card rcp-stat-card">
-        <div class="stat-title">Today's Collections</div>
-        <div class="stat-value">৳ @Model.TodaysCollections.ToString("N0")</div>
-        <div class="stat-sub">bKash / Card / Cash</div>
+    <!-- MY TODAY'S COLLECTION -->
+    <div class="card stat-card stat-card-button"
+         role="button"
+         tabindex="0"
+         data-url="@Url.Action("Index", "Payments", new { filter = "today" })">
+         @* data-url="@Url.Action("Index", "ReceptionistPayments", new { filter = "today" })" *@
+
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">MY TODAY'S COLLECTION</div>
+                <div class="stat-value">৳@Model.TodaysCollections.ToString("0")</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-regular fa-credit-card"></i>
+            </div>
+        </div>
+        <div class="stat-sub">Paid today</div>
     </div>
 
-    <!-- Monthly Collections -->
-    <div class="card stat-card rcp-stat-card">
-        <div class="stat-title">Total Collection</div>
-        <div class="stat-value">৳ @Model.MonthlyCollections.ToString("N0")</div>
-        <div class="stat-sub">Digital &amp; cash payments</div>
+    <!-- MY MONTHLY COLLECTION -->
+    <div class="card stat-card stat-card-button"
+         role="button"
+         tabindex="0"
+         data-url="@Url.Action("Index", "Payments", new { filter = "month" })">
+         @* data-url="@Url.Action("Index", "ReceptionistPayments", new { filter = "month" })" *@
+
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">MY MONTHLY COLLECTION</div>
+                <div class="stat-value">৳@Model.MonthlyCollections.ToString("0")</div>
+            </div>
+            <div class="stat-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+        </div>
+        <div class="stat-sub">Paid this month</div>
     </div>
+
 </div>
 
 
-<!-- ====== FIND YOUR DOCTOR SECTION (matches demo design) ====== -->
 <!-- ====== FIND YOUR DOCTOR SECTION ====== -->
-<section class="doctor-search-section">
-    <h2 class="doctor-search-title text-center">Find Your Doctor</h2>
+<section class="doctor-search-section" id="find-doctor">
+    <h2 class="doctor-search-title">Find Your Doctor</h2>
 
     <!-- FILTER BAR -->
     <div class="doctor-search-card">
         <form asp-action="Index"
+              asp-controller="ReceptionistDashboard"
               method="get"
               class="doctor-search-form"
-              id="doctorFilterForm">
+              id="receptionistDoctorFilterForm">
 
-            <!-- Doctor Name (live search) -->
+            <!-- Doctor Name -->
             <div class="doctor-search-field">
                 <label>Doctor Name</label>
                 <input type="text"
@@ -63,8 +113,7 @@
             <!-- Specialty -->
             <div class="doctor-search-field">
                 <label>Specialty</label>
-                <select name="specialtyId"
-                        onchange="document.getElementById('doctorFilterForm').submit()">
+                <select name="specialtyId">
                     @foreach (var option in Model.SpecialtyOptions)
                     {
                         <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
@@ -77,8 +126,7 @@
             <!-- Experience -->
             <div class="doctor-search-field">
                 <label>Experience</label>
-                <select name="experience"
-                        onchange="document.getElementById('doctorFilterForm').submit()">
+                <select name="experience">
                     @foreach (var option in Model.ExperienceOptions)
                     {
                         <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
@@ -88,30 +136,30 @@
                 </select>
             </div>
 
-            <!-- Reset only (4th column) -->
+            <!-- Reset -->
             <div class="doctor-search-field doctor-search-actions">
                 <label>&nbsp;</label>
                 <a asp-action="Index"
-                   class="btn-reset btn-reset-full">
+                   asp-controller="ReceptionistDashboard"
+                   class="btn-reset-full">
                     Reset Filters
                 </a>
             </div>
         </form>
     </div>
 
-    <!-- DOCTOR CARDS – 3 per row, 2 rows (controller should page to 6) -->
+    <!-- DOCTOR CARDS -->
     <div class="doctor-card-grid doctor-card-grid-three">
         @if (Model.Doctors != null && Model.Doctors.Any())
         {
             foreach (var d in Model.Doctors)
             {
-                <div class="doctor-card doctor-card-large">
+                <div class="doctor-card-large">
                     <!-- Photo -->
                     <div class="doctor-card-photo">
-                        @if (!string.IsNullOrEmpty(d.ProfileImagePath))
+                        @if (!string.IsNullOrWhiteSpace(d.ProfileImagePath))
                         {
-                            <img src="@Url.Content(d.ProfileImagePath)"
-                                 alt="@d.FullName" />
+                            <img src="@Url.Content(d.ProfileImagePath)" alt="@d.FullName" />
                         }
                         else
                         {
@@ -119,45 +167,34 @@
                             ? "?"
                             : d.FullName.Trim()[0].ToString().ToUpper();
 
-                            <div class="doctor-photo-fallback">
-                                @initial
-                            </div>
+                            <div class="doctor-photo-fallback">@initial</div>
                         }
                     </div>
 
+                    <!-- Info -->
                     <div class="doctor-info">
                         <h3 class="doctor-name">@d.FullName</h3>
                         <div class="doctor-specialty">@d.PrimarySpecialty</div>
 
-                        <div class="doctor-meta">
-                            @d.ExperienceText
-                        </div>
+                        <div class="doctor-meta">@d.ExperienceText</div>
 
-                        <div class="doctor-meta">
-                            @d.ClinicInfo
-                        </div>
+                        @if (!string.IsNullOrWhiteSpace(d.ClinicInfo))
+                        {
+                            <div class="doctor-meta">@d.ClinicInfo</div>
+                        }
 
-                        @* NEW: show Qualification instead of Bio *@
                         @if (!string.IsNullOrWhiteSpace(d.Qualification))
                         {
-                            <div class="doctor-qualification">
-                                @d.Qualification
-                            </div>
+                            <div class="doctor-qualification">@d.Qualification</div>
                         }
                     </div>
 
-
-
-                    <!-- Rating + action -->
+                    <!-- Footer -->
                     <div class="doctor-card-footer">
                         <div class="doctor-rating">
                             <span class="doctor-rating-star">★</span>
-                            <span class="doctor-rating-value">
-                                @d.AverageRating.ToString("0.0")
-                            </span>
-                            <span class="doctor-rating-count">
-                                (@d.ReviewCount reviews)
-                            </span>
+                            <span class="doctor-rating-value">@d.AverageRating.ToString("0.0")</span>
+                            <span class="doctor-rating-count">(@d.ReviewCount reviews)</span>
                         </div>
 
                         <a asp-controller="Appointment"
@@ -187,6 +224,7 @@
                 {
                     <li>
                         <a asp-action="Index"
+                           asp-controller="ReceptionistDashboard"
                            asp-route-page="@(Model.CurrentPage - 1)"
                            asp-route-doctorName="@Model.DoctorNameFilter"
                            asp-route-specialtyId="@Model.SpecialtyIdFilter"
@@ -200,6 +238,7 @@
                 {
                     <li class="@(Model.CurrentPage == p ? "active" : "")">
                         <a asp-action="Index"
+                           asp-controller="ReceptionistDashboard"
                            asp-route-page="@p"
                            asp-route-doctorName="@Model.DoctorNameFilter"
                            asp-route-specialtyId="@Model.SpecialtyIdFilter"
@@ -213,6 +252,7 @@
                 {
                     <li>
                         <a asp-action="Index"
+                           asp-controller="ReceptionistDashboard"
                            asp-route-page="@(Model.CurrentPage + 1)"
                            asp-route-doctorName="@Model.DoctorNameFilter"
                            asp-route-specialtyId="@Model.SpecialtyIdFilter"
@@ -226,145 +266,10 @@
     }
 </section>
 
-
-<!-- ====== BOTTOM SECTION: TODAY'S APPOINTMENTS + ALERTS ====== -->
-<section class="bottom-section">
-    <!-- Today's Appointments Card -->
-    <div class="card today-appointments-card">
-        <div class="today-appointments-header">
-            <div>
-                <h3>Today's Appointments</h3>
-                <p>Check-in, payment &amp; status overview</p>
-            </div>
-            <a asp-controller="Appointments"
-               asp-action="Index"
-               class="link-view-all">
-                View All
-            </a>
-        </div>
-
-        <div class="today-appointments-table">
-            @if (Model.TodaysAppointmentsList != null &&
-                        Model.TodaysAppointmentsList.Any())
-            {
-                <div class="table-header">
-                    <span>Time</span>
-                    <span>Patient</span>
-                    <span>Doctor</span>
-                    <span>Status</span>
-                    <span>Payment</span>
-                </div>
-
-                @foreach (var row in Model.TodaysAppointmentsList
-                            .OrderBy(r => r.AppointmentDateTime))
-                {
-                    var statusClass = row.Status switch
-                    {
-                        AppointmentStatus.Confirmed => "status-pill status-pill--confirmed",
-                        AppointmentStatus.Completed => "status-pill status-pill--completed",
-                        AppointmentStatus.Cancelled => "status-pill status-pill--cancelled",
-                        AppointmentStatus.NoShow => "status-pill status-pill--noshow",
-                        AppointmentStatus.Rescheduled => "status-pill status-pill--rescheduled",
-                        _ => "status-pill"
-                    };
-
-                    var paymentClass = row.PaymentStatus switch
-                    {
-                        PaymentStatus.Paid => "payment-pill payment-pill--paid",
-                        PaymentStatus.Pending => "payment-pill payment-pill--pending",
-                        PaymentStatus.Failed => "payment-pill payment-pill--failed",
-                        PaymentStatus.Refunded => "payment-pill payment-pill--refunded",
-                        _ => "payment-pill"
-                    };
-
-                    <div class="table-row">
-                        <span>@row.AppointmentDateTime.ToString("hh:mm tt")</span>
-                        <span>@row.PatientName</span>
-                        <span>@row.DoctorName</span>
-                        <span>
-                            <span class="@statusClass">@row.Status</span>
-                        </span>
-                        <span>
-                            <span class="@paymentClass">
-                                @row.PaymentDisplay
-                            </span>
-                        </span>
-                    </div>
-                }
-            }
-            else
-            {
-                <p class="today-empty">
-                    No appointments scheduled for today.
-                </p>
-            }
-        </div>
-    </div>
-
-    <!-- Alerts & Notifications Card -->
-    <div class="card alerts-card">
-        <div class="alerts-header">
-            <div>
-                <h3>Alerts &amp; Notifications</h3>
-                <p>New online bookings, cancellations and payments.</p>
-            </div>
-        </div>
-
-        <div class="alerts-list">
-            @if (Model.AlertsAndNotifications != null &&
-                        Model.AlertsAndNotifications.Any())
-            {
-                @foreach (var alert in Model.AlertsAndNotifications
-                            .OrderByDescending(a => a.CreatedAt))
-                {
-                    var rowClasses = "alert-item";
-                    if (alert.IsUnread)
-                    {
-                        rowClasses += " alert-item-unread";
-                    }
-
-                    <div class="@rowClasses">
-                        <div class="alert-icon">
-                            <span>🔔</span> @* you can swap icon based on alert type later *@
-                        </div>
-                        <div class="alert-content">
-                            <div class="alert-title">@alert.Title</div>
-
-                            @if (!string.IsNullOrWhiteSpace(alert.Message))
-                            {
-                                <div class="alert-subtitle">@alert.Message</div>
-                            }
-
-                            @if (!string.IsNullOrWhiteSpace(alert.Meta))
-                            {
-                                <div class="alert-meta">@alert.Meta</div>
-                            }
-                        </div>
-
-                        @if (!string.IsNullOrWhiteSpace(alert.BadgeText))
-                        {
-                            <span class="alert-badge @alert.BadgeCssClass">
-                                @alert.BadgeText
-                            </span>
-                        }
-                    </div>
-                }
-            }
-            else
-            {
-                <p class="alerts-empty">
-                    No recent alerts or notifications.
-                </p>
-            }
-        </div>
-    </div>
-</section>
-
-
 @section Scripts {
     <script>
         (function () {
-            const form = document.getElementById('doctorFilterForm');
+            const form = document.getElementById('receptionistDoctorFilterForm');
             if (!form) return;
 
             const debounce = (fn, delay) => {
@@ -386,10 +291,28 @@
             }
 
             [specialtySelect, experienceSelect].forEach(el => {
-                if (el) {
-                    el.addEventListener('change', submitForm);
-                }
+                if (el) el.addEventListener('change', submitForm);
             });
+
+            // ✅ Make stat cards clickable like buttons
+            document.querySelectorAll('.stat-card-button').forEach(card => {
+                card.style.cursor = 'pointer';
+
+                card.addEventListener('click', () => {
+                    const url = card.getAttribute('data-url');
+                    if (url) window.location.href = url;
+                });
+
+                // keyboard support: Enter / Space
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        const url = card.getAttribute('data-url');
+                        if (url) window.location.href = url;
+                    }
+                });
+            });
+
         })();
     </script>
 }

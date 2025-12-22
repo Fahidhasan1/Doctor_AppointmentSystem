@@ -7,92 +7,84 @@ namespace Doctor_AppointmentSystem.ViewModels
 {
     public class ReceptionistDashboardViewModel
     {
-        // ========= TOP CARDS =========
+        // ==========================
+        // DASHBOARD TOP CARDS
+        // ==========================
+
         public int TotalAppointments { get; set; }
         public int TodaysAppointments { get; set; }
+        public int UpcomingAppointments { get; set; }
+        public int CancelledAppointments { get; set; }
+
         public decimal TodaysCollections { get; set; }
         public decimal MonthlyCollections { get; set; }
+        public string CurrentDateDisplay { get; set; }
 
-        /// <summary>
-        /// For displaying "Wednesday, Dec 10, 2025" in the top-right corner.
-        /// </summary>
-        public string CurrentDateDisplay { get; set; } = string.Empty;
+        // ==========================
+        // FILTERS (Doctor search)
+        // ==========================
 
-        // ========= FILTERS (Find Your Doctor) =========
-        public string DoctorNameFilter { get; set; } = string.Empty;
+        public string? DoctorNameFilter { get; set; }
         public int? SpecialtyIdFilter { get; set; }
-        /// <summary>
-        /// Experience bucket: "", "0-3", "4-7", "8+"
-        /// </summary>
-        public string ExperienceFilter { get; set; } = string.Empty;
+        public string? ExperienceFilter { get; set; }
 
         public List<SelectListItem> SpecialtyOptions { get; set; } = new();
         public List<SelectListItem> ExperienceOptions { get; set; } = new();
 
-        // ========= DOCTOR CARDS =========
+        // ==========================
+        // DOCTOR CARDS
+        // ==========================
+
         public List<DoctorCardItem> Doctors { get; set; } = new();
 
-        // ========= PAGINATION =========
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
         public int TotalDoctors { get; set; }
 
-        // ========= TODAY'S APPOINTMENTS TABLE =========
+        // ==========================
+        // TODAY'S APPOINTMENTS TABLE
+        // ==========================
+
         public List<TodaysAppointmentRow> TodaysAppointmentsList { get; set; } = new();
 
-        // ========= ALERTS & NOTIFICATIONS =========
+        // ==========================
+        // ALERTS & NOTIFICATIONS
+        // ==========================
+
         public List<NotificationItem> AlertsAndNotifications { get; set; } = new();
 
-        // ======================================================
-        // Nested DTOs
-        // ======================================================
+        // =====================================================
+        // NESTED CLASSES
+        // =====================================================
 
         public class DoctorCardItem
         {
             public int DoctorProfileId { get; set; }
-
-            public string FullName { get; set; } = string.Empty;
-
-            public string PrimarySpecialty { get; set; } = string.Empty;
-
-            public string ExperienceText { get; set; } = string.Empty;
-
-            public string? ClinicInfo { get; set; }
-
-            /// <summary>
-            /// NEW: Doctor academic / professional qualification.
-            /// Comes from DoctorProfile.Qualification
-            /// </summary>
-            public string? Qualification { get; set; }
-
-            public string? Bio { get; set; }
-
-            public string? ProfileImagePath { get; set; }
-
+            public string FullName { get; set; }
+            public string PrimarySpecialty { get; set; }
+            public string ExperienceText { get; set; }
+            public string ClinicInfo { get; set; }
+            public string Qualification { get; set; }
+            public string Bio { get; set; }
+            public string ProfileImagePath { get; set; }
             public double AverageRating { get; set; }
-
             public int ReviewCount { get; set; }
         }
-
-
 
         public class TodaysAppointmentRow
         {
             public int AppointmentId { get; set; }
             public DateTime AppointmentDateTime { get; set; }
 
-            public string PatientName { get; set; } = string.Empty;
-            public string DoctorName { get; set; } = string.Empty;
+            public string PatientName { get; set; }
+            public string DoctorName { get; set; }
 
             public AppointmentStatus Status { get; set; }
 
             public PaymentStatus PaymentStatus { get; set; }
             public PaymentMethod? PaymentMethod { get; set; }
 
-            /// <summary>
-            /// e.g. "Paid (Card)", "Paid (bKash)", "Unpaid".
-            /// </summary>
-            public string PaymentDisplay { get; set; } = string.Empty;
+            public string PaymentDisplay { get; set; }
         }
 
         public class NotificationItem
@@ -100,20 +92,13 @@ namespace Doctor_AppointmentSystem.ViewModels
             public int NotificationId { get; set; }
             public DateTime CreatedAt { get; set; }
 
-            /// <summary>Short bold title.</summary>
-            public string Title { get; set; } = string.Empty;
+            public string Title { get; set; }
+            public string Message { get; set; }
 
-            /// <summary>Longer line describing the notification.</summary>
-            public string? Message { get; set; }
+            public string Meta { get; set; }
 
-            /// <summary>Optional meta line, e.g. channel or extra info.</summary>
-            public string? Meta { get; set; }
-
-            /// <summary>Text shown inside the colored pill.</summary>
-            public string BadgeText { get; set; } = string.Empty;
-
-            /// <summary>CSS class for the badge.</summary>
-            public string BadgeCssClass { get; set; } = string.Empty;
+            public string BadgeText { get; set; }
+            public string BadgeCssClass { get; set; }
 
             public bool IsUnread { get; set; }
         }

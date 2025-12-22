@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Doctor_AppointmentSystem.Controllers
 {
@@ -31,8 +32,11 @@ namespace Doctor_AppointmentSystem.Controllers
             string? experience,
             int page = 1)
         {
+            // Logged-in receptionist (used to scope dashboard data)
+            var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             // ==========================
-            // 1. TOP-CARD STATS
+            // 1. TOP-CARD STATS (Receptionist scoped)
             // ==========================
 
             var today = DateTime.Today;
@@ -42,11 +46,12 @@ namespace Doctor_AppointmentSystem.Controllers
             var nextMonthStart = monthStart.AddMonths(1);
 
             var totalAppointments = await _context.Appointments
-                .Where(a => a.IsActive)
+                .Where(a => a.IsActive && a.BookedByUserId == receptionistUserId)
                 .CountAsync();
 
             var todaysAppointmentsCount = await _context.Appointments
                 .Where(a => a.IsActive &&
+                            a.BookedByUserId == receptionistUserId &&
                             a.AppointmentDateTime >= today &&
                             a.AppointmentDateTime < tomorrow)
                 .CountAsync();
@@ -60,14 +65,18 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Where(p => p.IsActive &&
                             p.Status == PaymentStatus.Paid &&
                             p.PaidAtUtc >= todayStartUtc &&
-                            p.PaidAtUtc < tomorrowStartUtc)
+                            p.PaidAtUtc < tomorrowStartUtc &&
+                            p.Appointment.IsActive &&
+                            p.Appointment.BookedByUserId == receptionistUserId)
                 .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
             var monthlyCollections = await _context.Payments
                 .Where(p => p.IsActive &&
                             p.Status == PaymentStatus.Paid &&
                             p.PaidAtUtc >= monthStartUtc &&
-                            p.PaidAtUtc < nextMonthStartUtc)
+                            p.PaidAtUtc < nextMonthStartUtc &&
+                            p.Appointment.IsActive &&
+                            p.Appointment.BookedByUserId == receptionistUserId)
                 .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
             // ==========================
@@ -105,10 +114,10 @@ namespace Doctor_AppointmentSystem.Controllers
             // ==========================
 
             var doctorsQuery = _context.DoctorProfiles
-    .Include(d => d.User)
-    .Include(d => d.DoctorSpecialties)
-        .ThenInclude(ds => ds.Specialty)
-    .Where(d => d.IsActive && d.User.IsActive);
+                .Include(d => d.User)
+                .Include(d => d.DoctorSpecialties)
+                    .ThenInclude(ds => ds.Specialty)
+                .Where(d => d.IsActive && d.User.IsActive);
 
             if (!string.IsNullOrWhiteSpace(doctorName))
             {
@@ -174,9 +183,7 @@ namespace Doctor_AppointmentSystem.Controllers
                         ? "Room not set"
                         : $"Room {d.RoomNo}",
 
-                    // NEW: map qualification from DoctorProfile
                     Qualification = d.Qualification ?? string.Empty,
-
                     Bio = d.Description ?? string.Empty,
                     ProfileImagePath = d.User.ProfileImagePath ?? string.Empty,
                     AverageRating = d.Rating ?? 0.0,
@@ -184,9 +191,8 @@ namespace Doctor_AppointmentSystem.Controllers
                 })
                 .ToListAsync();
 
-
             // ==========================
-            // 4. TODAY'S APPOINTMENTS
+            // 4. TODAY'S APPOINTMENTS (Receptionist scoped)
             // ==========================
 
             var todaysAppointmentsQuery = _context.Appointments
@@ -195,6 +201,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Include(a => a.Doctor)
                     .ThenInclude(d => d.User)
                 .Where(a => a.IsActive &&
+                            a.BookedByUserId == receptionistUserId &&
                             a.AppointmentDateTime >= today &&
                             a.AppointmentDateTime < tomorrow)
                 .OrderBy(a => a.AppointmentDateTime);

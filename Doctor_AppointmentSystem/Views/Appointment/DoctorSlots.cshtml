@@ -1,0 +1,138 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorSlotsPageViewModel
+
+@{
+    ViewData["Title"] = "Book Appointment";
+
+    Layout = User.IsInRole("Receptionist")
+        ? "~/Views/Shared/_Layout_Receptionist.cshtml"
+        : "~/Views/Shared/_Layout_Patient.cshtml";
+
+    var backController = User.IsInRole("Receptionist")
+        ? "ReceptionistDashboard"
+        : "PatientDashboard";
+}
+
+<link rel="stylesheet" href="~/css/appointment-slots.css" asp-append-version="true" />
+
+<div class="appointment-page">
+    <div class="page-shell">
+        <div class="card-box">
+            <div class="card-head">
+                <div class="card-head-left">
+                    <h2 class="card-title">Book Appointment</h2>
+                    <p class="card-subtitle">
+                        Choose a date to view available slots for <strong>@Model.DoctorName</strong>.
+                    </p>
+                </div>
+
+                <a asp-controller="@backController" asp-action="Index" class="btn-back">
+                    ← Back
+                </a>
+            </div>
+
+            <div class="filters-row filters-row--compact">
+                <div class="field field--date">
+                    <label for="slotDate" class="label">Select Date</label>
+                    <input id="slotDate" type="date" class="input input--date" />
+                    <div class="hint">Only schedule-based times will be shown.</div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div id="slotsWrap" class="slots-wrap">
+                <div class="slots-empty">
+                    Select a date to load available slots.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+           const doctorProfileId = @(Model.DoctorProfileId);
+
+
+            const slotDate = document.getElementById('slotDate');
+            const slotsWrap = document.getElementById('slotsWrap');
+
+            // ✅ Set min date to today (prevents selecting past dates)
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            slotDate.min = todayStr;
+
+            // ✅ Default date: today
+            slotDate.value = todayStr;
+
+            // Auto load on change + first open
+            slotDate.addEventListener('change', loadSlots);
+            loadSlots();
+
+            async function loadSlots() {
+                const dateVal = slotDate.value;
+
+                // ✅ Extra guard: if user somehow selects a past date, block it
+                if (!dateVal || dateVal < todayStr) {
+                    slotsWrap.innerHTML = `<div class="slots-empty">Please select today or a future date.</div>`;
+                    return;
+                }
+
+                slotsWrap.innerHTML = `<div class="slots-loading">Loading slots...</div>`;
+
+                try {
+                    const url = `/Appointment/GetAvailableSlots?doctorProfileId=${doctorProfileId}&date=${encodeURIComponent(dateVal)}`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
+                    if (!res.ok) {
+                        slotsWrap.innerHTML = `<div class="slots-empty">Failed to load slots. Please try again.</div>`;
+                        return;
+                    }
+
+                    const data = await res.json();
+
+                    if (data && data.error) {
+                        slotsWrap.innerHTML = `<div class="slots-empty">${escapeHtml(data.error)}</div>`;
+                        return;
+                    }
+
+                    if (!data || data.length === 0) {
+                        slotsWrap.innerHTML = `<div class="slots-empty">No available slots for this date.</div>`;
+                        return;
+                    }
+
+                    const slotsHtml = data.map(s => {
+                        const slotValue = s.value; // "HH:mm"
+                        const slotText = s.text;
+
+                        const createUrl =
+                            `/Appointment/Create?doctorProfileId=${doctorProfileId}&date=${encodeURIComponent(dateVal)}&slot=${encodeURIComponent(slotValue)}`;
+
+                        return `<a class="slot-pill" href="${createUrl}">${escapeHtml(slotText)}</a>`;
+                    }).join('');
+
+                    slotsWrap.innerHTML = `
+                        <div class="slots-title">Available Slots</div>
+                        <div class="slots-grid">${slotsHtml}</div>
+                    `;
+                } catch (e) {
+                    slotsWrap.innerHTML = `<div class="slots-empty">Something went wrong loading slots. Please try again.</div>`;
+                }
+            }
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#039;');
+            }
+        })();
+    </script>
+}

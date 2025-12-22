@@ -36,6 +36,12 @@
 
     <!-- patient-specific dashboard content styles -->
     <link rel="stylesheet" href="~/css/patient-dashboard.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
+
+    <link rel="stylesheet" href="~/css/patient-profile.css" asp-append-version="true" />
+
+
 </head>
 <body>
     <div class="admin-layout">
@@ -66,12 +72,14 @@
                 </a>
 
                 <!-- BOOK APPOINTMENT -->
-                <a asp-controller="DoctorAppointments"
-                   asp-action="FindDoctor"
-                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "DoctorAppointments" ? "active" : "")">
+                <a asp-controller="PatientDashboard"
+                   asp-action="Index"
+                   asp-fragment="find-doctor"
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientDashboard" ? "active" : "")">
                     <div class="nav-link-icon">📅</div>
                     <span>Book Appointment</span>
                 </a>
+
 
                 <!-- MY APPOINTMENTS -->
                 <a asp-controller="PatientAppointments"
@@ -144,7 +152,8 @@
                 <div class="topbar-left">
                     <button class="menu-toggle" id="menuToggle">☰</button>
                     <div>
-                        <div class="topbar-title">@pageTitle</div>
+                        <div class="topbar-title">Sunshine Hospital</div>
+
                     </div>
                 </div>
                 <div class="topbar-right">
@@ -153,8 +162,65 @@
             </header>
 
             <section class="dashboard-content">
+
+                @{
+                    var successMessage = TempData["SuccessMessage"] as string;
+                    var errorMessage = TempData["ErrorMessage"] as string;
+                    var warningMessage = TempData["WarningMessage"] as string;
+                }
+
+                @if (!string.IsNullOrWhiteSpace(successMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-success" id="successToast">
+                            @successMessage
+                        </div>
+                    </div>
+
+                    <script>
+                        setTimeout(function () {
+                            var el = document.getElementById('successToast');
+                            if (el) el.classList.add('toast-hide');
+                        }, 4000);
+                    </script>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-error" id="errorToast">
+                            @errorMessage
+                        </div>
+                    </div>
+
+                    <script>
+                        setTimeout(function () {
+                            var el = document.getElementById('errorToast');
+                            if (el) el.classList.add('toast-hide');
+                        }, 4000);
+                    </script>
+                }
+
+                @* Warning shows as error style (since toast.css has no warning class) *@
+                @if (!string.IsNullOrWhiteSpace(warningMessage))
+                {
+                    <div class="toast-container">
+                        <div class="toast-message toast-error" id="warningToast">
+                            @warningMessage
+                        </div>
+                    </div>
+
+                    <script>
+                        setTimeout(function () {
+                            var el = document.getElementById('warningToast');
+                            if (el) el.classList.add('toast-hide');
+                        }, 4000);
+                    </script>
+                }
+
                 @RenderBody()
             </section>
+
         </main>
     </div>
 

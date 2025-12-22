@@ -34,6 +34,10 @@ namespace Doctor_AppointmentSystem.Data
         {
             base.OnModelCreating(builder);
 
+            // ============================
+            // APPOINTMENT RELATIONSHIPS
+            // ============================
+
             // Appointment -> DoctorProfile (NO CASCADE)
             builder.Entity<Appointment>()
                 .HasOne(a => a.Doctor)
@@ -42,11 +46,17 @@ namespace Doctor_AppointmentSystem.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Appointment -> PatientProfile (NO CASCADE)
+            // IMPORTANT: bind to navigation (a.Patient) so EF DOES NOT create a shadow FK named "PatientId"
             builder.Entity<Appointment>()
-                .HasOne<PatientProfile>()
+                .HasOne(a => a.Patient)
                 .WithMany()
                 .HasForeignKey(a => a.PatientProfileId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // ============================
+            // OTHER RELATIONSHIPS
+            // (keep your original safe config)
+            // ============================
 
             // DoctorReview -> DoctorProfile (NO CASCADE)
             builder.Entity<DoctorReview>()

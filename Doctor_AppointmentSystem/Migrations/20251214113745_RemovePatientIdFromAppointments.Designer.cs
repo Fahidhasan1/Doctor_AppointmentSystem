@@ -4,6 +4,7 @@ using Doctor_AppointmentSystem.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Doctor_AppointmentSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251214113745_RemovePatientIdFromAppointments")]
+    partial class RemovePatientIdFromAppointments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,6 +206,9 @@ namespace Doctor_AppointmentSystem.Migrations
                     b.Property<string>("LastStatusChangedByUserId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PatientProfileId")
                         .HasColumnType("int");
 
@@ -218,6 +224,8 @@ namespace Doctor_AppointmentSystem.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("PatientId");
 
                     b.HasIndex("PatientProfileId");
 
@@ -931,6 +939,12 @@ namespace Doctor_AppointmentSystem.Migrations
                         .IsRequired();
 
                     b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Doctor_AppointmentSystem.Models.PatientProfile", null)
                         .WithMany()
                         .HasForeignKey("PatientProfileId")
                         .OnDelete(DeleteBehavior.Restrict)

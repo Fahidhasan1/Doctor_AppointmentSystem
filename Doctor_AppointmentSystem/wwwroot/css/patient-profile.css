@@ -1,0 +1,199 @@
+﻿/* If these already exist in admin-dashboard.css, skip them */
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+.profile-left, .profile-right {
+    background: rgba(255,255,255,.92);
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 10px 28px rgba(0,0,0,.06);
+}
+
+.profile-photo-wrap {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    margin: 6px auto 10px auto;
+    overflow: hidden;
+    border: 3px solid rgba(0,0,0,.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-photo-fallback {
+    font-size: 44px;
+    font-weight: 900;
+}
+
+.profile-name {
+    text-align: center;
+    font-weight: 900;
+    font-size: 18px;
+    margin-top: 4px;
+}
+
+.profile-role {
+    text-align: center;
+    font-weight: 700;
+    opacity: .7;
+}
+
+.profile-email {
+    text-align: center;
+    opacity: .75;
+    margin-top: 6px;
+}
+
+.profile-photo-form {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.profile-side-details {
+    margin-top: 14px;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.profile-side-title {
+    font-weight: 900;
+    color: #6670a0;
+    margin-bottom: 6px;
+}
+
+.profile-side-item {
+    margin: 4px 0;
+    opacity: .85;
+    font-size: 13.5px;
+    line-height: 1.35;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+.btn-save-profile {
+    margin-top: 14px;
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-weight: 900;
+    width: 160px;
+}
+
+@media (max-width: 1100px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .btn-save-profile {
+        width: 100%;
+    }
+}
+
+
+/* ============================
+   Universal form controls style
+   (matches Admin UI look)
+============================ */
+
+.form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: rgba(255,255,255,.98);
+    font-size: 15px;
+    font-weight: 500;
+    color: #0f172a;
+    outline: none;
+}
+
+    .form-control:focus {
+        border-color: rgba(91, 94, 247, 0.55);
+        box-shadow: 0 0 0 4px rgba(91, 94, 247, 0.12);
+    }
+
+/* Labels to match admin size */
+.form-group label,
+label {
+    display: block;
+    font-weight: 800;
+    font-size: 15px;
+    margin-bottom: 8px;
+    color: #1e2a56;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    border: none;
+    font-size: 15px;
+}
+
+/* Primary (Save Profile like admin) */
+.btn-primary {
+    background: #5b5ef7;
+    color: #fff;
+    box-shadow: 0 10px 22px rgba(91, 94, 247, 0.25);
+}
+
+    .btn-primary:hover {
+        filter: brightness(0.95);
+    }
+
+/* Outline button (Change Photo like admin) */
+.btn-outline-primary {
+    background: #fff;
+    border: 1px solid rgba(91, 94, 247, 0.45);
+    color: #2b5cff;
+}
+
+    .btn-outline-primary:hover {
+        background: rgba(91, 94, 247, 0.06);
+    }
+
+/* Grid spacing */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group-full {
+    grid-column: 1 / -1;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 110px;
+}

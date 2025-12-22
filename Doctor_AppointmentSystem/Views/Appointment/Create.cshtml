@@ -1,0 +1,127 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.AppointmentCreateViewModel
+
+@{
+    ViewData["Title"] = "Confirm Appointment";
+
+    // ✅ Use correct sidebar/layout for both roles
+    Layout = User.IsInRole("Receptionist")
+        ? "~/Views/Shared/_Layout_Receptionist.cshtml"
+        : "~/Views/Shared/_Layout_Patient.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/appointment-create.css" asp-append-version="true" />
+
+<div class="page-shell">
+    <div class="card-box">
+        <div class="card-head">
+            <div>
+                <h2 class="card-title">Confirm Appointment</h2>
+                <p class="card-subtitle">Please confirm the details below before booking.</p>
+            </div>
+
+            @{
+                var backController = User.IsInRole("Receptionist")
+                ? "ReceptionistDashboard"
+                : "PatientDashboard";
+            }
+
+            <a asp-controller="@backController" asp-action="Index" class="btn-back">
+                ← Back
+            </a>
+        </div>
+
+        <div class="confirm-grid">
+            <div class="confirm-box">
+                <div class="confirm-label">DOCTOR</div>
+                <div class="confirm-value">@Model.DoctorName</div>
+            </div>
+
+            <div class="confirm-box">
+                <div class="confirm-label">DATE</div>
+                <div class="confirm-value">
+                    @(Model.AppointmentDate?.ToString("dddd, MMM dd, yyyy"))
+                </div>
+            </div>
+
+            <div class="confirm-box">
+                <div class="confirm-label">TIME</div>
+                <div class="confirm-value">
+                    @{
+                        var timeText = TimeSpan.TryParse(Model.SelectedSlot, out var ts)
+                        ? DateTime.Today.Add(ts).ToString("hh:mm tt")
+                        : Model.SelectedSlot;
+                    }
+                    @timeText
+                </div>
+
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <form asp-action="Create" method="post" class="form-wrap">
+            @Html.AntiForgeryToken()
+
+            <!-- Hidden values needed for POST -->
+            <input type="hidden" asp-for="DoctorProfileId" />
+            <input type="hidden" asp-for="AppointmentDate" />
+            <input type="hidden" asp-for="SelectedSlot" />
+
+            @if (User.IsInRole("Receptionist"))
+            {
+                <div class="field">
+                    <label class="label" asp-for="PatientProfileId">Patient</label>
+                    <select class="input" asp-for="PatientProfileId">
+                        <option value="">-- Select Patient --</option>
+                        @foreach (var p in Model.Patients)
+                        {
+                            <option value="@p.PatientProfileId">
+                                @p.PatientName
+                            </option>
+                        }
+                    </select>
+                    <span class="text-danger" asp-validation-for="PatientProfileId"></span>
+                </div>
+            }
+            else
+            {
+                <input type="hidden" asp-for="PatientProfileId" />
+            }
+
+            <div class="fields-row">
+                <div class="field">
+                    <label class="label" asp-for="VisitType">Visit Type (optional)</label>
+                    <input class="input" asp-for="VisitType" placeholder="e.g., Consultation" />
+                    <span class="text-danger" asp-validation-for="VisitType"></span>
+                </div>
+
+                <div class="field field--checkbox">
+                    <label class="checkbox">
+                        <input type="checkbox" asp-for="IsFirstVisit" />
+                        <span>First visit</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions-row">
+                <a class="btn-outline"
+                   asp-action="DoctorSlots"
+                   asp-route-doctorProfileId="@Model.DoctorProfileId">
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn-primary">
+                    Book Appointment
+                </button>
+            </div>
+
+            <div class="text-danger summary">
+                @Html.ValidationSummary(excludePropertyErrors: true)
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

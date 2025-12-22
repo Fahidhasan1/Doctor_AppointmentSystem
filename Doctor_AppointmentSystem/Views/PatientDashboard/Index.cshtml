@@ -7,8 +7,13 @@
 
 <!-- ============ TOP STATS (same structure as Admin/Doctor) ============ -->
 <div class="stats-grid">
+
     <!-- UPCOMING APPOINTMENTS -->
-    <div class="card stat-card">
+    <a asp-controller="PatientAppointments"
+       asp-action="Index"
+       asp-route-filter="upcoming"
+       asp-route-fromCard="true"
+       class="card stat-card stat-card-link">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Upcoming Appointments</div>
@@ -19,10 +24,14 @@
             </div>
         </div>
         <div class="stat-sub">Within next 7 days</div>
-    </div>
+    </a>
 
     <!-- COMPLETED VISITS -->
-    <div class="card stat-card">
+    <a asp-controller="PatientAppointments"
+       asp-action="Index"
+       asp-route-filter="completed"
+       asp-route-fromCard="true"
+       class="card stat-card stat-card-link">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Completed Visits</div>
@@ -33,10 +42,14 @@
             </div>
         </div>
         <div class="stat-sub">All time completed</div>
-    </div>
+    </a>
 
     <!-- CANCELLED / MISSED -->
-    <div class="card stat-card">
+    <a asp-controller="PatientAppointments"
+       asp-action="Index"
+       asp-route-filter="cancelled"
+       asp-route-fromCard="true"
+       class="card stat-card stat-card-link">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Cancelled / Missed</div>
@@ -47,10 +60,14 @@
             </div>
         </div>
         <div class="stat-sub">Cancelled or no-show</div>
-    </div>
+    </a>
 
     <!-- DIGITAL PAYMENTS -->
-    <div class="card stat-card">
+    <a asp-controller="PatientAppointments"
+       asp-action="Index"
+       asp-route-filter="payments"
+       asp-route-fromCard="true"
+       class="card stat-card stat-card-link">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Digital Payments</div>
@@ -61,11 +78,13 @@
             </div>
         </div>
         <div class="stat-sub">Paid via bKash &amp; cards</div>
-    </div>
+    </a>
+
 </div>
 
+
 <!-- ====== FIND YOUR DOCTOR SECTION (Patient Dashboard) ====== -->
-<section class="doctor-search-section">
+<section class="doctor-search-section" id="find-doctor">
     <h2 class="doctor-search-title">Find Your Doctor</h2>
 
     <!-- FILTER BAR -->
@@ -172,13 +191,14 @@
                             <span class="doctor-rating-value">@d.AverageRating.ToString("0.0")</span>
                             <span class="doctor-rating-count">(@d.ReviewCount reviews)</span>
                         </div>
-
-                        <a asp-controller="PatientBooking"
-                           asp-action="ViewSlots"
+                        <a asp-controller="Appointment"
+                           asp-action="DoctorSlots"
                            asp-route-doctorProfileId="@d.DoctorProfileId"
                            class="doctor-card-button">
                             View Slots
                         </a>
+
+
                     </div>
                 </div>
             }
@@ -465,31 +485,4 @@
     </div>
 </div>
 
-@* @section Scripts {
-    <!-- Live search & auto filter submit -->
-    <script>
-        (function () {
-            const form = document.getElementById("doctorFilterForm");
-            if (!form) return;
 
-            const nameInput = form.querySelector("input[name='doctorNameFilter']");
-            const selects = form.querySelectorAll("select[name='specialtyIdFilter'], select[name='experienceFilter']");
-            let typingTimer;
-
-            if (nameInput) {
-                nameInput.addEventListener("input", function () {
-                    clearTimeout(typingTimer);
-                    typingTimer = setTimeout(function () {
-                        form.submit();
-                    }, 400); // live search delay
-                });
-            }
-
-            selects.forEach(function (sel) {
-                sel.addEventListener("change", function () {
-                    form.submit();
-                });
-            });
-        })();
-    </script>
-} *@

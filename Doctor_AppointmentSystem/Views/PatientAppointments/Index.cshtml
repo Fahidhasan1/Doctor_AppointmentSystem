@@ -1,0 +1,291 @@
+﻿@using System
+@using System.Linq
+@model Doctor_AppointmentSystem.ViewModels.PatientAppointmentsIndexViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout_Patient.cshtml";
+
+    // Active pill helper
+    string active(string key) => (Model.Filter ?? "") == key ? "active" : "";
+
+    // Title override when coming from dashboard cards
+    string prettyTitle = "My Appointments";
+
+    if (Model.FromCard)
+    {
+        prettyTitle = (Model.Filter ?? "").ToLowerInvariant() switch
+        {
+            "upcoming" => "Upcoming Appointments",
+            "completed" => "Completed Visits",
+            "cancelled" => "Cancelled / Missed",
+            "payments" => "Paid Appointments",
+            _ => "My Appointments"
+        };
+    }
+
+    ViewData["Title"] = prettyTitle;
+}
+
+<div class="page-header">
+    <h2 class="page-title">@prettyTitle</h2>
+
+    @* Show subtitle ONLY when coming from sidebar (All view) *@
+    @if (!Model.FromCard)
+    {
+        <p class="page-subtitle">View and track your appointments.</p>
+    }
+</div>
+
+@* Filters visible ONLY for sidebar view *@
+@if (!Model.FromCard)
+{
+    <div class="filters-row">
+        <a asp-action="Index" asp-controller="PatientAppointments"
+           class="filter-pill @active("")">All</a>
+
+        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="upcoming"
+           class="filter-pill @active("upcoming")">Upcoming</a>
+
+        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="completed"
+           class="filter-pill @active("completed")">Completed</a>
+
+        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="cancelled"
+           class="filter-pill @active("cancelled")">Cancelled / Missed</a>
+
+        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="payments"
+           class="filter-pill @active("payments")">Paid</a>
+    </div>
+}
+
+@if (Model.Appointments == null || !Model.Appointments.Any())
+{
+    <div class="empty-state card">
+        <div class="empty-title">No appointments found</div>
+        <div class="empty-sub">
+            Try a different filter, or book a new appointment from the dashboard.
+        </div>
+
+        <div style="margin-top: 12px;">
+            <a asp-controller="PatientDashboard"
+               asp-action="Index"
+               asp-fragment="find-doctor"
+               class="btn-primary">
+                Book Appointment
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Doctor</th>
+                        <th>Specialty</th>
+                        <th>Visit Type</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.Appointments)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-main">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
+                                <div class="cell-sub">@a.AppointmentDateTime.ToString("hh:mm tt") (@a.DurationMinutes min)</div>
+                            </td>
+
+                            <td>
+                                <div class="cell-main">@a.DoctorName</div>
+                            </td>
+
+                            <td>
+                                <div class="cell-main">@(string.IsNullOrWhiteSpace(a.SpecialtyName) ? "-" : a.SpecialtyName)</div>
+                            </td>
+
+                            <td>
+                                <div class="cell-main">@(!string.IsNullOrWhiteSpace(a.VisitType) ? a.VisitType : "-")</div>
+                            </td>
+
+                            <td>
+                                <span class="badge @GetStatusBadgeClass(a.Status.ToString())">
+                                    @a.Status
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (a.IsPaid)
+                                {
+                                    <div class="cell-main">Paid @(a.AmountPaid.HasValue ? $"৳{a.AmountPaid.Value:0}" : "")</div>
+                                    <div class="cell-sub">@(!string.IsNullOrWhiteSpace(a.PaymentMethod) ? a.PaymentMethod : "")</div>
+                                }
+                                else
+                                {
+                                    <div class="cell-main">Unpaid</div>
+                                    <div class="cell-sub">—</div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@functions {
+    // Maps status text to badge styles (you can tweak names to match your CSS)
+    private string GetStatusBadgeClass(string status)
+    {
+        status = (status ?? "").ToLowerInvariant();
+
+        if (status.Contains("confirm") || status.Contains("resched"))
+            return "badge-success";
+
+        if (status.Contains("complete"))
+            return "badge-info";
+
+        if (status.Contains("cancel") || status.Contains("noshow"))
+            return "badge-danger";
+
+        return "badge-neutral";
+    }
+}
+
+<style>
+    /* Basic styling (safe even if you already have css) */
+    .page-header {
+        margin-bottom: 14px;
+    }
+
+    .page-title {
+        margin: 0;
+        font-size: 22px;
+    }
+
+    .page-subtitle {
+        margin: 6px 0 0;
+        opacity: .8;
+    }
+
+    .filters-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0 16px;
+    }
+
+    .filter-pill {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 999px;
+        text-decoration: none;
+        border: 1px solid rgba(0,0,0,.12);
+        color: inherit;
+        background: rgba(255,255,255,.75);
+    }
+
+        .filter-pill.active {
+            border-color: rgba(0,0,0,.35);
+            font-weight: 600;
+        }
+
+    .card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 14px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    }
+
+    .table-card {
+        padding: 0;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table th, .table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(0,0,0,.08);
+            vertical-align: top;
+            text-align: left;
+        }
+
+        .table th {
+            font-size: 13px;
+            opacity: .75;
+            letter-spacing: .2px;
+        }
+
+    .cell-main {
+        font-weight: 600;
+    }
+
+    .cell-sub {
+        font-size: 12px;
+        opacity: .7;
+        margin-top: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 22px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .empty-sub {
+        opacity: .8;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 10px;
+        text-decoration: none;
+        border: 1px solid rgba(0,0,0,.12);
+        background: rgba(0,0,0,.05);
+        color: inherit;
+        font-weight: 600;
+    }
+
+    /* Badge set */
+    .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid rgba(0,0,0,.1);
+    }
+
+    .badge-success {
+        background: rgba(34,197,94,.12);
+    }
+
+    .badge-info {
+        background: rgba(59,130,246,.12);
+    }
+
+    .badge-danger {
+        background: rgba(239,68,68,.12);
+    }
+
+    .badge-neutral {
+        background: rgba(107,114,128,.12);
+    }
+</style>

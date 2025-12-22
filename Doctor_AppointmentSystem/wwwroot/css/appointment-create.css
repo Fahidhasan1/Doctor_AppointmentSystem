@@ -1,0 +1,166 @@
+﻿.page-shell {
+    padding: 28px;
+}
+
+.card-box {
+    background: #fff;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.card-title {
+    font-size: 34px;
+    font-weight: 700;
+    margin: 0;
+    color: #0b1b3a;
+}
+
+.card-subtitle {
+    margin: 6px 0 0;
+    color: #6b7a99;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid #cdd7ff;
+    color: #2b4cff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.confirm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.confirm-box {
+    border: 1px solid #dbe4ff;
+    background: #f7f9ff;
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.confirm-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #6b7a99;
+}
+
+.confirm-value {
+    margin-top: 6px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0b1b3a;
+}
+
+.divider {
+    height: 1px;
+    background: #e6ecff;
+    margin: 22px 0;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #0b1b3a;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #dbe4ff;
+    border-radius: 12px;
+    outline: none;
+}
+
+.fields-row {
+    display: grid;
+    grid-template-columns: 1.4fr 0.6fr;
+    gap: 18px;
+    align-items: end;
+}
+
+.field--checkbox {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.checkbox {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: 700;
+    color: #0b1b3a;
+}
+
+.actions-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.btn-outline {
+    border: 1px solid #cdd7ff;
+    background: #fff;
+    color: #2b4cff;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 12px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    border: none;
+    background: #4f5dff;
+    color: #fff;
+    font-weight: 800;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.summary {
+    margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+    .confirm-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fields-row {
+        grid-template-columns: 1fr;
+    }
+
+    .actions-row {
+        justify-content: stretch;
+    }
+
+    .btn-outline, .btn-primary {
+        width: 100%;
+        text-align: center;
+    }
+}

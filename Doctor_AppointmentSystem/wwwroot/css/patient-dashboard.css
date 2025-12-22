@@ -555,3 +555,15 @@
         margin-top: 10px;
     }
 }
+
+
+/* Make stat cards clickable without changing appearance */
+a.stat-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+    a.stat-card-link:hover {
+        cursor: pointer;
+    }

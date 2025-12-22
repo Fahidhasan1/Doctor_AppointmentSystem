@@ -173,26 +173,67 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/admin-dashboard.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
-
     @{
         var loginSuccess = TempData["LoginSuccess"] as string;
+        var successMessage = TempData["SuccessMessage"] as string;
+        var errorMessage = TempData["ErrorMessage"] as string;
+        var warningMessage = TempData["WarningMessage"] as string;
     }
 
-    @if (!string.IsNullOrEmpty(loginSuccess))
+
+    @if (!string.IsNullOrWhiteSpace(loginSuccess))
     {
         <div class="toast-container">
-            <div class="toast-message toast-success">
-                @loginSuccess
-            </div>
+            <div class="toast-message toast-success" id="loginToast">@loginSuccess</div>
         </div>
-
         <script>
             setTimeout(function () {
-                var el = document.querySelector('.toast-message');
+                var el = document.getElementById('loginToast');
                 if (el) el.classList.add('toast-hide');
             }, 4000);
         </script>
     }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="toast-container">
+            <div class="toast-message toast-success" id="successToast">@successMessage</div>
+        </div>
+        <script>
+            setTimeout(function () {
+                var el = document.getElementById('successToast');
+                if (el) el.classList.add('toast-hide');
+            }, 4000);
+        </script>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="toast-container">
+            <div class="toast-message toast-error" id="errorToast">@errorMessage</div>
+        </div>
+        <script>
+            setTimeout(function () {
+                var el = document.getElementById('errorToast');
+                if (el) el.classList.add('toast-hide');
+            }, 4000);
+        </script>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(warningMessage))
+    {
+        <div class="toast-container">
+            <div class="toast-message toast-error" id="warningToast">@warningMessage</div>
+        </div>
+        <script>
+            setTimeout(function () {
+                var el = document.getElementById('warningToast');
+                if (el) el.classList.add('toast-hide');
+            }, 4000);
+        </script>
+    }
+
+
 
 
 </body>

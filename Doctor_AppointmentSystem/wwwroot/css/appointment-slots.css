@@ -1,0 +1,203 @@
+﻿/* Page wrapper: ensures it fits inside dashboard content area */
+.appointment-page {
+    width: 100%;
+}
+
+.page-shell {
+    width: 100%;
+}
+
+.card-box {
+    width: 100%;
+    max-width: 100%;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 18px 45px rgba(20, 40, 80, 0.10);
+    padding: 26px 28px;
+}
+
+/* Header */
+.card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.card-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    color: #0c1b3a;
+}
+
+.card-subtitle {
+    margin: 0;
+    color: #55627a;
+    font-size: 15px;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #cfd9ff;
+    padding: 10px 16px;
+    border-radius: 999px;
+    color: #2b4dff;
+    text-decoration: none;
+    font-weight: 600;
+    background: #f7f9ff;
+}
+
+    .btn-back:hover {
+        background: #eef3ff;
+    }
+
+/* Filters row */
+.filters-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 18px;
+    align-items: end;
+    margin-top: 10px;
+}
+
+.field .label {
+    display: block;
+    font-weight: 600;
+    color: #223055;
+    margin-bottom: 8px;
+}
+
+.input {
+    width: 100%;
+    height: 46px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid #d6def5;
+    outline: none;
+    font-size: 15px;
+}
+
+    .input:focus {
+        border-color: #9db1ff;
+        box-shadow: 0 0 0 4px rgba(79, 114, 255, 0.12);
+    }
+
+.hint {
+    margin-top: 8px;
+    color: #7a869f;
+    font-size: 13px;
+}
+
+.field--right {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 12px;
+    border: none;
+    background: #4f72ff;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(79, 114, 255, 0.25);
+}
+
+    .btn-primary:hover {
+        filter: brightness(0.97);
+    }
+
+/* Divider */
+.divider {
+    height: 1px;
+    background: #e8ecfb;
+    margin: 20px 0;
+}
+
+/* Slots area */
+.slots-wrap {
+    width: 100%;
+}
+
+.slots-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0c1b3a;
+    margin-bottom: 12px;
+}
+
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 1200px) {
+    .slots-grid {
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+    .filters-row {
+        grid-template-columns: 1fr;
+    }
+
+    .field--right {
+        justify-content: flex-start;
+    }
+
+    .slots-grid {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+    }
+}
+
+.slot-pill {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 14px;
+    border: 1px solid #d6def5;
+    background: #f7f9ff;
+    text-decoration: none;
+    color: #122042;
+    font-weight: 700;
+    transition: 0.15s ease;
+}
+
+    .slot-pill:hover {
+        background: #eef3ff;
+        border-color: #b8c6ff;
+        transform: translateY(-1px);
+    }
+
+.slots-empty,
+.slots-loading {
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px dashed #d6def5;
+    color: #5b6b87;
+    background: #fbfcff;
+}
+
+/* Make date section compact like your yellow mark */
+.filters-row--compact {
+    grid-template-columns: 1fr;
+    justify-items: start;
+}
+
+.field--date {
+    max-width: 420px; /* controls yellow-mark width */
+}
+
+.input--date {
+    max-width: 420px;
+}

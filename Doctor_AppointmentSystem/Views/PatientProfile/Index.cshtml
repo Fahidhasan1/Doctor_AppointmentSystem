@@ -1,0 +1,179 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.PatientProfileViewModel
+@using Doctor_AppointmentSystem.Enums
+
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout_Patient.cshtml";
+
+    var fullName = $"{Model.FirstName} {Model.LastName}".Trim();
+    var initial = (!string.IsNullOrWhiteSpace(fullName) ? fullName.Trim()[0].ToString().ToUpper() : "P");
+}
+
+<div class="card">
+    <div class="card-title-row">
+        <div>
+            <h3>My Profile</h3>
+            <div class="card-title-sub">
+                View and update your patient profile information.
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- LEFT PANEL (same as admin) -->
+        <div class="profile-left">
+            <div class="profile-photo-wrap">
+                @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+                {
+                    <img src="@Url.Content(Model.ProfileImagePath)" class="profile-photo" alt="Profile" />
+                }
+                else
+                {
+                    <div class="profile-photo-fallback">@initial</div>
+                }
+            </div>
+
+            <div class="profile-name">@fullName</div>
+            <div class="profile-role">Patient</div>
+            <div class="profile-email">@Model.Email</div>
+
+            <!-- Change Photo (WORKING) -->
+            <form asp-controller="PatientProfile"
+                  asp-action="ChangePhoto"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="profile-photo-form">
+                @Html.AntiForgeryToken()
+
+                <input type="file"
+                       name="profilePhoto"
+                       id="profilePhotoInput"
+                       accept=".jpg,.jpeg,.png,.webp"
+                       hidden />
+
+                <button type="button" class="btn btn-outline-primary" id="changePhotoBtn">
+                    Change Photo
+                </button>
+
+                <button type="submit" class="btn btn-outline-primary" id="uploadPhotoBtn" style="display:none;">
+                    Upload
+                </button>
+            </form>
+
+            <!-- LEFT DETAILS (same look as admin Personal Details box) -->
+            <div class="profile-side-details">
+                <div class="profile-side-title">Personal Details</div>
+                <div class="profile-side-item"><b>Phone:</b> @(!string.IsNullOrWhiteSpace(Model.PhoneNumber) ? Model.PhoneNumber : "-")</div>
+                <div class="profile-side-item"><b>Date of Birth:</b> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "-")</div>
+                <div class="profile-side-item"><b>Gender:</b> @(Model.Gender.HasValue? Model.Gender.Value.ToString() : "-")</div>
+
+                <div class="profile-side-title mt-3">Health Details</div>
+                <div class="profile-side-item"><b>Blood Group:</b> @(!string.IsNullOrWhiteSpace(Model.BloodGroup) ? Model.BloodGroup : "-")</div>
+
+                <div class="profile-side-title mt-3">Emergency Contact</div>
+                <div class="profile-side-item"><b>Name:</b> @(!string.IsNullOrWhiteSpace(Model.EmergencyContactName) ? Model.EmergencyContactName : "-")</div>
+                <div class="profile-side-item"><b>Phone:</b> @(!string.IsNullOrWhiteSpace(Model.EmergencyContact) ? Model.EmergencyContact : "-")</div>
+                <div class="profile-side-item"><b>Relation:</b> @(!string.IsNullOrWhiteSpace(Model.EmergencyContactRelation) ? Model.EmergencyContactRelation : "-")</div>
+
+                <div class="profile-side-title mt-3">Address</div>
+                <div class="profile-side-item">@(!string.IsNullOrWhiteSpace(Model.Address) ? Model.Address : "-")</div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL (same as admin) -->
+        <div class="profile-right">
+            <form asp-controller="PatientProfile" asp-action="Index" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label asp-for="FirstName"></label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LastName"></label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input value="@Model.Email" class="form-control" disabled />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PhoneNumber"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth">Date of Birth</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Gender"></label>
+                        <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Gender>()" class="form-control">
+                            <option value="">Select</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BloodGroup">Blood Group</label>
+                        <input asp-for="BloodGroup" class="form-control" placeholder="e.g. A+" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EmergencyContactName">Emergency Contact Name</label>
+                        <input asp-for="EmergencyContactName" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EmergencyContact">Emergency Contact Number</label>
+                        <input asp-for="EmergencyContact" class="form-control" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="EmergencyContactRelation">Relation</label>
+                        <input asp-for="EmergencyContactRelation" class="form-control" />
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label asp-for="Address"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <!-- ADMIN STYLE SAVE BUTTON -->
+                <button type="submit" class="btn btn-primary btn-save-profile">
+                    Save Profile
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const btn = document.getElementById('changePhotoBtn');
+            const input = document.getElementById('profilePhotoInput');
+            const uploadBtn = document.getElementById('uploadPhotoBtn');
+
+            if (!btn || !input) return;
+
+            btn.addEventListener('click', () => input.click());
+
+            input.addEventListener('change', () => {
+                uploadBtn.style.display = (input.files && input.files.length) ? "inline-flex" : "none";
+            });
+        })();
+    </script>
+}

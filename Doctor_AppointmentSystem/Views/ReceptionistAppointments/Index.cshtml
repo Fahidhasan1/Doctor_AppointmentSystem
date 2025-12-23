@@ -3,140 +3,166 @@
 @{
     ViewData["Title"] = "Appointments";
     Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
-    var active = (Model.Filter ?? "all").ToLower();
+
+    var currentFilter = (Model.Filter ?? "all").ToLower();
+    bool isActive(string f) => currentFilter == f;
 }
 
-<div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
-        <div>
-            <h2 style="margin:0;">Appointments</h2>
-            <div style="margin-top:6px;">Showing appointments booked by you.</div>
+<link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
 
-            <div style="margin-top:10px;">
-                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="all"
-                   style="@(active == "all" ? "font-weight:600;" : "")">All</a>
-                <span> | </span>
-                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="today"
-                   style="@(active == "today" ? "font-weight:600;" : "")">Today</a>
-                <span> | </span>
-                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="upcoming"
-                   style="@(active == "upcoming" ? "font-weight:600;" : "")">Upcoming</a>
-                <span> | </span>
-                <a asp-controller="ReceptionistAppointments" asp-action="Index" asp-route-filter="cancelled"
-                   style="@(active == "cancelled" ? "font-weight:600;" : "")">Cancelled</a>
+<div class="appt-page">
+
+    <div class="appt-card">
+        <div class="appt-header">
+            <div>
+                <h2 class="appt-title">Appointments</h2>
+                <div class="appt-subtitle">Showing appointments booked by you.</div>
+
+                <!-- Filter Tabs -->
+                <div class="appt-tabs">
+                    <a class="appt-tab @(isActive("all") ? "active" : "")"
+                       asp-controller="ReceptionistAppointments"
+                       asp-action="Index"
+                       asp-route-filter="all">
+                        All
+                    </a>
+
+                    <a class="appt-tab @(isActive("today") ? "active" : "")"
+                       asp-controller="ReceptionistAppointments"
+                       asp-action="Index"
+                       asp-route-filter="today">
+                        Today
+                    </a>
+
+                    <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
+                       asp-controller="ReceptionistAppointments"
+                       asp-action="Index"
+                       asp-route-filter="upcoming">
+                        Upcoming
+                    </a>
+
+                    <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
+                       asp-controller="ReceptionistAppointments"
+                       asp-action="Index"
+                       asp-route-filter="cancelled">
+                        Cancelled
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div>
-            <a asp-controller="ReceptionistDashboard"
-               asp-action="Index"
-               asp-fragment="find-doctor"
-               class="btn-reset-full">
-                + New Booking
-            </a>
-        </div>
-    </div>
+        @if (Model.Appointments == null || !Model.Appointments.Any())
+        {
+            <div class="appt-empty">
+                No appointments found.
+            </div>
+        }
+        else
+        {
+            <div class="appt-table-wrap">
+                <table class="appt-table">
+                    <thead>
+                        <tr>
+                            <th>Date &amp; Time</th>
+                            <th>Doctor</th>
+                            <th>Patient</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th class="appt-actions-col">Action</th>
+                        </tr>
+                    </thead>
 
-    <div style="margin-top:18px; overflow-x:auto;">
-        <table style="width:100%; border-collapse:separate; border-spacing:0 10px;">
-            <thead>
-                <tr style="text-align:left;">
-                    <th style="padding:8px 10px;">Date &amp; Time</th>
-                    <th style="padding:8px 10px;">Doctor</th>
-                    <th style="padding:8px 10px;">Patient</th>
-                    <th style="padding:8px 10px;">Status</th>
-                    <th style="padding:8px 10px;">Payment</th>
-                    <th style="padding:8px 10px;">Action</th>
-                </tr>
-            </thead>
+                    <tbody>
+                        @foreach (var a in Model.Appointments)
+                        {
+                            <tr>
+                                <!-- Date & Time (stacked) -->
+                                <td>
+                                    <div class="appt-dt">
+                                        <div class="appt-dt-date">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
+                                        <div class="appt-dt-time">@a.AppointmentDateTime.ToString("hh:mm tt")</div>
+                                    </div>
+                                </td>
 
-            <tbody>
-                @if (Model.Appointments == null || !Model.Appointments.Any())
-                {
-                    <tr>
-                        <td colspan="6" style="padding:14px 10px;">
-                            No appointments found.
-                        </td>
-                    </tr>
-                }
-                else
-                {
-                    foreach (var a in Model.Appointments)
-                    {
-                        <tr style="background:#fff; border-radius:12px;">
-                            <td style="padding:10px;">
-                                @a.AppointmentDateTime.ToString("ddd, MMM dd, yyyy")
-                                <span style="opacity:.7;">•</span>
-                                @a.AppointmentDateTime.ToString("hh:mm tt")
-                            </td>
+                                <td>@a.DoctorName</td>
+                                <td>@a.PatientName</td>
+                                <td>@a.Status</td>
 
-                            <td style="padding:10px; white-space:nowrap;">
-                                @a.DoctorName
-                            </td>
+                                <!-- Payment + Amount (stacked) -->
+                                <td>
+                                    <div class="appt-pay">
+                                        <div class="appt-pay-status">@a.PaymentDisplay</div>
+                                        @if (a.Amount > 0)
+                                        {
+                                            <div class="appt-pay-amount">৳@a.Amount.ToString("0")</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="appt-pay-amount">—</div>
+                                        }
+                                    </div>
+                                </td>
 
-                            <td style="padding:10px; white-space:nowrap;">
-                                @a.PatientName
-                            </td>
-
-                            <td style="padding:10px;">
-                                @a.StatusText
-                            </td>
-
-                            <td style="padding:10px; white-space:nowrap;">
-                                @a.PaymentSummary
-                            </td>
-
-                            <td style="padding:10px; white-space:nowrap;">
-                                @if (!a.CanShowActions)
-                                {
-                                    <span style="opacity:.6;">—</span>
-                                }
-                                else
-                                {
-                                    <details>
-                                        <summary style="cursor:pointer; user-select:none;">
-                                            Actions ▾
-                                        </summary>
-
-                                        <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                                <!-- Actions (center + same line) -->
+                                <td class="appt-actions-col">
+                                    @if (a.CanShowActions)
+                                    {
+                                        <div class="appt-actions">
                                             @if (a.CanCollectCash)
                                             {
-                                                <form asp-action="CollectCash" asp-controller="ReceptionistAppointments" method="post">
+                                                <form asp-controller="ReceptionistAppointments"
+                                                      asp-action="CollectCash"
+                                                      method="post"
+                                                      class="appt-action-form">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@a.AppointmentId" />
-                                                    <input type="hidden" name="filter" value="@Model.Filter" />
-                                                    <button type="submit" class="btn-reset-full">Collect Cash</button>
+                                                    <button type="submit" class="appt-btn appt-btn-primary">
+                                                        Collect Cash
+                                                    </button>
                                                 </form>
                                             }
 
-                                            @if (a.CanConfirmMobileBanking)
+                                            @if (a.CanConfirmMobile)
                                             {
-                                                <form asp-action="ConfirmMobileBanking" asp-controller="ReceptionistAppointments" method="post">
+                                                <form asp-controller="ReceptionistAppointments"
+                                                      asp-action="ConfirmMobile"
+                                                      method="post"
+                                                      class="appt-action-form">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@a.AppointmentId" />
-                                                    <input type="hidden" name="filter" value="@Model.Filter" />
-                                                    <button type="submit" class="btn-reset-full">Confirm Mobile</button>
+                                                    <button type="submit" class="appt-btn appt-btn-primary">
+                                                        Confirm Mobile
+                                                    </button>
                                                 </form>
                                             }
 
                                             @if (a.CanCancel)
                                             {
-                                                <form asp-action="Cancel" asp-controller="ReceptionistAppointments" method="post"
-                                                      onsubmit="return confirm('Cancel this appointment?');">
+                                                <form asp-controller="ReceptionistAppointments"
+                                                      asp-action="Cancel"
+                                                      method="post"
+                                                      class="appt-action-form"
+                                                      onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@a.AppointmentId" />
-                                                    <input type="hidden" name="filter" value="@Model.Filter" />
-                                                    <button type="submit" class="btn-reset-full">Cancel</button>
+                                                    <button type="submit" class="appt-btn appt-btn-danger">
+                                                        Cancel
+                                                    </button>
                                                 </form>
                                             }
                                         </div>
-                                    </details>
-                                }
-                            </td>
-                        </tr>
-                    }
-                }
-            </tbody>
-        </table>
+                                    }
+                                    else
+                                    {
+                                        <span class="appt-dash">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
+
 </div>

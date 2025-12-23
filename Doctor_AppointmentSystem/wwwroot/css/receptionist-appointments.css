@@ -1,0 +1,252 @@
+﻿/* ============================
+   FILTER TABS
+============================ */
+/*.appt-filters {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0 18px;
+}
+
+.appt-filter {
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid #d6dcff;
+    color: #1f2a7c;
+    font-weight: 500;
+    text-decoration: none;
+    background: #fff;
+}
+
+    .appt-filter.active {
+        background: #eef1ff;
+        border-color: #8b9cff;
+    }*/
+
+/* ============================
+   TABLE
+============================ */
+/*.appointments-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .appointments-table th {
+        text-align: left;
+        padding: 14px 10px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .appointments-table td {
+        padding: 12px 10px;
+        vertical-align: middle;
+    }
+
+    .appointments-table tbody tr + tr td {
+        border-top: 1px solid rgba(0,0,0,0.06);
+    }*/
+
+/* Date & Time stacked */
+/*.dt-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.dt-date {
+    font-weight: 600;
+}
+
+.dt-time {
+    opacity: 0.75;
+}*/
+
+/* Text wrapping */
+/*.wrap {
+    max-width: 220px;
+    white-space: normal;
+}*/
+
+/* ============================
+   ACTION BUTTONS
+============================ */
+/*.appt-actions {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.btn-action {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #8b9cff;
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-danger {
+    border-color: #ff8b8b;
+    color: #c40000;
+}*/
+
+
+.appt-page {
+    width: 100%;
+}
+
+.appt-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(14, 28, 64, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.appt-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.appt-subtitle {
+    margin-top: 6px;
+    color: #475569;
+}
+
+.appt-tabs {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.appt-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #0f172a;
+    text-decoration: none;
+    font-weight: 600;
+    background: #fff;
+}
+
+    .appt-tab:hover {
+        background: rgba(99, 102, 241, 0.08);
+    }
+
+    .appt-tab.active {
+        background: rgba(99, 102, 241, 0.14);
+        border-color: rgba(99, 102, 241, 0.55);
+    }
+
+.appt-table-wrap {
+    margin-top: 18px;
+    overflow-x: auto;
+}
+
+.appt-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    .appt-table thead th {
+        text-align: left;
+        font-weight: 800;
+        color: #0f172a;
+        padding: 14px 10px;
+    }
+
+    .appt-table tbody td {
+        padding: 14px 10px;
+        vertical-align: middle;
+        border-top: 1px solid rgba(2, 6, 23, 0.08);
+        color: #0f172a;
+    }
+
+.appt-actions-col {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.appt-dt-date {
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.appt-dt-time {
+    margin-top: 4px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.appt-pay-status {
+    font-weight: 700;
+}
+
+.appt-pay-amount {
+    margin-top: 4px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+.appt-actions {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.appt-action-form {
+    margin: 0;
+}
+
+.appt-btn {
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    background: #fff;
+    color: #1e293b;
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    line-height: 1;
+}
+
+    .appt-btn:hover {
+        background: rgba(99, 102, 241, 0.08);
+    }
+
+.appt-btn-primary {
+    border-color: rgba(99, 102, 241, 0.55);
+    color: #1d4ed8;
+}
+
+.appt-btn-danger {
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #dc2626;
+}
+
+    .appt-btn-danger:hover {
+        background: rgba(239, 68, 68, 0.08);
+    }
+
+.appt-dash {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.appt-empty {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.03);
+    color: #475569;
+    font-weight: 600;
+}

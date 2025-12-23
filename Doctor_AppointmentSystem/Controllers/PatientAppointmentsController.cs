@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-// Change these namespaces if your project uses different ones
 using Doctor_AppointmentSystem.Data;
 using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.Enums;
@@ -28,13 +28,10 @@ namespace Doctor_AppointmentSystem.Controllers
 
         // GET: /PatientAppointments?filter=upcoming|completed|cancelled|payments
         public async Task<IActionResult> Index(string? filter, bool fromCard = false)
-
         {
-            // 1) Identify logged-in user
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Challenge();
 
-            // 2) Get patient profile
             var patientProfile = await _context.PatientProfiles
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.UserId == user.Id && p.IsActive);
@@ -45,26 +42,20 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction("Index", "PatientDashboard");
             }
 
-            // 3) Normalize filter
             var normalized = (filter ?? "").Trim().ToLowerInvariant();
             var now = DateTime.Now;
 
-            // 4) Base query (only this patient's active appointments)
             IQueryable<Appointment> baseQuery = _context.Appointments
                 .AsNoTracking()
                 .Where(a => a.PatientProfileId == patientProfile.Id && a.IsActive);
 
-            // 5) Apply filter so dashboard cards show ONLY that category
             switch (normalized)
             {
-              
-                   case "upcoming":
+                case "upcoming":
                     baseQuery = baseQuery.Where(a =>
                         a.AppointmentDateTime >= now &&
-                        (a.Status == AppointmentStatus.Confirmed ||
-                         a.Status == AppointmentStatus.Rescheduled));
+                        (a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Rescheduled));
                     break;
-
 
                 case "completed":
                     baseQuery = baseQuery.Where(a => a.Status == AppointmentStatus.Completed);
@@ -72,26 +63,21 @@ namespace Doctor_AppointmentSystem.Controllers
 
                 case "cancelled":
                     baseQuery = baseQuery.Where(a =>
-                        a.Status == AppointmentStatus.Cancelled ||
-                        a.Status == AppointmentStatus.NoShow);
+                        a.Status == AppointmentStatus.Cancelled || a.Status == AppointmentStatus.NoShow);
                     break;
 
+                // ✅ NEW: payments mode (Digital Payments card)
+                // We filter after payment mapping because payments are in Payments table.
                 case "payments":
-                    // Paid appointments only
-                    baseQuery = baseQuery.Where(a =>
-                        _context.Payments.Any(p =>
-                            p.AppointmentId == a.Id &&
-                            p.IsActive &&
-                            p.Status == PaymentStatus.Paid));
+                    // keep baseQuery as-is (patient's appointments)
+                    // we'll reduce the list to only paid after mapping.
                     break;
 
                 default:
-                    // All (sidebar)
                     normalized = "";
                     break;
             }
 
-            // 6) Project to ViewModel
             var list = await baseQuery
                 .OrderByDescending(a => a.AppointmentDateTime)
                 .Select(a => new PatientAppointmentListItemViewModel
@@ -102,39 +88,117 @@ namespace Doctor_AppointmentSystem.Controllers
                     VisitType = a.VisitType,
                     Status = a.Status,
 
-                    // Doctor name (from DoctorProfiles -> Users)
                     DoctorName = _context.DoctorProfiles
                         .Where(d => d.Id == a.DoctorProfileId)
                         .Select(d => ((d.User.FirstName ?? "") + " " + (d.User.LastName ?? "")).Trim())
                         .FirstOrDefault() ?? "",
 
-                    // Specialty (first specialty if multiple)
                     SpecialtyName = _context.DoctorSpecialties
                         .Where(ds => ds.DoctorProfileId == a.DoctorProfileId)
                         .Select(ds => ds.Specialty.Name)
                         .FirstOrDefault(),
 
-                    // Payment info
-                    IsPaid = _context.Payments.Any(p =>
-                        p.AppointmentId == a.Id &&
-                        p.IsActive &&
-                        p.Status == PaymentStatus.Paid),
-
-                    AmountPaid = _context.Payments
-                        .Where(p => p.AppointmentId == a.Id && p.IsActive && p.Status == PaymentStatus.Paid)
-                        .OrderByDescending(p => p.PaidAtUtc)
-                        .Select(p => (decimal?)p.Amount)
+                    FeeAmount = _context.DoctorProfiles
+                        .Where(d => d.Id == a.DoctorProfileId)
+                        .Select(d => d.VisitCharge)
                         .FirstOrDefault(),
 
-                    PaymentMethod = _context.Payments
-                        .Where(p => p.AppointmentId == a.Id && p.IsActive && p.Status == PaymentStatus.Paid)
-                        .OrderByDescending(p => p.PaidAtUtc)
-                        .Select(p => p.Method.ToString())
-                        .FirstOrDefault()
+                    PaymentDisplay = "Unpaid",
+                    Amount = 0m,
+                    IsPaid = false,
+                    PaidPaymentId = null, // ✅ make sure this exists in your VM
+
+                    CanShowActions = false,
+                    CanPay = false,
+                    CanCancel = false
                 })
                 .ToListAsync();
 
-            // 7) Send to View
+            var ids = list.Select(x => x.Id).ToList();
+
+            var latestPayments = await _context.Payments
+                .AsNoTracking()
+                .Where(p => p.IsActive && ids.Contains(p.AppointmentId))
+                .GroupBy(p => p.AppointmentId)
+                .Select(g => g.OrderByDescending(p => p.CreatedAt).FirstOrDefault())
+                .ToListAsync();
+
+            var payMap = latestPayments
+                .Where(p => p != null)
+                .ToDictionary(p => p!.AppointmentId, p => p!);
+
+            foreach (var row in list)
+            {
+                var isCancelled = row.Status == AppointmentStatus.Cancelled
+                                  || row.Status == AppointmentStatus.NoShow;
+
+                var isCompleted = row.Status == AppointmentStatus.Completed;
+                var isFuture = row.AppointmentDateTime >= DateTime.Now;
+
+                // -------------------------
+                // PAYMENT STATUS HANDLING
+                // -------------------------
+                if (payMap.TryGetValue(row.Id, out var pay))
+                {
+                    if (pay.Status == PaymentStatus.Paid)
+                    {
+                        row.PaymentDisplay = $"Paid ({pay.Method})";
+                        row.IsPaid = true;
+                        row.Amount = pay.Amount;
+                        row.PaidPaymentId = pay.Id; // 🔑 enables receipt
+                    }
+                    else
+                    {
+                        row.PaymentDisplay = "Unpaid";
+                        row.IsPaid = false;
+                        row.Amount = row.FeeAmount;
+                        row.PaidPaymentId = null;
+                    }
+                }
+                else
+                {
+                    row.PaymentDisplay = "Unpaid";
+                    row.Amount = row.FeeAmount;
+                    row.IsPaid = false;
+                    row.PaidPaymentId = null;
+                }
+
+                // -------------------------
+                // ACTION VISIBILITY LOGIC
+                // -------------------------
+                var isConfirmLike =
+                    row.Status == AppointmentStatus.Confirmed
+                    || row.Status == AppointmentStatus.Rescheduled;
+
+                row.CanCancel =
+                    isFuture
+                    && isConfirmLike
+                    && !isCancelled
+                    && !isCompleted
+                    && !row.IsPaid;
+
+                row.CanPay =
+                    isFuture
+                    && isConfirmLike
+                    && !isCancelled
+                    && !isCompleted
+                    && !row.IsPaid;
+
+                row.CanShowActions =
+                    row.CanCancel
+                    || row.CanPay
+                    || row.IsPaid;
+            }
+
+            // ✅ NEW: Apply payments filter AFTER payment mapping
+            if (normalized == "payments")
+            {
+                list = list
+                    .Where(x => x.IsPaid && x.PaidPaymentId.HasValue)
+                    .OrderByDescending(x => x.AppointmentDateTime)
+                    .ToList();
+            }
+
             var vm = new PatientAppointmentsIndexViewModel
             {
                 Filter = normalized,
@@ -142,8 +206,107 @@ namespace Doctor_AppointmentSystem.Controllers
                 FromCard = fromCard
             };
 
-
             return View(vm);
         }
+
+
+
+        // POST: /PatientAppointments/Cancel
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(int id, string? filter = "")
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+            var patientProfileId = await _context.PatientProfiles
+                .Where(p => p.UserId == userId && p.IsActive)
+                .Select(p => (int?)p.Id)
+                .FirstOrDefaultAsync();
+
+            if (patientProfileId == null)
+            {
+                TempData["ErrorMessage"] = "Patient profile not found or inactive.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            var appt = await _context.Appointments
+                .FirstOrDefaultAsync(a => a.Id == id && a.IsActive && a.PatientProfileId == patientProfileId);
+
+            if (appt == null)
+            {
+                TempData["ErrorMessage"] = "Appointment not found.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            var alreadyPaid = await _context.Payments.AnyAsync(p =>
+                p.IsActive && p.AppointmentId == id && p.Status == PaymentStatus.Paid);
+
+            if (alreadyPaid)
+            {
+                TempData["ErrorMessage"] = "Cannot cancel after payment is completed.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            // This releases the slot because GetAvailableSlots ignores Cancelled
+            appt.Status = AppointmentStatus.Cancelled;
+            appt.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Appointment cancelled successfully. The slot is now available.";
+            return RedirectToAction(nameof(Index), new { filter });
+        }
+
+        // POST: /PatientAppointments/Pay
+        // Option B: No DB payment created now. Just show message.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Pay(int id, string? filter = "")
+        {
+            var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
+
+            var patientProfileId = await _context.PatientProfiles
+                .Where(p => p.UserId == userId && p.IsActive)
+                .Select(p => (int?)p.Id)
+                .FirstOrDefaultAsync();
+
+            if (patientProfileId == null)
+            {
+                TempData["ErrorMessage"] = "Patient profile not found or inactive.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            var appt = await _context.Appointments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id && a.IsActive && a.PatientProfileId == patientProfileId);
+
+            if (appt == null)
+            {
+                TempData["ErrorMessage"] = "Appointment not found.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            if (appt.Status == AppointmentStatus.Cancelled || appt.Status == AppointmentStatus.NoShow || appt.Status == AppointmentStatus.Completed)
+            {
+                TempData["ErrorMessage"] = "Payment is not available for this appointment.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            var alreadyPaid = await _context.Payments.AnyAsync(p =>
+                p.IsActive && p.AppointmentId == id && p.Status == PaymentStatus.Paid);
+
+            if (alreadyPaid)
+            {
+                TempData["SuccessMessage"] = "This appointment is already paid.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            // Option B: No pending record created now
+            TempData["InfoMessage"] = "bKash payment will be added soon. Please pay later.";
+            return RedirectToAction(nameof(Index), new { filter });
+        }
+
     }
 }

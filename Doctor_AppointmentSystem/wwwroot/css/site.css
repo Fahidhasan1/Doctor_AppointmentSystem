@@ -85,3 +85,14 @@ body {
     gap: 8px; /* consistent spacing between Edit and Activate/Deactivate */
 }
 
+.appt-btn-link {
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .appt-btn-link:hover,
+    .appt-btn-link:focus {
+        text-decoration: none !important;
+    }

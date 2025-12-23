@@ -1,24 +1,24 @@
-﻿@using System
-@using System.Linq
-@model Doctor_AppointmentSystem.ViewModels.PatientAppointmentsIndexViewModel
+﻿@model Doctor_AppointmentSystem.ViewModels.PatientAppointmentsIndexViewModel
 
 @{
+    ViewData["Title"] = "My Appointments";
     Layout = "~/Views/Shared/_Layout_Patient.cshtml";
 
-    // Active pill helper
-    string active(string key) => (Model.Filter ?? "") == key ? "active" : "";
+    var currentFilter = (Model.Filter ?? "").Trim().ToLowerInvariant();
+    bool isActive(string f) => currentFilter == (f ?? "");
 
-    // Title override when coming from dashboard cards
+    // ✅ Payments mode (Digital Payments card)
+    bool isPaymentsView = currentFilter == "payments";
+
     string prettyTitle = "My Appointments";
-
     if (Model.FromCard)
     {
-        prettyTitle = (Model.Filter ?? "").ToLowerInvariant() switch
+        prettyTitle = currentFilter switch
         {
             "upcoming" => "Upcoming Appointments",
             "completed" => "Completed Visits",
             "cancelled" => "Cancelled / Missed",
-            "payments" => "Paid Appointments",
+            "payments" => "Digital Payments", // ✅ NEW
             _ => "My Appointments"
         };
     }
@@ -26,266 +26,334 @@
     ViewData["Title"] = prettyTitle;
 }
 
-<div class="page-header">
-    <h2 class="page-title">@prettyTitle</h2>
+<link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
 
-    @* Show subtitle ONLY when coming from sidebar (All view) *@
-    @if (!Model.FromCard)
-    {
-        <p class="page-subtitle">View and track your appointments.</p>
-    }
-</div>
+<div class="appt-page">
+    <div class="appt-card">
+        <div class="appt-header">
+            <div>
+                <h2 class="appt-title">@prettyTitle</h2>
 
-@* Filters visible ONLY for sidebar view *@
-@if (!Model.FromCard)
-{
-    <div class="filters-row">
-        <a asp-action="Index" asp-controller="PatientAppointments"
-           class="filter-pill @active("")">All</a>
+                @if (!Model.FromCard)
+                {
+                    <div class="appt-subtitle">View and track your appointments.</div>
 
-        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="upcoming"
-           class="filter-pill @active("upcoming")">Upcoming</a>
+                    <div class="appt-tabs">
+                        <a class="appt-tab @(isActive("") ? "active" : "")"
+                           asp-controller="PatientAppointments"
+                           asp-action="Index"
+                           asp-route-filter="">
+                            All
+                        </a>
 
-        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="completed"
-           class="filter-pill @active("completed")">Completed</a>
+                        <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
+                           asp-controller="PatientAppointments"
+                           asp-action="Index"
+                           asp-route-filter="upcoming">
+                            Upcoming
+                        </a>
 
-        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="cancelled"
-           class="filter-pill @active("cancelled")">Cancelled / Missed</a>
+                        <a class="appt-tab @(isActive("completed") ? "active" : "")"
+                           asp-controller="PatientAppointments"
+                           asp-action="Index"
+                           asp-route-filter="completed">
+                            Completed
+                        </a>
 
-        <a asp-action="Index" asp-controller="PatientAppointments" asp-route-filter="payments"
-           class="filter-pill @active("payments")">Paid</a>
-    </div>
-}
+                        <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
+                           asp-controller="PatientAppointments"
+                           asp-action="Index"
+                           asp-route-filter="cancelled">
+                            Cancelled / Missed
+                        </a>
 
-@if (Model.Appointments == null || !Model.Appointments.Any())
-{
-    <div class="empty-state card">
-        <div class="empty-title">No appointments found</div>
-        <div class="empty-sub">
-            Try a different filter, or book a new appointment from the dashboard.
+                        @* ✅ Optional: show payments tab in normal view too *@
+                        <a class="appt-tab @(isActive("payments") ? "active" : "")"
+                           asp-controller="PatientAppointments"
+                           asp-action="Index"
+                           asp-route-filter="payments">
+                            Digital Payments
+                        </a>
+                    </div>
+                }
+            </div>
         </div>
 
-        <div style="margin-top: 12px;">
-            <a asp-controller="PatientDashboard"
-               asp-action="Index"
-               asp-fragment="find-doctor"
-               class="btn-primary">
-                Book Appointment
-            </a>
-        </div>
-    </div>
-}
-else
-{
-    <div class="card table-card">
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Date &amp; Time</th>
-                        <th>Doctor</th>
-                        <th>Specialty</th>
-                        <th>Visit Type</th>
-                        <th>Status</th>
-                        <th>Payment</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var a in Model.Appointments)
-                    {
-                        <tr>
-                            <td>
-                                <div class="cell-main">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
-                                <div class="cell-sub">@a.AppointmentDateTime.ToString("hh:mm tt") (@a.DurationMinutes min)</div>
-                            </td>
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info">@TempData["InfoMessage"]</div>
+        }
 
-                            <td>
-                                <div class="cell-main">@a.DoctorName</div>
-                            </td>
+        @if (Model.Appointments == null || !Model.Appointments.Any())
+        {
+            <div class="appt-empty">
+                No appointments found.
+            </div>
+        }
+        else
+        {
+            <div class="appt-table-wrap">
+                <table class="appt-table">
+                    <thead>
+                        @if (isPaymentsView)
+                        {
+                            <tr>
+                                <th>Appointment</th>
+                                <th>Doctor</th>
+                                <th>Payment</th>
+                                <th class="appt-actions-col">Receipt</th>
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Doctor</th>
+                                <th>Specialty</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th class="appt-actions-col">Action</th>
+                            </tr>
+                        }
+                    </thead>
 
-                            <td>
-                                <div class="cell-main">@(string.IsNullOrWhiteSpace(a.SpecialtyName) ? "-" : a.SpecialtyName)</div>
-                            </td>
+                    <tbody>
+                        @foreach (var a in Model.Appointments)
+                        {
+                            // ✅ In payments view, show ONLY PAID items
+                            if (isPaymentsView && !(a.IsPaid && a.PaidPaymentId.HasValue))
+                            {
+                                continue;
+                            }
 
-                            <td>
-                                <div class="cell-main">@(!string.IsNullOrWhiteSpace(a.VisitType) ? a.VisitType : "-")</div>
-                            </td>
-
-                            <td>
-                                <span class="badge @GetStatusBadgeClass(a.Status.ToString())">
-                                    @a.Status
-                                </span>
-                            </td>
-
-                            <td>
-                                @if (a.IsPaid)
+                            <tr>
+                                @if (isPaymentsView)
                                 {
-                                    <div class="cell-main">Paid @(a.AmountPaid.HasValue ? $"৳{a.AmountPaid.Value:0}" : "")</div>
-                                    <div class="cell-sub">@(!string.IsNullOrWhiteSpace(a.PaymentMethod) ? a.PaymentMethod : "")</div>
+                                    <td>
+                                        <div class="appt-dt">
+                                            <div class="appt-dt-date">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
+                                            <div class="appt-dt-time">@a.AppointmentDateTime.ToString("hh:mm tt") (@a.DurationMinutes min)</div>
+                                        </div>
+                                    </td>
+
+                                    <td>@a.DoctorName</td>
+
+                                    <td>
+                                        <div class="appt-pay">
+                                            <div class="appt-pay-status">@a.PaymentDisplay</div>
+                                            @if (a.Amount > 0)
+                                            {
+                                                <div class="appt-pay-amount">৳@a.Amount.ToString("0")</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="appt-pay-amount">—</div>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <td class="appt-actions-col">
+                                        @if (a.IsPaid && a.PaidPaymentId.HasValue)
+                                        {
+                                            <a asp-controller="PatientReceipts"
+                                               asp-action="Download"
+                                               asp-route-paymentId="@a.PaidPaymentId"
+                                               class="appt-btn appt-btn-primary appt-btn-link">
+                                                Download Receipt
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="appt-dash">—</span>
+                                        }
+                                    </td>
                                 }
                                 else
                                 {
-                                    <div class="cell-main">Unpaid</div>
-                                    <div class="cell-sub">—</div>
+                                    <td>
+                                        <div class="appt-dt">
+                                            <div class="appt-dt-date">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
+                                            <div class="appt-dt-time">@a.AppointmentDateTime.ToString("hh:mm tt") (@a.DurationMinutes min)</div>
+                                        </div>
+                                    </td>
+
+                                    <td>@a.DoctorName</td>
+
+                                    <td>@(string.IsNullOrWhiteSpace(a.SpecialtyName) ? "-" : a.SpecialtyName)</td>
+
+                                    <td>@a.Status</td>
+
+                                    <td>
+                                        <div class="appt-pay">
+                                            <div class="appt-pay-status">@a.PaymentDisplay</div>
+
+                                            @if (a.Amount > 0)
+                                            {
+                                                <div class="appt-pay-amount">৳@a.Amount.ToString("0")</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="appt-pay-amount">—</div>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <td class="appt-actions-col">
+                                        @if (a.IsPaid && a.PaidPaymentId.HasValue)
+                                        {
+                                            <a asp-controller="PatientReceipts"
+                                               asp-action="Download"
+                                               asp-route-paymentId="@a.PaidPaymentId"
+                                               class="appt-btn appt-btn-primary appt-btn-link">
+                                                Download Receipt
+                                            </a>
+                                        }
+                                        else if (a.CanShowActions)
+                                        {
+                                            <div class="appt-actions">
+                                                @if (a.CanPay)
+                                                {
+                                                    <form asp-controller="PatientAppointments"
+                                                          asp-action="Pay"
+                                                          method="post"
+                                                          class="appt-action-form">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@a.Id" />
+                                                        <input type="hidden" name="filter" value="@Model.Filter" />
+
+                                                        <button type="submit" class="appt-btn appt-btn-primary">
+                                                            Pay
+                                                        </button>
+                                                    </form>
+                                                }
+
+                                                @if (a.CanCancel)
+                                                {
+                                                    <form asp-controller="PatientAppointments"
+                                                          asp-action="Cancel"
+                                                          method="post"
+                                                          class="appt-action-form cancel-form">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@a.Id" />
+                                                        <input type="hidden" name="filter" value="@Model.Filter" />
+
+                                                        <button type="button"
+                                                                class="appt-btn appt-btn-danger js-cancel-btn"
+                                                                data-doctor="@a.DoctorName"
+                                                                data-datetime="@a.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")">
+                                                            Cancel
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="appt-dash">—</span>
+                                        }
+                                    </td>
                                 }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Cancel Modal -->
+<div id="cancelModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="cancelModalTitle">
+        <div class="modal-header">
+            <h3 id="cancelModalTitle" class="modal-title">Cancel Appointment</h3>
+            <button type="button" class="modal-close" id="cancelModalCloseBtn">×</button>
+        </div>
+
+        <div class="modal-body">
+            <p class="modal-text">Are you sure you want to cancel this appointment?</p>
+
+            <div class="modal-details">
+                <div><span>Doctor:</span> <strong id="cancelDoctorText">—</strong></div>
+                <div><span>Date & Time:</span> <strong id="cancelDateTimeText">—</strong></div>
+            </div>
+
+            <div class="modal-warning">
+                Cancelling will free the slot so other patients can book it.
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="appt-btn" id="cancelModalBackBtn">No, keep it</button>
+            <button type="button" class="appt-btn appt-btn-danger" id="cancelModalConfirmBtn">
+                Yes, cancel appointment
+            </button>
         </div>
     </div>
-}
+</div>
 
-@functions {
-    // Maps status text to badge styles (you can tweak names to match your CSS)
-    private string GetStatusBadgeClass(string status)
-    {
-        status = (status ?? "").ToLowerInvariant();
+<script>
+    (function () {
+        const modal = document.getElementById('cancelModal');
+        const closeBtn = document.getElementById('cancelModalCloseBtn');
+        const backBtn = document.getElementById('cancelModalBackBtn');
+        const confirmBtn = document.getElementById('cancelModalConfirmBtn');
 
-        if (status.Contains("confirm") || status.Contains("resched"))
-            return "badge-success";
+        const doctorText = document.getElementById('cancelDoctorText');
+        const dateTimeText = document.getElementById('cancelDateTimeText');
 
-        if (status.Contains("complete"))
-            return "badge-info";
+        let formToSubmit = null;
 
-        if (status.Contains("cancel") || status.Contains("noshow"))
-            return "badge-danger";
-
-        return "badge-neutral";
-    }
-}
-
-<style>
-    /* Basic styling (safe even if you already have css) */
-    .page-header {
-        margin-bottom: 14px;
-    }
-
-    .page-title {
-        margin: 0;
-        font-size: 22px;
-    }
-
-    .page-subtitle {
-        margin: 6px 0 0;
-        opacity: .8;
-    }
-
-    .filters-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin: 10px 0 16px;
-    }
-
-    .filter-pill {
-        display: inline-block;
-        padding: 8px 12px;
-        border-radius: 999px;
-        text-decoration: none;
-        border: 1px solid rgba(0,0,0,.12);
-        color: inherit;
-        background: rgba(255,255,255,.75);
-    }
-
-        .filter-pill.active {
-            border-color: rgba(0,0,0,.35);
-            font-weight: 600;
+        function openModal() {
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
         }
 
-    .card {
-        background: #fff;
-        border-radius: 14px;
-        padding: 14px;
-        box-shadow: 0 6px 18px rgba(0,0,0,.06);
-    }
-
-    .table-card {
-        padding: 0;
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-    }
-
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-        .table th, .table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid rgba(0,0,0,.08);
-            vertical-align: top;
-            text-align: left;
+        function closeModal() {
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            formToSubmit = null;
         }
 
-        .table th {
-            font-size: 13px;
-            opacity: .75;
-            letter-spacing: .2px;
-        }
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.js-cancel-btn');
+            if (!btn) return;
 
-    .cell-main {
-        font-weight: 600;
-    }
+            e.preventDefault();
+            e.stopPropagation();
 
-    .cell-sub {
-        font-size: 12px;
-        opacity: .7;
-        margin-top: 2px;
-    }
+            formToSubmit = btn.closest('form');
 
-    .empty-state {
-        text-align: center;
-        padding: 22px;
-    }
+            doctorText.textContent = btn.getAttribute('data-doctor') || '—';
+            dateTimeText.textContent = btn.getAttribute('data-datetime') || '—';
 
-    .empty-title {
-        font-size: 18px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
+            openModal();
+        });
 
-    .empty-sub {
-        opacity: .8;
-    }
+        confirmBtn.addEventListener('click', function () {
+            if (formToSubmit) {
+                formToSubmit.submit();
+            }
+        });
 
-    .btn-primary {
-        display: inline-block;
-        padding: 10px 14px;
-        border-radius: 10px;
-        text-decoration: none;
-        border: 1px solid rgba(0,0,0,.12);
-        background: rgba(0,0,0,.05);
-        color: inherit;
-        font-weight: 600;
-    }
+        [closeBtn, backBtn].forEach(x => x.addEventListener('click', closeModal));
 
-    /* Badge set */
-    .badge {
-        display: inline-block;
-        padding: 6px 10px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
-        border: 1px solid rgba(0,0,0,.1);
-    }
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeModal();
+        });
 
-    .badge-success {
-        background: rgba(34,197,94,.12);
-    }
-
-    .badge-info {
-        background: rgba(59,130,246,.12);
-    }
-
-    .badge-danger {
-        background: rgba(239,68,68,.12);
-    }
-
-    .badge-neutral {
-        background: rgba(107,114,128,.12);
-    }
-</style>
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    })();
+</script>

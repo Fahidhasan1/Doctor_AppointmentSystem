@@ -11,11 +11,23 @@ namespace Doctor_AppointmentSystem.ViewModels
         public int DurationMinutes { get; set; }
         public string? VisitType { get; set; }
         public AppointmentStatus Status { get; set; }
+
         public string DoctorName { get; set; } = "";
         public string? SpecialtyName { get; set; }
+
+        // Fee for this appointment (doctor visit charge)
+        public decimal FeeAmount { get; set; }
+
+        // Payment display values for the table
+        public string PaymentDisplay { get; set; } = "Unpaid";
+        public decimal Amount { get; set; }
         public bool IsPaid { get; set; }
-        public decimal? AmountPaid { get; set; }
-        public string? PaymentMethod { get; set; }
+
+        // Row actions
+        public bool CanShowActions { get; set; }
+        public bool CanPay { get; set; }
+        public bool CanCancel { get; set; }
+        public int? PaidPaymentId { get; set; }
        
 
 

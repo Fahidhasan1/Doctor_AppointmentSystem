@@ -1,0 +1,292 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.PatientReceiptViewModel
+@{
+    ViewData["Title"] = "Appointment Receipt";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Appointment Receipt</title>
+
+    <style>
+        /* =========================
+                   A4 PAGE SETUP
+                ========================== */
+        @@page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6fb;
+            margin: 0;
+            padding: 20px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* This is the A4 “sheet” */
+        .print-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Inner padding like real paper margins */
+        .sheet-content {
+            padding: 18mm 16mm;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* =========================
+                   WATERMARK (behind content)
+                ========================== */
+        .receipt-watermark {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-25deg);
+            font-size: 78px;
+            font-weight: 800;
+            color: rgba(0, 0, 0, 0.06);
+            white-space: nowrap;
+            user-select: none;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* =========================
+                   HEADER
+                ========================== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #e6e9f2;
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+
+        .hospital h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 0.2px;
+        }
+
+        .hospital small {
+            display: block;
+            margin-top: 4px;
+            color: #6c7286;
+            font-size: 14px;
+        }
+
+        .receipt-meta {
+            text-align: right;
+            font-size: 14px;
+            color: #111;
+            line-height: 1.5;
+        }
+
+            .receipt-meta strong {
+                font-weight: 700;
+            }
+
+        /* =========================
+                   SECTIONS
+                ========================== */
+        .section {
+            margin-top: 18px;
+        }
+
+            .section h3 {
+                margin: 0 0 10px;
+                font-size: 16px;
+                color: #2f3565;
+                letter-spacing: 0.2px;
+            }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px 40px;
+        }
+
+        .item span {
+            display: block;
+            font-size: 13px;
+            color: #6c7286;
+            margin-bottom: 4px;
+        }
+
+        .item strong {
+            font-size: 15px;
+            color: #111;
+        }
+
+        .divider {
+            height: 1px;
+            background: #e6e9f2;
+            margin: 18px 0;
+        }
+
+        .footer-note {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #6c7286;
+            text-align: center;
+        }
+
+        /* =========================
+                   ACTION BUTTONS (screen only)
+                ========================== */
+        .actions {
+            margin-top: 22px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 11px 18px;
+            border-radius: 10px;
+            border: 1px solid #cfd3ff;
+            background: #fff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #6269ff;
+            color: #fff;
+            border-color: #6269ff;
+        }
+
+        /* =========================
+                   PRINT RULES
+                ========================== */
+        @@media print {
+            body {
+                background: #fff !important;
+                padding: 0 !important;
+            }
+
+            .print-sheet {
+                width: auto !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .sheet-content {
+                padding: 0 !important;
+            }
+            /* Hide buttons in print */
+            .actions {
+                display: none !important;
+            }
+            /* Keep watermark visible but subtle */
+            .receipt-watermark {
+                color: rgba(0, 0, 0, 0.07) !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="print-sheet">
+        <div class="receipt-watermark">@Model.HospitalName</div>
+
+        <div class="sheet-content">
+            <div class="header">
+                <div class="hospital">
+                    <h1>@Model.HospitalName</h1>
+                    <small>Appointment Receipt / Visit Slip</small>
+                </div>
+
+                <div class="receipt-meta">
+                    <div><strong>Receipt No:</strong> @Model.ReceiptNo</div>
+                    <div>Issued: @Model.IssuedAt.ToString("dd MMM yyyy, hh:mm tt")</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>Patient Information</h3>
+                <div class="grid">
+                    <div class="item"><span>Name</span><strong>@Model.PatientName</strong></div>
+                    <div class="item"><span>Patient Code</span><strong>@Model.PatientCode</strong></div>
+                    <div class="item"><span>Phone</span><strong>@(string.IsNullOrWhiteSpace(Model.PatientPhone) ? "-" : Model.PatientPhone)</strong></div>
+                    <div class="item"><span>Gender</span><strong>@(string.IsNullOrWhiteSpace(Model.PatientGender) ? "-" : Model.PatientGender)</strong></div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <h3>Appointment Details</h3>
+                <div class="grid">
+                    <div class="item"><span>Doctor</span><strong>@Model.DoctorName</strong></div>
+                    <div class="item"><span>Specialty</span><strong>@Model.Specialty</strong></div>
+                    <div class="item"><span>Room No</span><strong>@(string.IsNullOrWhiteSpace(Model.RoomNo) ? "-" : Model.RoomNo)</strong></div>
+                    <div class="item"><span>Date & Time</span><strong>@Model.AppointmentDateTime.ToString("dd MMM yyyy, hh:mm tt")</strong></div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="section">
+                <h3>Payment Information</h3>
+                <div class="grid">
+                    <div class="item"><span>Amount</span><strong>৳@Model.Amount.ToString("0")</strong></div>
+                    <div class="item"><span>Method</span><strong>@Model.Method</strong></div>
+                    <div class="item"><span>Provider</span><strong>@(string.IsNullOrWhiteSpace(Model.ProviderName) ? "-" : Model.ProviderName)</strong></div>
+                    <div class="item"><span>Transaction ID</span><strong>@(string.IsNullOrWhiteSpace(Model.TransactionId) ? "-" : Model.TransactionId)</strong></div>
+                </div>
+            </div>
+
+            @if (Model.ShowIssuer)
+            {
+                <div class="divider"></div>
+
+                <div class="section">
+                    <h3>Issued By</h3>
+                    <div class="grid">
+                        <div class="item">
+                            <span>@Model.IssuerRole</span>
+                            <strong>@Model.IssuedBy</strong>
+                        </div>
+                        <div class="item">
+                            <span>Note</span>
+                            <strong>Printed for patient verification</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="footer-note">
+                Please arrive at least <strong>10 minutes early</strong> and bring this receipt for verification.
+            </div>
+
+            <div class="actions">
+                <button class="btn" onclick="history.back()">Back</button>
+                <button class="btn btn-primary" onclick="window.print()">Print / Save PDF</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,10 +1,9 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Doctor_AppointmentSystem.Data;
 using Doctor_AppointmentSystem.Enums;
-using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,57 +31,52 @@ namespace Doctor_AppointmentSystem.Controllers
             string? experience,
             int page = 1)
         {
-            // Logged-in receptionist (used to scope dashboard data)
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             // ==========================
-            // 1. TOP-CARD STATS (Receptionist scoped)
+            // 1) CARD LOGIC (FIXED)
             // ==========================
+            // ✅ "Today" means "BOOKED TODAY" => use Appointment.CreatedAt
+            var todayLocal = DateTime.Today;
+            var tomorrowLocal = todayLocal.AddDays(1);
 
-            var today = DateTime.Today;
-            var tomorrow = today.AddDays(1);
+            // convert local day range to UTC (safe with PaidAtUtc / CreatedAt that are stored in UTC)
+            var todayStartUtc = DateTime.SpecifyKind(todayLocal, DateTimeKind.Local).ToUniversalTime();
+            var tomorrowStartUtc = DateTime.SpecifyKind(tomorrowLocal, DateTimeKind.Local).ToUniversalTime();
 
-            var monthStart = new DateTime(today.Year, today.Month, 1);
-            var nextMonthStart = monthStart.AddMonths(1);
-
+            // total booked all time (by this receptionist)
             var totalAppointments = await _context.Appointments
                 .Where(a => a.IsActive && a.BookedByUserId == receptionistUserId)
                 .CountAsync();
 
+            // ✅ booked today = CreatedAt within today range (UTC)
             var todaysAppointmentsCount = await _context.Appointments
-                .Where(a => a.IsActive &&
-                            a.BookedByUserId == receptionistUserId &&
-                            a.AppointmentDateTime >= today &&
-                            a.AppointmentDateTime < tomorrow)
+                .Where(a => a.IsActive
+                            && a.BookedByUserId == receptionistUserId
+                            && a.CreatedAt >= todayStartUtc
+                            && a.CreatedAt < tomorrowStartUtc)
                 .CountAsync();
 
-            var todayStartUtc = DateTime.SpecifyKind(today, DateTimeKind.Local).ToUniversalTime();
-            var tomorrowStartUtc = DateTime.SpecifyKind(tomorrow, DateTimeKind.Local).ToUniversalTime();
-            var monthStartUtc = DateTime.SpecifyKind(monthStart, DateTimeKind.Local).ToUniversalTime();
-            var nextMonthStartUtc = DateTime.SpecifyKind(nextMonthStart, DateTimeKind.Local).ToUniversalTime();
-
+            // ✅ collection today + total collection:
+            // In your project: only the receptionist who booked can confirm payment,
+            // so Payment.InitiatedByUserId == receptionistUserId is the correct KPI.
             var todaysCollections = await _context.Payments
-                .Where(p => p.IsActive &&
-                            p.Status == PaymentStatus.Paid &&
-                            p.PaidAtUtc >= todayStartUtc &&
-                            p.PaidAtUtc < tomorrowStartUtc &&
-                            p.Appointment.IsActive &&
-                            p.Appointment.BookedByUserId == receptionistUserId)
+                .Where(p => p.IsActive
+                            && p.Status == PaymentStatus.Paid
+                            && p.InitiatedByUserId == receptionistUserId
+                            && p.PaidAtUtc >= todayStartUtc
+                            && p.PaidAtUtc < tomorrowStartUtc)
                 .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
-            var monthlyCollections = await _context.Payments
-                .Where(p => p.IsActive &&
-                            p.Status == PaymentStatus.Paid &&
-                            p.PaidAtUtc >= monthStartUtc &&
-                            p.PaidAtUtc < nextMonthStartUtc &&
-                            p.Appointment.IsActive &&
-                            p.Appointment.BookedByUserId == receptionistUserId)
+            var totalCollections = await _context.Payments
+                .Where(p => p.IsActive
+                            && p.Status == PaymentStatus.Paid
+                            && p.InitiatedByUserId == receptionistUserId)
                 .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
             // ==========================
-            // 2. FILTER OPTIONS
+            // 2) FILTER OPTIONS
             // ==========================
-
             var specialtyOptions = await _context.Specialties
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Name)
@@ -110,9 +104,8 @@ namespace Doctor_AppointmentSystem.Controllers
             };
 
             // ==========================
-            // 3. DOCTOR QUERY + CARDS
+            // 3) DOCTOR QUERY + CARDS
             // ==========================
-
             var doctorsQuery = _context.DoctorProfiles
                 .Include(d => d.User)
                 .Include(d => d.DoctorSpecialties)
@@ -123,9 +116,7 @@ namespace Doctor_AppointmentSystem.Controllers
             {
                 var term = doctorName.Trim().ToLower();
                 doctorsQuery = doctorsQuery.Where(d =>
-                    (d.User.FirstName + " " + d.User.LastName)
-                        .ToLower()
-                        .Contains(term));
+                    (d.User.FirstName + " " + d.User.LastName).ToLower().Contains(term));
             }
 
             if (specialtyId.HasValue && specialtyId.Value > 0)
@@ -166,13 +157,8 @@ namespace Doctor_AppointmentSystem.Controllers
                     DoctorProfileId = d.Id,
                     FullName = d.User.FirstName + " " + d.User.LastName,
                     PrimarySpecialty =
-                        d.DoctorSpecialties
-                            .Where(ds => ds.IsPrimary)
-                            .Select(ds => ds.Specialty.Name)
-                            .FirstOrDefault()
-                        ?? d.DoctorSpecialties
-                            .Select(ds => ds.Specialty.Name)
-                            .FirstOrDefault()
+                        d.DoctorSpecialties.Where(ds => ds.IsPrimary).Select(ds => ds.Specialty.Name).FirstOrDefault()
+                        ?? d.DoctorSpecialties.Select(ds => ds.Specialty.Name).FirstOrDefault()
                         ?? "General Physician",
 
                     ExperienceText = d.Experience > 0
@@ -192,18 +178,16 @@ namespace Doctor_AppointmentSystem.Controllers
                 .ToListAsync();
 
             // ==========================
-            // 4. TODAY'S APPOINTMENTS (Receptionist scoped)
+            // 4) TODAY'S APPOINTMENTS LIST (NULL-SAFE FIX)
             // ==========================
-
+            // Note: this section is a dashboard table, it can remain based on AppointmentDateTime (actual schedule)
             var todaysAppointmentsQuery = _context.Appointments
-                .Include(a => a.Patient)
-                    .ThenInclude(p => p.User)
-                .Include(a => a.Doctor)
-                    .ThenInclude(d => d.User)
-                .Where(a => a.IsActive &&
-                            a.BookedByUserId == receptionistUserId &&
-                            a.AppointmentDateTime >= today &&
-                            a.AppointmentDateTime < tomorrow)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Where(a => a.IsActive
+                            && a.BookedByUserId == receptionistUserId
+                            && a.AppointmentDateTime >= todayLocal
+                            && a.AppointmentDateTime < tomorrowLocal)
                 .OrderBy(a => a.AppointmentDateTime);
 
             var todaysAppointments = await todaysAppointmentsQuery.ToListAsync();
@@ -215,8 +199,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Select(g => g.OrderByDescending(p => p.CreatedAt).First())
                 .ToListAsync();
 
-            var paymentsByAppointmentId = latestPayments
-                .ToDictionary(p => p.AppointmentId, p => p);
+            var paymentsByAppointmentId = latestPayments.ToDictionary(p => p.AppointmentId, p => p);
 
             var todaysAppointmentRows = new List<ReceptionistDashboardViewModel.TodaysAppointmentRow>();
 
@@ -241,7 +224,6 @@ namespace Doctor_AppointmentSystem.Controllers
                             _ => payment.Method.ToString()
                         };
 
-
                         paymentDisplay = $"Paid ({methodText})";
                     }
                     else
@@ -250,12 +232,18 @@ namespace Doctor_AppointmentSystem.Controllers
                     }
                 }
 
+                // ✅ FIX: Patient can be NULL for Unregistered Patient
+                var patientName =
+                    (a.PatientProfileId != null && a.Patient != null && a.Patient.User != null)
+                        ? (a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim()
+                        : (a.UnregisteredPatientName ?? "Unregistered Patient").Trim();
+
                 todaysAppointmentRows.Add(new ReceptionistDashboardViewModel.TodaysAppointmentRow
                 {
                     AppointmentId = a.Id,
                     AppointmentDateTime = a.AppointmentDateTime,
-                    PatientName = a.Patient.User.FirstName + " " + a.Patient.User.LastName,
-                    DoctorName = "Dr. " + a.Doctor.User.FirstName + " " + a.Doctor.User.LastName,
+                    PatientName = patientName,
+                    DoctorName = "Dr. " + (a.Doctor.User.FirstName + " " + a.Doctor.User.LastName).Trim(),
                     Status = a.Status,
                     PaymentStatus = paymentStatus,
                     PaymentMethod = paymentMethod,
@@ -264,9 +252,8 @@ namespace Doctor_AppointmentSystem.Controllers
             }
 
             // ==========================
-            // 5. ALERTS & NOTIFICATIONS
+            // 5) ALERTS & NOTIFICATIONS
             // ==========================
-
             var latestNotifications = await _context.Notifications
                 .Where(n => n.IsActive)
                 .OrderByDescending(n => n.CreatedAt)
@@ -280,9 +267,7 @@ namespace Doctor_AppointmentSystem.Controllers
                     {
                         NotificationId = n.Id,
                         CreatedAt = n.CreatedAt,
-                        Title = n.Subject ?? (n.Channel == NotificationChannel.Email
-                            ? "Email notification"
-                            : "SMS notification"),
+                        Title = n.Subject ?? (n.Channel == NotificationChannel.Email ? "Email notification" : "SMS notification"),
                         Message = n.MessageBody,
                         Meta = n.Channel.ToString()
                     };
@@ -299,9 +284,9 @@ namespace Doctor_AppointmentSystem.Controllers
                         item.BadgeCssClass = "badge-pending";
                         item.IsUnread = true;
                     }
-                    else // Sent
+                    else
                     {
-                        if (n.CreatedAt.Date == today)
+                        if (n.CreatedAt.Date == todayLocal)
                         {
                             item.BadgeText = "Today";
                             item.BadgeCssClass = "badge-today";
@@ -320,22 +305,24 @@ namespace Doctor_AppointmentSystem.Controllers
                 .ToList();
 
             // ==========================
-            // 6. BUILD VIEWMODEL
+            // 6) BUILD VIEWMODEL
             // ==========================
-
             var vm = new ReceptionistDashboardViewModel
             {
                 TotalAppointments = totalAppointments,
                 TodaysAppointments = todaysAppointmentsCount,
+
                 TodaysCollections = todaysCollections,
-                MonthlyCollections = monthlyCollections,
-                CurrentDateDisplay = today.ToString("dddd, MMM dd, yyyy"),
+                TotalCollections = totalCollections,
+
+                CurrentDateDisplay = todayLocal.ToString("dddd, MMM dd, yyyy"),
 
                 DoctorNameFilter = doctorName,
                 SpecialtyIdFilter = specialtyId,
                 ExperienceFilter = experience,
                 SpecialtyOptions = specialtyOptions,
                 ExperienceOptions = experienceOptions,
+
                 Doctors = doctors,
                 CurrentPage = page,
                 TotalPages = totalPages,

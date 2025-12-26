@@ -14,8 +14,7 @@
     <div class="card stat-card stat-card-button"
          role="button"
          tabindex="0"
-         data-url="@Url.Action("Index", "Appointments", new { filter = "all" })">
-         @* data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "all" })" *@
+         data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "all", fromCard = true })">
 
         <div class="stat-card-header">
             <div>
@@ -33,8 +32,7 @@
     <div class="card stat-card stat-card-button"
          role="button"
          tabindex="0"
-         data-url="@Url.Action("Index", "Appointments", new { filter = "today" })">
-         @* data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "today" })" *@
+         data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "today", fromCard = true })">
 
         <div class="stat-card-header">
             <div>
@@ -52,8 +50,7 @@
     <div class="card stat-card stat-card-button"
          role="button"
          tabindex="0"
-         data-url="@Url.Action("Index", "Payments", new { filter = "today" })">
-         @* data-url="@Url.Action("Index", "ReceptionistPayments", new { filter = "today" })" *@
+         data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "paidtoday", fromCard = true })">
 
         <div class="stat-card-header">
             <div>
@@ -67,27 +64,25 @@
         <div class="stat-sub">Paid today</div>
     </div>
 
-    <!-- MY MONTHLY COLLECTION -->
+    <!-- MY TOTAL COLLECTION -->
     <div class="card stat-card stat-card-button"
          role="button"
          tabindex="0"
-         data-url="@Url.Action("Index", "Payments", new { filter = "month" })">
-         @* data-url="@Url.Action("Index", "ReceptionistPayments", new { filter = "month" })" *@
+         data-url="@Url.Action("Index", "ReceptionistAppointments", new { filter = "paidall", fromCard = true })">
 
         <div class="stat-card-header">
             <div>
-                <div class="stat-title">MY MONTHLY COLLECTION</div>
-                <div class="stat-value">৳@Model.MonthlyCollections.ToString("0")</div>
+                <div class="stat-title">MY TOTAL COLLECTION</div>
+                <div class="stat-value">৳@Model.TotalCollections.ToString("0")</div>
             </div>
             <div class="stat-icon">
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
-        <div class="stat-sub">Paid this month</div>
+        <div class="stat-sub">Paid (all time)</div>
     </div>
 
 </div>
-
 
 <!-- ====== FIND YOUR DOCTOR SECTION ====== -->
 <section class="doctor-search-section" id="find-doctor">

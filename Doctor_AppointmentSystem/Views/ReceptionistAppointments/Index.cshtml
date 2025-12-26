@@ -1,16 +1,49 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.ReceptionistAppointmentViewModel
 
 @{
-    ViewData["Title"] = "Appointments";
     Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
 
-    var currentFilter = (Model.Filter ?? "all").ToLower();
-    bool isActive(string f) => currentFilter == f;
+    var currentFilter = (Model.Filter ?? "all").Trim().ToLowerInvariant();
+    bool isActive(string f) => currentFilter == (f ?? "").Trim().ToLowerInvariant();
+
+    var fromCard = (ViewData["FromCard"] as bool?) == true;
+    var cardTitle = ViewData["CardTitle"] as string ?? "Appointments";
+
+    // ✅ match Patient-style title behavior
+    string prettyTitle = "Appointments";
+    if (fromCard)
+    {
+        prettyTitle = currentFilter switch
+        {
+            "all" => "My Total Booked",
+            "today" => "Today's Booked",
+            "upcoming" => "Upcoming Appointments",
+            "cancelled" => "Cancelled Appointments",
+            "paidtoday" => "Today's Collection",
+            "paidall" => "My Total Collection",
+            _ => cardTitle
+        };
+    }
+
+    ViewData["Title"] = prettyTitle;
 }
 
 <link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
 
 <style>
+    /* center Action column header + cells */
+    th.appt-actions-col, td.appt-actions-col {
+        text-align: center;
+    }
+
+    /* keep action buttons centered */
+    .appt-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
     /* Remove underline from button-like links */
     .appt-btn {
         text-decoration: none !important;
@@ -79,36 +112,67 @@
         gap: 10px;
         margin-top: 14px;
     }
+
+    /* optional hospital header spacing */
+    .page-header {
+        margin: 6px 0 10px;
+    }
+
+    .page-hospital {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+        color: #1f2b5b;
+    }
 </style>
+
+@if (fromCard)
+{
+    <div class="page-header">
+        <h1 class="page-hospital">Sunshine Hospital</h1>
+    </div>
+}
 
 <div class="appt-page">
     <div class="appt-card">
         <div class="appt-header">
             <div>
-                <h2 class="appt-title">Appointments</h2>
-                <div class="appt-subtitle">Showing appointments booked by you.</div>
+                <h2 class="appt-title">@prettyTitle</h2>
 
-                <div class="appt-tabs">
-                    <a class="appt-tab @(isActive("all") ? "active" : "")"
-                       asp-controller="ReceptionistAppointments"
-                       asp-action="Index"
-                       asp-route-filter="all">All</a>
+                @if (!fromCard)
+                {
+                    <div class="appt-subtitle">Showing appointments booked by you.</div>
 
-                    <a class="appt-tab @(isActive("today") ? "active" : "")"
-                       asp-controller="ReceptionistAppointments"
-                       asp-action="Index"
-                       asp-route-filter="today">Today</a>
+                    <div class="appt-tabs">
+                        <a class="appt-tab @(isActive("all") ? "active" : "")"
+                           asp-controller="ReceptionistAppointments"
+                           asp-action="Index"
+                           asp-route-filter="all">
+                            All
+                        </a>
 
-                    <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
-                       asp-controller="ReceptionistAppointments"
-                       asp-action="Index"
-                       asp-route-filter="upcoming">Upcoming</a>
+                        <a class="appt-tab @(isActive("today") ? "active" : "")"
+                           asp-controller="ReceptionistAppointments"
+                           asp-action="Index"
+                           asp-route-filter="today">
+                            Today
+                        </a>
 
-                    <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
-                       asp-controller="ReceptionistAppointments"
-                       asp-action="Index"
-                       asp-route-filter="cancelled">Cancelled</a>
-                </div>
+                        <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
+                           asp-controller="ReceptionistAppointments"
+                           asp-action="Index"
+                           asp-route-filter="upcoming">
+                            Upcoming
+                        </a>
+
+                        <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
+                           asp-controller="ReceptionistAppointments"
+                           asp-action="Index"
+                           asp-route-filter="cancelled">
+                            Cancelled
+                        </a>
+                    </div>
+                }
             </div>
         </div>
 
@@ -284,7 +348,6 @@
     }
 
     function backdropClick(e) {
-        // click outside modal closes
         closeMobileModal();
     }
 

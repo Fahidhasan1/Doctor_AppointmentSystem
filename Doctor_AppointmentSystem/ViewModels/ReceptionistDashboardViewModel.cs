@@ -18,6 +18,8 @@ namespace Doctor_AppointmentSystem.ViewModels
 
         public decimal TodaysCollections { get; set; }
         public decimal MonthlyCollections { get; set; }
+        public decimal TotalCollections { get; set; }
+
         public string CurrentDateDisplay { get; set; }
 
         // ==========================

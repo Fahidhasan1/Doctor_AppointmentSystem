@@ -22,29 +22,53 @@ namespace Doctor_AppointmentSystem.Controllers
             _context = context;
         }
 
-        // GET: /ReceptionistAppointments?filter=all|today|upcoming|cancelled
+        // GET: /ReceptionistAppointments?filter=all|today|upcoming|cancelled|paidtoday|paidall&fromCard=true
         [HttpGet]
-        public async Task<IActionResult> Index(string? filter = "all")
+        public async Task<IActionResult> Index(string filter = "all", bool fromCard = false)
         {
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var today = DateTime.Today;
+            if (string.IsNullOrWhiteSpace(receptionistUserId))
+                return Challenge();
 
+            filter = (filter ?? "all").Trim().ToLowerInvariant();
+
+            // ==========================
+            // OPTION A: "Today" = Booked today (CreatedAt)
+            // ==========================
+            var localTodayStart = DateTime.Today;
+            var localTomorrowStart = localTodayStart.AddDays(1);
+
+            // CreatedAt is typically stored as UTC (your models default CreatedAt = DateTime.UtcNow)
+            var todayStartUtc = DateTime.SpecifyKind(localTodayStart, DateTimeKind.Local).ToUniversalTime();
+            var tomorrowStartUtc = DateTime.SpecifyKind(localTomorrowStart, DateTimeKind.Local).ToUniversalTime();
+
+            // ==========================
+            // Base appointment query (only appointments booked by this receptionist)
+            // ==========================
             var query = _context.Appointments
                 .AsNoTracking()
                 .Include(a => a.Doctor).ThenInclude(d => d.User)
                 .Include(a => a.Patient).ThenInclude(p => p.User)
                 .Where(a => a.IsActive && a.BookedByUserId == receptionistUserId);
 
-            switch ((filter ?? "all").Trim().ToLower())
+            // ==========================
+            // Apply appointment-level filters
+            // ==========================
+            switch (filter)
             {
                 case "today":
-                    query = query.Where(a => a.AppointmentDateTime.Date == today &&
-                                             a.Status != AppointmentStatus.Cancelled);
+                    // ✅ Booked today (CreatedAt), exclude cancelled
+                    query = query.Where(a =>
+                        a.CreatedAt >= todayStartUtc &&
+                        a.CreatedAt < tomorrowStartUtc &&
+                        a.Status != AppointmentStatus.Cancelled);
                     break;
 
                 case "upcoming":
-                    query = query.Where(a => a.AppointmentDateTime.Date > today &&
-                                             a.Status != AppointmentStatus.Cancelled);
+                    // scheduled in the future, not cancelled
+                    query = query.Where(a =>
+                        a.AppointmentDateTime.Date > localTodayStart &&
+                        a.Status != AppointmentStatus.Cancelled);
                     break;
 
                 case "cancelled":
@@ -52,10 +76,19 @@ namespace Doctor_AppointmentSystem.Controllers
                     query = query.Where(a => a.Status == AppointmentStatus.Cancelled);
                     break;
 
+                case "paidtoday":
+                case "paidall":
+                    // handled after payment map is loaded (we need latest payment per appointment)
+                    break;
+
                 default:
+                    // all
                     break;
             }
 
+            // ==========================
+            // Project to rows (payments filled later)
+            // ==========================
             var appointments = await query
                 .OrderByDescending(a => a.AppointmentDateTime)
                 .Select(a => new ReceptionistAppointmentRowViewModel
@@ -85,7 +118,31 @@ namespace Doctor_AppointmentSystem.Controllers
                 })
                 .ToListAsync();
 
+            // No rows → build vm quickly
+            if (appointments.Count == 0)
+            {
+                ViewData["FromCard"] = fromCard;
+                ViewData["CardTitle"] = filter switch
+                {
+                    "all" => "My Total Booked",
+                    "today" => "Today's Booked",
+                    "upcoming" => "Upcoming Appointments",
+                    "cancelled" => "Cancelled Appointments",
+                    "paidtoday" => "Today's Collection",
+                    "paidall" => "My Total Collection",
+                    _ => "Appointments"
+                };
+
+                return View(new ReceptionistAppointmentViewModel
+                {
+                    Filter = filter,
+                    Appointments = appointments
+                });
+            }
+
+            // ==========================
             // Load latest payment per appointment (if any)
+            // ==========================
             var ids = appointments.Select(x => x.AppointmentId).ToList();
 
             var latestPayments = await _context.Payments
@@ -99,19 +156,21 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Where(p => p != null)
                 .ToDictionary(p => p!.AppointmentId, p => p!);
 
+            // ==========================
+            // Attach payment state + actions
+            // ==========================
             foreach (var row in appointments)
             {
-                // Cancelled -> no actions
                 var isCancelled = row.Status.Equals(AppointmentStatus.Cancelled.ToString(), StringComparison.OrdinalIgnoreCase);
                 if (isCancelled)
                 {
                     row.CanShowActions = false;
                     row.IsPaid = false;
                     row.PaymentId = null;
+                    row.PaymentDisplay = "Cancelled";
                     continue;
                 }
 
-                // default unpaid behavior
                 row.PaymentDisplay = "Unpaid";
                 row.Amount = 0m;
                 row.IsPaid = false;
@@ -140,11 +199,15 @@ namespace Doctor_AppointmentSystem.Controllers
 
                         row.PaymentDisplay = $"Paid ({methodText})";
                     }
+                    else
+                    {
+                        row.PaymentDisplay = pay.Status.ToString();
+                    }
                 }
 
-                // Unpaid -> show actions
                 if (!isPaid)
                 {
+                    // Unpaid → show actions
                     row.CanShowActions = true;
                     row.CanCollectCash = true;
                     row.CanConfirmMobile = true;
@@ -152,15 +215,59 @@ namespace Doctor_AppointmentSystem.Controllers
                 }
                 else
                 {
-                    // Paid -> hide payment actions (view will show Download Receipt)
+                    // Paid → hide payment actions (view will show Download Receipt)
                     row.CanShowActions = false;
                 }
             }
 
+            // ==========================
+            // Apply payment-driven filters (paidtoday / paidall)
+            // ==========================
+            if (filter == "paidall" || filter == "paidtoday")
+            {
+                appointments = appointments
+                    .Where(a => a.IsPaid && a.PaymentId.HasValue)
+                    .ToList();
+
+                if (filter == "paidtoday")
+                {
+                    // ✅ collected today by THIS receptionist
+                    var paidTodayPaymentIds = latestPayments
+                        .Where(p =>
+                            p != null
+                            && p.Status == PaymentStatus.Paid
+                            && p.InitiatedByUserId == receptionistUserId
+                            && p.PaidAtUtc.HasValue
+                            && p.PaidAtUtc.Value >= todayStartUtc
+                            && p.PaidAtUtc.Value < tomorrowStartUtc)
+                        .Select(p => p!.Id)
+                        .ToHashSet();
+
+                    appointments = appointments
+                        .Where(a => a.PaymentId.HasValue && paidTodayPaymentIds.Contains(a.PaymentId.Value))
+                        .ToList();
+                }
+            }
+
+            // ==========================
+            // Build VM + Card title flags
+            // ==========================
             var vm = new ReceptionistAppointmentViewModel
             {
-                Filter = (filter ?? "all").ToLower(),
+                Filter = filter,
                 Appointments = appointments
+            };
+
+            ViewData["FromCard"] = fromCard;
+            ViewData["CardTitle"] = filter switch
+            {
+                "all" => "My Total Booked",
+                "today" => "Today's Booked",
+                "upcoming" => "Upcoming Appointments",
+                "cancelled" => "Cancelled Appointments",
+                "paidtoday" => "Today's Collection",
+                "paidall" => "My Total Collection",
+                _ => "Appointments"
             };
 
             return View(vm);
@@ -211,7 +318,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 Currency = "BDT",
                 Status = PaymentStatus.Paid,
                 Method = PaymentMethod.Cash,
-                ProviderName = "Cash",              // optional
+                ProviderName = "Cash",
                 GatewayTransactionId = null,
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
@@ -272,7 +379,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction(nameof(Index), new { filter });
             }
 
-            // Map provider -> enum
             PaymentMethod method = provider.ToLower() switch
             {
                 "bkash" => PaymentMethod.Bkash,
@@ -295,8 +401,8 @@ namespace Doctor_AppointmentSystem.Controllers
                 Currency = "BDT",
                 Status = PaymentStatus.Paid,
                 Method = method,
-                ProviderName = provider,                 // "bKash"/"Nagad"/"Rocket"
-                GatewayTransactionId = transactionId,    // required
+                ProviderName = provider,
+                GatewayTransactionId = transactionId,
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
                 InitiatedByUserId = userId,

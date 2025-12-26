@@ -72,7 +72,9 @@ namespace Doctor_AppointmentSystem.Controllers
                             ? (a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim()
                             : (a.UnregisteredPatientName ?? "Unregistered Patient").Trim(),
 
-                    // defaults (filled after payment lookup)
+                    // defaults
+                    IsPaid = false,
+                    PaymentId = null,
                     PaymentDisplay = "Unpaid",
                     Amount = 0m,
 
@@ -104,12 +106,16 @@ namespace Doctor_AppointmentSystem.Controllers
                 if (isCancelled)
                 {
                     row.CanShowActions = false;
+                    row.IsPaid = false;
+                    row.PaymentId = null;
                     continue;
                 }
 
                 // default unpaid behavior
                 row.PaymentDisplay = "Unpaid";
                 row.Amount = 0m;
+                row.IsPaid = false;
+                row.PaymentId = null;
 
                 bool isPaid = false;
 
@@ -120,14 +126,23 @@ namespace Doctor_AppointmentSystem.Controllers
                     if (pay.Status == PaymentStatus.Paid)
                     {
                         isPaid = true;
+                        row.IsPaid = true;
+                        row.PaymentId = pay.Id;
 
-                        row.PaymentDisplay = (pay.Method == PaymentMethod.Cash)
-                            ? "Paid (Cash)"
-                            : "Paid (Mobile Banking)";
+                        var methodText = pay.Method switch
+                        {
+                            PaymentMethod.Cash => "Cash",
+                            PaymentMethod.Bkash => "bKash",
+                            PaymentMethod.Nagad => "Nagad",
+                            PaymentMethod.Rocket => "Rocket",
+                            _ => pay.Method.ToString()
+                        };
+
+                        row.PaymentDisplay = $"Paid ({methodText})";
                     }
                 }
 
-                // ✅ Actions show ONLY if NOT paid and NOT cancelled
+                // Unpaid -> show actions
                 if (!isPaid)
                 {
                     row.CanShowActions = true;
@@ -137,6 +152,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 }
                 else
                 {
+                    // Paid -> hide payment actions (view will show Download Receipt)
                     row.CanShowActions = false;
                 }
             }
@@ -195,6 +211,8 @@ namespace Doctor_AppointmentSystem.Controllers
                 Currency = "BDT",
                 Status = PaymentStatus.Paid,
                 Method = PaymentMethod.Cash,
+                ProviderName = "Cash",              // optional
+                GatewayTransactionId = null,
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
                 InitiatedByUserId = userId,
@@ -211,7 +229,7 @@ namespace Doctor_AppointmentSystem.Controllers
         // POST: /ReceptionistAppointments/ConfirmMobile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmMobile(int id, string? filter = "all")
+        public async Task<IActionResult> ConfirmMobile(int id, string provider, string transactionId, string? filter = "all")
         {
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -239,6 +257,30 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction(nameof(Index), new { filter });
             }
 
+            provider = (provider ?? "").Trim();
+            transactionId = (transactionId ?? "").Trim();
+
+            if (string.IsNullOrWhiteSpace(provider))
+            {
+                TempData["ErrorMessage"] = "Please select a provider (bKash/Nagad/Rocket).";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            if (string.IsNullOrWhiteSpace(transactionId))
+            {
+                TempData["ErrorMessage"] = "Transaction ID is required for mobile payment.";
+                return RedirectToAction(nameof(Index), new { filter });
+            }
+
+            // Map provider -> enum
+            PaymentMethod method = provider.ToLower() switch
+            {
+                "bkash" => PaymentMethod.Bkash,
+                "nagad" => PaymentMethod.Nagad,
+                "rocket" => PaymentMethod.Rocket,
+                _ => PaymentMethod.Bkash
+            };
+
             var fee = await _context.DoctorProfiles
                 .Where(d => d.Id == appt.DoctorProfileId)
                 .Select(d => d.VisitCharge)
@@ -246,15 +288,15 @@ namespace Doctor_AppointmentSystem.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // ✅ Use your existing enum value (you used Bkash already)
-            // UI will still show "Mobile Banking"
             _context.Payments.Add(new Payment
             {
                 AppointmentId = appt.Id,
                 Amount = fee,
                 Currency = "BDT",
                 Status = PaymentStatus.Paid,
-                Method = PaymentMethod.Bkash,
+                Method = method,
+                ProviderName = provider,                 // "bKash"/"Nagad"/"Rocket"
+                GatewayTransactionId = transactionId,    // required
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
                 InitiatedByUserId = userId,

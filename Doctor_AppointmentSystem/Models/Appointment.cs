@@ -27,6 +27,8 @@ namespace Doctor_AppointmentSystem.Models
         // ✅ NEW: store typed patient name for unregistered patient booking
         [StringLength(120)]
         public string? UnregisteredPatientName { get; set; }
+        public string? UnregisteredPatientPhone { get; set; }
+
 
         // Schedule Information
         [Required]

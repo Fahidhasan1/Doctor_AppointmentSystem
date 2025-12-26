@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Doctor_AppointmentSystem.Data;
 using Doctor_AppointmentSystem.Enums;
+using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,83 +26,131 @@ namespace Doctor_AppointmentSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Download(int paymentId)
         {
+            if (paymentId <= 0) return NotFound();
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
-                return Challenge();
+            if (string.IsNullOrWhiteSpace(userId)) return Challenge();
 
             var isReceptionist = User.IsInRole("Receptionist");
             var isPatient = User.IsInRole("Patient");
 
-            // Load payment + appointment
+            // Load payment + appointment + doctor + doctor user
             var payment = await _context.Payments
+                .AsNoTracking()
                 .Include(p => p.Appointment)
-                .FirstOrDefaultAsync(p => p.Id == paymentId && p.IsActive);
+                    .ThenInclude(a => a.Doctor)
+                        .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(p =>
+                    p.Id == paymentId &&
+                    p.IsActive &&
+                    p.Status == PaymentStatus.Paid);
 
-            if (payment == null)
-                return NotFound();
-
-            // Receipt only for PAID payments
-            if (payment.Status != PaymentStatus.Paid)
-                return Forbid();
+            if (payment == null) return NotFound();
 
             var appt = payment.Appointment;
-            if (appt == null)
-                return NotFound();
+            if (appt == null) return NotFound();
 
-            // If patient, enforce ownership (patient can only see their own receipt)
+            // -------------------------
+            // Authorization
+            // -------------------------
             if (isPatient && !isReceptionist)
             {
                 var patientProfileId = await _context.PatientProfiles
+                    .AsNoTracking()
                     .Where(p => p.UserId == userId && p.IsActive)
                     .Select(p => (int?)p.Id)
                     .FirstOrDefaultAsync();
 
-                if (patientProfileId == null)
-                    return Forbid();
+                if (patientProfileId == null) return Forbid();
 
-                if (appt.PatientProfileId != patientProfileId.Value)
+                // Patient can only download if appointment is their registered profile
+                if (appt.PatientProfileId == null) return Forbid();
+                if (appt.PatientProfileId != patientProfileId.Value) return Forbid();
+            }
+
+            if (isReceptionist)
+            {
+                // Optional tightening: receptionist can view if they booked it OR they initiated the payment
+                // (keeps it safe and correct)
+                var bookedBySameReceptionist = appt.BookedByUserId == userId;
+                var paidBySameReceptionist = payment.InitiatedByUserId == userId;
+
+                if (!bookedBySameReceptionist && !paidBySameReceptionist)
                     return Forbid();
             }
 
-            // Load patient profile + user (ApplicationUser)
-            var patient = await _context.PatientProfiles
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Id == appt.PatientProfileId && p.IsActive);
-
-            if (patient == null || patient.User == null)
-                return NotFound();
-
-            // Load doctor profile + user
+            // Doctor profile + user
             var doctor = await _context.DoctorProfiles
+                .AsNoTracking()
                 .Include(d => d.User)
                 .FirstOrDefaultAsync(d => d.Id == appt.DoctorProfileId && d.IsActive);
 
-            if (doctor == null || doctor.User == null)
-                return NotFound();
+            if (doctor == null || doctor.User == null) return NotFound();
 
-            // Get specialty name
+            // Specialty from DoctorSpecialties (primary first)
             var specialty = await _context.DoctorSpecialties
-                .Where(ds => ds.DoctorProfileId == appt.DoctorProfileId)
+                .AsNoTracking()
+                .Where(ds =>
+                    ds.DoctorProfileId == appt.DoctorProfileId &&
+                    ds.Specialty.IsActive)
+                .OrderByDescending(ds => ds.IsPrimary)
                 .Select(ds => ds.Specialty.Name)
                 .FirstOrDefaultAsync();
 
+            specialty ??= "-";
+
             // Issued time
-            var issuedUtc = payment.PaidAtUtc ?? payment.StatusLastUpdatedUtc ?? DateTime.UtcNow;
+            var issuedUtc = payment.PaidAtUtc ?? payment.StatusLastUpdatedUtc ?? payment.CreatedAt;
 
-            // PhoneNumber exists in IdentityUser
-            var phone = string.IsNullOrWhiteSpace(patient.User.PhoneNumber)
-                ? "-"
-                : patient.User.PhoneNumber;
+            // -------------------------
+            // Patient data (Registered OR Unregistered)
+            // -------------------------
+            string patientName;
+            string patientCode;
+            string patientPhone;
+            string patientGender;
 
-            // Gender is in your ApplicationUser model
-            var gender = patient.User.Gender == null
-                ? "-"
-                : patient.User.Gender.ToString();
+            bool showPatientCode;
+            bool showPatientGender;
 
-            // RoomNo is in DoctorProfile
-            var roomNo = string.IsNullOrWhiteSpace(doctor.RoomNo)
-                ? "-"
-                : doctor.RoomNo;
+            if (appt.PatientProfileId != null)
+            {
+                // Registered patient
+                var patient = await _context.PatientProfiles
+                    .AsNoTracking()
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.Id == appt.PatientProfileId && p.IsActive);
+
+                if (patient == null || patient.User == null) return NotFound();
+
+                patientName = $"{patient.User.FirstName} {patient.User.LastName}".Trim();
+                patientCode = $"P-{patient.Id:000000}";
+                patientPhone = string.IsNullOrWhiteSpace(patient.User.PhoneNumber) ? "-" : patient.User.PhoneNumber;
+                patientGender = patient.User.Gender == null ? "-" : patient.User.Gender.ToString();
+
+                showPatientCode = true;
+                showPatientGender = true;
+            }
+            else
+            {
+                // ✅ Unregistered patient (Receptionist booking)
+                patientName = string.IsNullOrWhiteSpace(appt.UnregisteredPatientName)
+                    ? "Unregistered Patient"
+                    : appt.UnregisteredPatientName.Trim();
+
+                patientPhone = string.IsNullOrWhiteSpace(appt.UnregisteredPatientPhone)
+                    ? "-"
+                    : appt.UnregisteredPatientPhone.Trim();
+
+                patientCode = "-";
+                patientGender = "-";
+
+                // ✅ hide these two on receipt for unregistered
+                showPatientCode = false;
+                showPatientGender = false;
+            }
+
+            var roomNo = string.IsNullOrWhiteSpace(doctor.RoomNo) ? "-" : doctor.RoomNo;
 
             var vm = new PatientReceiptViewModel
             {
@@ -111,14 +160,16 @@ namespace Doctor_AppointmentSystem.Controllers
                 IssuedAt = issuedUtc.ToLocalTime(),
 
                 // Patient
-                PatientName = $"{patient.User.FirstName} {patient.User.LastName}".Trim(),
-                PatientCode = $"P-{patient.Id:000000}",
-                PatientPhone = phone,
-                PatientGender = gender,
+                PatientName = patientName,
+                PatientCode = patientCode,
+                PatientPhone = patientPhone,
+                PatientGender = patientGender,
+                ShowPatientCode = showPatientCode,
+                ShowPatientGender = showPatientGender,
 
                 // Appointment
                 DoctorName = $"{doctor.User.FirstName} {doctor.User.LastName}".Trim(),
-                Specialty = specialty ?? "-",
+                Specialty = specialty,
                 RoomNo = roomNo,
                 AppointmentDateTime = appt.AppointmentDateTime,
 
@@ -126,27 +177,60 @@ namespace Doctor_AppointmentSystem.Controllers
                 Amount = payment.Amount,
                 Method = payment.Method.ToString(),
                 ProviderName = string.IsNullOrWhiteSpace(payment.ProviderName) ? "-" : payment.ProviderName,
-                TransactionId = string.IsNullOrWhiteSpace(payment.GatewayTransactionId) ? "-" : payment.GatewayTransactionId
+                TransactionId = string.IsNullOrWhiteSpace(payment.GatewayTransactionId) ? "-" : payment.GatewayTransactionId,
+
+                // Note (you can change later)
+                Note = "Printed for patient verification"
             };
 
-            // If receptionist is viewing, show issuer info
+            // -------------------------
+            // Issued By (Receptionist receipt)
+            // -------------------------
             if (isReceptionist)
             {
-                var issuer = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Id == userId);
-
                 vm.ShowIssuer = true;
                 vm.IssuerRole = "Receptionist";
-                vm.IssuedBy = issuer == null
-                    ? "-"
-                    : $"{issuer.FirstName} {issuer.LastName}".Trim();
+
+                // Issuer name
+                if (!string.IsNullOrWhiteSpace(payment.InitiatedByUserId))
+                {
+                    var issuerUser = await _context.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.Id == payment.InitiatedByUserId);
+
+                    vm.IssuedBy = issuerUser == null
+                        ? "-"
+                        : $"{issuerUser.FirstName} {issuerUser.LastName}".Trim();
+
+                    // ✅ receptionist profile (ID + counter)
+                    var recProfile = await _context.ReceptionistProfiles
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(r => r.UserId == payment.InitiatedByUserId && r.IsActive);
+
+                    if (recProfile != null)
+                    {
+                        vm.IssuerId = recProfile.Id.ToString(); // ✅ receptionist ID
+                        vm.IssuerCounterNo = string.IsNullOrWhiteSpace(recProfile.CounterNumber) ? "-" : recProfile.CounterNumber;
+                    }
+                    else
+                    {
+                        vm.IssuerId = "-";
+                        vm.IssuerCounterNo = "-";
+                    }
+                }
+                else
+                {
+                    vm.IssuedBy = "-";
+                    vm.IssuerId = "-";
+                    vm.IssuerCounterNo = "-";
+                }
             }
             else
             {
                 vm.ShowIssuer = false;
             }
 
-            return View(vm);
+            return View("Download", vm);
         }
     }
 }

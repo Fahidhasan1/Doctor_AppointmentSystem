@@ -73,15 +73,21 @@ namespace Doctor_AppointmentSystem.ViewModels
         public int DoctorProfileId { get; set; }
 
         // ✅ IMPORTANT CHANGE:
-        // This is now nullable because receptionist booking does NOT require a registered patient.
+        // Nullable because receptionist booking does NOT require registered patient.
         // Patient role will still set this automatically in controller POST.
         [Display(Name = "Patient")]
         public int? PatientProfileId { get; set; }
 
-        // ✅ NEW: receptionist typed patient name (unregistered patient)
+        // Receptionist-only: unregistered patient name
         [StringLength(120)]
         [Display(Name = "Patient Name")]
         public string? UnregisteredPatientName { get; set; }
+
+        // ✅ NEW: Receptionist-only unregistered patient phone
+        [StringLength(20)]
+        [Phone]
+        [Display(Name = "Patient Phone")]
+        public string? UnregisteredPatientPhone { get; set; }
 
         // Date only (UI picks date, then slot time separately)
         [Required]
@@ -95,7 +101,6 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string? SelectedSlot { get; set; }
 
         // Optional fields (matches your Appointment model)
-        // NOTE: In your controller we can override this with doctor schedule duration
         [Range(5, 480)]
         [Display(Name = "Duration (minutes)")]
         public int DurationMinutes { get; set; } = 20;
@@ -107,7 +112,7 @@ namespace Doctor_AppointmentSystem.ViewModels
         [Display(Name = "First Visit")]
         public bool IsFirstVisit { get; set; } = false;
 
-        // If you want to keep default workflow consistent
+        // Default workflow: confirmed
         public AppointmentStatus Status { get; set; } = AppointmentStatus.Confirmed;
     }
 
@@ -120,7 +125,7 @@ namespace Doctor_AppointmentSystem.ViewModels
 
         public string DoctorName { get; set; } = string.Empty;
 
-        // This will be filled from Patient profile name OR UnregisteredPatientName
+        // Filled from patient profile name OR UnregisteredPatientName
         public string PatientName { get; set; } = string.Empty;
 
         public DateTime AppointmentDateTime { get; set; }

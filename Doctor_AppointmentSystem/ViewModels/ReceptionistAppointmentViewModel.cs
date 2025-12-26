@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace Doctor_AppointmentSystem.ViewModels
 {
-    // =========================
-    // ViewModel for single row
-    // =========================
     public class ReceptionistAppointmentRowViewModel
     {
         public int AppointmentId { get; set; }
@@ -18,21 +15,20 @@ namespace Doctor_AppointmentSystem.ViewModels
 
         public string Status { get; set; } = string.Empty;
 
-        // Payment display (simple)
+        // Payment
         public bool IsPaid { get; set; }
+        public int? PaymentId { get; set; }
+
         public string PaymentDisplay { get; set; } = "Unpaid";
         public decimal Amount { get; set; }
 
-        // Action flags (for buttons)
+        // Actions
         public bool CanShowActions { get; set; }
         public bool CanCollectCash { get; set; }
         public bool CanConfirmMobile { get; set; }
         public bool CanCancel { get; set; }
     }
 
-    // =========================
-    // ViewModel for Index page
-    // =========================
     public class ReceptionistAppointmentViewModel
     {
         public string Filter { get; set; } = "all";

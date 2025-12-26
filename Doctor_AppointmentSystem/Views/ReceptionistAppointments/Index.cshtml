@@ -10,52 +10,111 @@
 
 <link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
 
-<div class="appt-page">
+<style>
+    /* Remove underline from button-like links */
+    .appt-btn {
+        text-decoration: none !important;
+    }
 
+    /* Simple modal */
+    .appt-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .appt-modal {
+        width: min(520px, 92vw);
+        background: #fff;
+        border-radius: 16px;
+        padding: 18px 18px 14px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .appt-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+
+    .appt-modal-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .appt-modal-close {
+        border: none;
+        background: transparent;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .appt-modal-body label {
+        display: block;
+        font-weight: 600;
+        margin-top: 10px;
+        margin-bottom: 6px;
+    }
+
+    .appt-modal-body select,
+    .appt-modal-body input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #d9d9d9;
+        border-radius: 10px;
+        outline: none;
+    }
+
+    .appt-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px;
+    }
+</style>
+
+<div class="appt-page">
     <div class="appt-card">
         <div class="appt-header">
             <div>
                 <h2 class="appt-title">Appointments</h2>
                 <div class="appt-subtitle">Showing appointments booked by you.</div>
 
-                <!-- Filter Tabs -->
                 <div class="appt-tabs">
                     <a class="appt-tab @(isActive("all") ? "active" : "")"
                        asp-controller="ReceptionistAppointments"
                        asp-action="Index"
-                       asp-route-filter="all">
-                        All
-                    </a>
+                       asp-route-filter="all">All</a>
 
                     <a class="appt-tab @(isActive("today") ? "active" : "")"
                        asp-controller="ReceptionistAppointments"
                        asp-action="Index"
-                       asp-route-filter="today">
-                        Today
-                    </a>
+                       asp-route-filter="today">Today</a>
 
                     <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
                        asp-controller="ReceptionistAppointments"
                        asp-action="Index"
-                       asp-route-filter="upcoming">
-                        Upcoming
-                    </a>
+                       asp-route-filter="upcoming">Upcoming</a>
 
                     <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
                        asp-controller="ReceptionistAppointments"
                        asp-action="Index"
-                       asp-route-filter="cancelled">
-                        Cancelled
-                    </a>
+                       asp-route-filter="cancelled">Cancelled</a>
                 </div>
             </div>
         </div>
 
         @if (Model.Appointments == null || !Model.Appointments.Any())
         {
-            <div class="appt-empty">
-                No appointments found.
-            </div>
+            <div class="appt-empty">No appointments found.</div>
         }
         else
         {
@@ -76,7 +135,6 @@
                         @foreach (var a in Model.Appointments)
                         {
                             <tr>
-                                <!-- Date & Time (stacked) -->
                                 <td>
                                     <div class="appt-dt">
                                         <div class="appt-dt-date">@a.AppointmentDateTime.ToString("dd MMM yyyy")</div>
@@ -88,7 +146,6 @@
                                 <td>@a.PatientName</td>
                                 <td>@a.Status</td>
 
-                                <!-- Payment + Amount (stacked) -->
                                 <td>
                                     <div class="appt-pay">
                                         <div class="appt-pay-status">@a.PaymentDisplay</div>
@@ -103,9 +160,20 @@
                                     </div>
                                 </td>
 
-                                <!-- Actions (center + same line) -->
                                 <td class="appt-actions-col">
-                                    @if (a.CanShowActions)
+                                    @* Paid -> Download Receipt *@
+                                    @if (a.IsPaid && a.PaymentId.HasValue)
+                                    {
+                                        <div class="appt-actions">
+                                            <a asp-controller="PatientReceipts"
+                                               asp-action="Download"
+                                               asp-route-paymentId="@a.PaymentId.Value"
+                                               class="appt-btn appt-btn-primary">
+                                                Download Receipt
+                                            </a>
+                                        </div>
+                                    }
+                                    else if (a.CanShowActions)
                                     {
                                         <div class="appt-actions">
                                             @if (a.CanCollectCash)
@@ -116,6 +184,7 @@
                                                       class="appt-action-form">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@a.AppointmentId" />
+                                                    <input type="hidden" name="filter" value="@Model.Filter" />
                                                     <button type="submit" class="appt-btn appt-btn-primary">
                                                         Collect Cash
                                                     </button>
@@ -124,16 +193,11 @@
 
                                             @if (a.CanConfirmMobile)
                                             {
-                                                <form asp-controller="ReceptionistAppointments"
-                                                      asp-action="ConfirmMobile"
-                                                      method="post"
-                                                      class="appt-action-form">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="id" value="@a.AppointmentId" />
-                                                    <button type="submit" class="appt-btn appt-btn-primary">
-                                                        Confirm Mobile
-                                                    </button>
-                                                </form>
+                                                <button type="button"
+                                                        class="appt-btn appt-btn-primary"
+                                                        onclick="openMobileModal(@a.AppointmentId)">
+                                                    Confirm Mobile
+                                                </button>
                                             }
 
                                             @if (a.CanCancel)
@@ -145,6 +209,7 @@
                                                       onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="id" value="@a.AppointmentId" />
+                                                    <input type="hidden" name="filter" value="@Model.Filter" />
                                                     <button type="submit" class="appt-btn appt-btn-danger">
                                                         Cancel
                                                     </button>
@@ -164,5 +229,66 @@
             </div>
         }
     </div>
-
 </div>
+
+@* Modal Backdrop *@
+<div id="mobileModalBackdrop" class="appt-modal-backdrop" onclick="backdropClick(event)">
+    <div class="appt-modal" onclick="event.stopPropagation()">
+        <div class="appt-modal-header">
+            <h3 class="appt-modal-title">Confirm Mobile Payment</h3>
+            <button type="button" class="appt-modal-close" onclick="closeMobileModal()">×</button>
+        </div>
+
+        <form asp-controller="ReceptionistAppointments" asp-action="ConfirmMobile" method="post">
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="mobileAppointmentId" name="id" value="" />
+            <input type="hidden" name="filter" value="@Model.Filter" />
+
+            <div class="appt-modal-body">
+                <label for="provider">Provider</label>
+                <select id="provider" name="provider" required>
+                    <option value="">-- Select --</option>
+                    <option value="bKash">bKash</option>
+                    <option value="Nagad">Nagad</option>
+                    <option value="Rocket">Rocket</option>
+                </select>
+
+                <label for="transactionId">Transaction ID</label>
+                <input id="transactionId"
+                       name="transactionId"
+                       type="text"
+                       placeholder="Enter transaction ID"
+                       required />
+            </div>
+
+            <div class="appt-modal-actions">
+                <button type="button" class="appt-btn" onclick="closeMobileModal()">Cancel</button>
+                <button type="submit" class="appt-btn appt-btn-primary">Confirm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openMobileModal(appointmentId) {
+        document.getElementById("mobileAppointmentId").value = appointmentId;
+        document.getElementById("provider").value = "";
+        document.getElementById("transactionId").value = "";
+        document.getElementById("mobileModalBackdrop").style.display = "flex";
+        setTimeout(() => document.getElementById("provider").focus(), 50);
+    }
+
+    function closeMobileModal() {
+        document.getElementById("mobileModalBackdrop").style.display = "none";
+    }
+
+    function backdropClick(e) {
+        // click outside modal closes
+        closeMobileModal();
+    }
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeMobileModal();
+    });
+</script>

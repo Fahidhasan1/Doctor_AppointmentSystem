@@ -15,6 +15,10 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string PatientPhone { get; set; } = "-";
         public string PatientGender { get; set; } = "-";
 
+        // ✅ Control what to show (for unregistered patient)
+        public bool ShowPatientCode { get; set; } = true;
+        public bool ShowPatientGender { get; set; } = true;
+
         // Appointment
         public string DoctorName { get; set; } = "-";
         public string Specialty { get; set; } = "-";
@@ -28,8 +32,15 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string TransactionId { get; set; } = "-";
 
         // Issuer (Receptionist)
-        public bool ShowIssuer { get; set; }
+        public bool ShowIssuer { get; set; } = false;
+        public string IssuerRole { get; set; } = "Receptionist";
         public string IssuedBy { get; set; } = "-";
-        public string IssuerRole { get; set; } = "-";
+
+        // ✅ NEW: receptionist ID + counter no
+        public string IssuerId { get; set; } = "-";
+        public string IssuerCounterNo { get; set; } = "-";
+
+        // Note
+        public string Note { get; set; } = "Printed for patient verification";
     }
 }

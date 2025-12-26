@@ -286,3 +286,8 @@ body.modal-open {
     .appt-btn-link:focus {
         text-decoration: none !important;
     }
+
+
+.appt-btn {
+    text-decoration: none;
+}

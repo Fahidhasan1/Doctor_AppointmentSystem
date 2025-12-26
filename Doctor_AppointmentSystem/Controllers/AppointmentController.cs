@@ -194,8 +194,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 SelectedSlot = slotTime.ToString(@"hh\:mm")
             };
 
-            // ✅ Patient: keep same behavior
-            // ✅ Receptionist: no dropdown needed anymore (patient name is typed in the view)
             if (!User.IsInRole("Receptionist"))
             {
                 var pid = await GetCurrentPatientProfileIdAsync();
@@ -213,7 +211,7 @@ namespace Doctor_AppointmentSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AppointmentCreateViewModel vm)
         {
-            // ✅ Patient booking stays same: patient profile id is auto-set
+            // Patient booking: keep your existing behavior
             if (User.IsInRole("Patient"))
             {
                 var pid = await GetCurrentPatientProfileIdAsync();
@@ -225,14 +223,14 @@ namespace Doctor_AppointmentSystem.Controllers
 
                 vm.PatientProfileId = pid.Value;
 
-                // Ensure we don't store unregistered name for patients
+                // Ensure we don't store unregistered fields for patients
                 vm.UnregisteredPatientName = null;
+                vm.UnregisteredPatientPhone = null;
             }
 
-            // ✅ Receptionist booking: must provide typed patient name
+            // Receptionist booking: require name + phone
             if (User.IsInRole("Receptionist"))
             {
-                // In receptionist flow, PatientProfileId is NOT required
                 ModelState.Remove(nameof(vm.PatientProfileId));
 
                 if (string.IsNullOrWhiteSpace(vm.UnregisteredPatientName))
@@ -240,9 +238,14 @@ namespace Doctor_AppointmentSystem.Controllers
                     TempData["ErrorMessage"] = "Patient name is required.";
                     return RedirectToDashboard();
                 }
+
+                if (string.IsNullOrWhiteSpace(vm.UnregisteredPatientPhone))
+                {
+                    TempData["ErrorMessage"] = "Patient phone is required.";
+                    return RedirectToDashboard();
+                }
             }
 
-            // ✅ Common validation
             if (!vm.AppointmentDate.HasValue || string.IsNullOrWhiteSpace(vm.SelectedSlot))
             {
                 TempData["ErrorMessage"] = "Invalid booking information.";
@@ -262,11 +265,9 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToDashboard();
             }
 
-            // Slot duration
             var duration = await GetDoctorSlotDurationMinutes(vm.DoctorProfileId, bookingDate.DayOfWeek) ?? 20;
             var startDateTime = bookingDate.Add(slotTime);
 
-            // Slot availability check
             var slotAvailable = await IsSlotAvailableAsync(vm.DoctorProfileId, startDateTime, duration);
             if (!slotAvailable)
             {
@@ -276,7 +277,6 @@ namespace Doctor_AppointmentSystem.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // ✅ Set PatientProfileId only if Patient role
             int? patientProfileIdToSave = null;
             if (User.IsInRole("Patient"))
             {
@@ -286,14 +286,11 @@ namespace Doctor_AppointmentSystem.Controllers
             var appointment = new Appointment
             {
                 DoctorProfileId = vm.DoctorProfileId,
-
-                // ✅ patient id only for Patient role
                 PatientProfileId = patientProfileIdToSave,
 
-                // ✅ receptionist typed name for unregistered patient
-                UnregisteredPatientName = User.IsInRole("Receptionist")
-                    ? vm.UnregisteredPatientName?.Trim()
-                    : null,
+                // receptionist typed info
+                UnregisteredPatientName = User.IsInRole("Receptionist") ? vm.UnregisteredPatientName?.Trim() : null,
+                UnregisteredPatientPhone = User.IsInRole("Receptionist") ? vm.UnregisteredPatientPhone?.Trim() : null,
 
                 AppointmentDateTime = startDateTime,
                 DurationMinutes = duration,
@@ -303,8 +300,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 Status = AppointmentStatus.Confirmed,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
-
-                // ✅ Who booked the appointment (receptionist or patient)
                 BookedByUserId = userId
             };
 
@@ -383,10 +378,8 @@ namespace Doctor_AppointmentSystem.Controllers
             if (TimeSpan.TryParse(slot, out time))
                 return true;
 
-            if (DateTime.TryParseExact(slot, "h:mm tt", CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out var dt) ||
-                DateTime.TryParseExact(slot, "hh:mm tt", CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out dt))
+            if (DateTime.TryParseExact(slot, "h:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt) ||
+                DateTime.TryParseExact(slot, "hh:mm tt", CultureInfo.InvariantCulture, DateTimeStyles.None, out dt))
             {
                 time = dt.TimeOfDay;
                 return true;

@@ -1,9 +1,7 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.AppointmentCreateViewModel
-
 @{
     ViewData["Title"] = "Confirm Appointment";
 
-    // ✅ Use correct sidebar/layout for both roles
     Layout = User.IsInRole("Receptionist")
         ? "~/Views/Shared/_Layout_Receptionist.cshtml"
         : "~/Views/Shared/_Layout_Patient.cshtml";
@@ -47,13 +45,18 @@
                 <div class="confirm-label">TIME</div>
                 <div class="confirm-value">
                     @{
-                        var timeText = TimeSpan.TryParse(Model.SelectedSlot, out var ts)
-                        ? DateTime.Today.Add(ts).ToString("hh:mm tt")
-                        : Model.SelectedSlot;
+                        string timeText = Model.SelectedSlot ?? "";
+                        if (!string.IsNullOrWhiteSpace(Model.SelectedSlot))
+                        {
+                            TimeSpan ts;
+                            if (TimeSpan.TryParse(Model.SelectedSlot, out ts))
+                            {
+                                timeText = DateTime.Today.Add(ts).ToString("hh:mm tt");
+                            }
+                        }
                     }
                     @timeText
                 </div>
-
             </div>
         </div>
 
@@ -62,28 +65,34 @@
         <form asp-action="Create" method="post" class="form-wrap">
             @Html.AntiForgeryToken()
 
-            <!-- Hidden values needed for POST -->
             <input type="hidden" asp-for="DoctorProfileId" />
             <input type="hidden" asp-for="AppointmentDate" />
             <input type="hidden" asp-for="SelectedSlot" />
 
             @if (User.IsInRole("Receptionist"))
             {
-                <!-- ✅ Receptionist: type unregistered patient name -->
-                <div class="field">
-                    <label class="label">Patient Name</label>
-                    <input class="input"
-                           type="text"
-                           name="UnregisteredPatientName"
-                           value="@(ViewBag.UnregisteredPatientName ?? "")"
-                           placeholder="Type patient full name..."
-                           required />
+                <div class="fields-row">
+                    <div class="field">
+                        <label class="label" asp-for="UnregisteredPatientName">Patient Name</label>
+                        <input class="input"
+                               asp-for="UnregisteredPatientName"
+                               placeholder="Type patient full name..."
+                               required />
+                        <span class="text-danger" asp-validation-for="UnregisteredPatientName"></span>
+                    </div>
 
-                    <!-- Keep PatientProfileId empty for receptionist booking -->
-                    <input type="hidden" asp-for="PatientProfileId" value="" />
-
-                    <span class="text-danger"></span>
+                    <div class="field">
+                        <label class="label" asp-for="UnregisteredPatientPhone">Patient Phone</label>
+                        <input class="input"
+                               asp-for="UnregisteredPatientPhone"
+                               placeholder="e.g., 01XXXXXXXXX"
+                               required />
+                        <span class="text-danger" asp-validation-for="UnregisteredPatientPhone"></span>
+                    </div>
                 </div>
+
+                <!-- Keep PatientProfileId empty for receptionist booking -->
+                <input type="hidden" asp-for="PatientProfileId" value="" />
             }
             else
             {
@@ -106,15 +115,8 @@
             </div>
 
             <div class="actions-row">
-                <a class="btn-outline"
-                   asp-action="DoctorSlots"
-                   asp-route-doctorProfileId="@Model.DoctorProfileId">
-                    Cancel
-                </a>
-
-                <button type="submit" class="btn-primary">
-                    Book Appointment
-                </button>
+                <a class="btn-outline" href="javascript:history.back()">Cancel</a>
+                <button type="submit" class="btn-primary">Book Appointment</button>
             </div>
 
             <div class="text-danger summary">

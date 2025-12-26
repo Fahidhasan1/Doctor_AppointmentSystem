@@ -241,6 +241,7 @@ namespace Doctor_AppointmentSystem.Controllers
                             _ => payment.Method.ToString()
                         };
 
+
                         paymentDisplay = $"Paid ({methodText})";
                     }
                     else

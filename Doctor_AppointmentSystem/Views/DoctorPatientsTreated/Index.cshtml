@@ -1,0 +1,66 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorPatientsTreatedIndexViewModel
+
+@{
+    ViewData["Title"] = Model.PageTitle ?? "Patients Treated";
+    Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
+
+<div class="appt-page">
+    <div class="appt-card">
+
+        <div class="appt-header">
+            <div>
+                <h2 class="appt-title">@Model.PageTitle</h2>
+                <div class="appt-subtitle">
+                    Unique patients you have treated (Completed appointments only).
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:10px; margin-bottom: 12px;">
+            <span class="text-muted" style="font-size:13px;">
+                Total Patients Treated:
+            </span>
+            <strong style="font-size:14px;">@Model.TotalPatientsTreated</strong>
+        </div>
+
+        @if (Model.Patients == null || !Model.Patients.Any())
+        {
+            <div class="appt-empty">No treated patients found.</div>
+        }
+        else
+        {
+            <div class="appt-table-wrap">
+                <table class="appt-table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Patient Number</th>
+                            <th>Visits</th>
+                            <th>Last Treated</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var p in Model.Patients)
+                        {
+                            <tr>
+                                <td>@p.PatientName</td>
+                                <td>@p.PatientPhone</td>
+                                <td>@p.VisitsCount</td>
+                                <td>@p.LastTreatedAt.ToString("dd MMM yyyy")</td>
+                                <td>
+                                    @(p.IsRegistered ? "Registered" : "Unregistered")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+</div>

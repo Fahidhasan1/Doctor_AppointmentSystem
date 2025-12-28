@@ -68,36 +68,13 @@
                     <span>Dashboard</span>
                 </a>
 
-                <!-- APPOINTMENTS DROPDOWN -->
-                <div class="nav-dropdown">
-                    <div class="nav-dropdown-toggle" data-dropdown>
-                        <div class="nav-dropdown-toggle-main">
-                            <div class="nav-link-icon">📅</div>
-                            <span>Appointments</span>
-                        </div>
-                        <span class="nav-dropdown-arrow">▾</span>
-                    </div>
-
-                    <div class="nav-submenu">
-                        <a asp-controller="DoctorAppointments"
-                           asp-action="Today"
-                           class="nav-link nav-link--sub">
-                            Today’s Appointments
-                        </a>
-
-                        <a asp-controller="DoctorAppointments"
-                           asp-action="Upcoming"
-                           class="nav-link nav-link--sub">
-                            Upcoming (Date-wise)
-                        </a>
-
-                        <a asp-controller="DoctorAppointments"
-                           asp-action="History"
-                           class="nav-link nav-link--sub">
-                            Appointment History
-                        </a>
-                    </div>
-                </div>
+                <!-- APPOINTMENTS (NO DROPDOWN) -->
+                <a asp-controller="DoctorAppointments"
+                   asp-action="Index"
+                   class="nav-link">
+                    <div class="nav-link-icon">📅</div>
+                    <span>Appointments</span>
+                </a>
 
                 <!-- SCHEDULE & AVAILABILITY DROPDOWN -->
                 <div class="nav-dropdown">
@@ -186,6 +163,7 @@
                     </button>
                 </form>
             </nav>
+
         </aside>
 
         <!-- MAIN -->

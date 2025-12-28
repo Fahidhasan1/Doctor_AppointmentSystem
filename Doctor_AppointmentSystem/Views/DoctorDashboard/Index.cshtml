@@ -10,7 +10,7 @@
 <div class="stats-grid">
     <!-- TODAY'S APPOINTMENTS -->
     <div class="card stat-card"
-         data-url="@Url.Action("Today", "DoctorAppointments")">
+         data-url="@Url.Action("Index", "DoctorAppointments", new { filter = "Today", fromCard = true })">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Today's Appointments</div>
@@ -22,7 +22,7 @@
 
     <!-- UPCOMING APPOINTMENTS -->
     <div class="card stat-card"
-         data-url="@Url.Action("Upcoming", "DoctorAppointments")">
+         data-url="@Url.Action("Index", "DoctorAppointments", new { filter = "Upcoming", fromCard = true })">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Upcoming</div>
@@ -46,7 +46,7 @@
 
     <!-- MONTHLY REVENUE -->
     <div class="card stat-card"
-         data-url="@Url.Action("Index", "DoctorRevenue")">
+         data-url="@Url.Action("Index", "DoctorAppointments", new { filter = "ThisMonthPaid", fromCard = true })">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Monthly Revenue</div>

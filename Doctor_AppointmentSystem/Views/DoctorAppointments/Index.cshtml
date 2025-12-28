@@ -1,0 +1,191 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorAppointmentsIndexViewModel
+@using Doctor_AppointmentSystem.Enums
+
+@{
+    ViewData["Title"] = "Appointments";
+    Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
+
+    var currentFilter = (ViewBag.ActiveFilter as string ?? Model.Filter ?? "All")
+                        .Trim()
+                        .ToLowerInvariant();
+
+    bool isActive(string f) =>
+        currentFilter == (f ?? "").Trim().ToLowerInvariant();
+
+    bool fromCard = ViewBag.FromCard is bool b && b;
+
+    // -------- Dynamic Page Title --------
+    string pageTitle = "Appointments";
+    string? pageSubtitle = "View and manage your appointments.";
+
+    if (fromCard)
+    {
+        pageSubtitle = null;
+
+        pageTitle = currentFilter switch
+        {
+            "today" => "Today's Appointments",
+            "upcoming" => "Upcoming Appointments",
+            "thismonthpaid" => "This Month's Paid Appointments",
+            "completed" => "Completed Appointments",
+            "cancelled" => "Cancelled / No Show Appointments",
+            _ => "Appointments"
+        };
+    }
+}
+
+<link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
+
+<div class="appt-page">
+    <div class="appt-card">
+
+        <!-- HEADER -->
+        <div class="appt-header">
+            <div>
+                <h2 class="appt-title">@pageTitle</h2>
+
+                @if (!string.IsNullOrWhiteSpace(pageSubtitle))
+                {
+                    <div class="appt-subtitle">@pageSubtitle</div>
+                }
+
+                @* Tabs only when NOT from card *@
+                @if (!fromCard)
+                {
+                    <div class="appt-tabs">
+                        <a class="appt-tab @(isActive("all") ? "active" : "")"
+                           asp-controller="DoctorAppointments"
+                           asp-action="Index"
+                           asp-route-filter="All">
+                            All
+                        </a>
+
+                        <a class="appt-tab @(isActive("today") ? "active" : "")"
+                           asp-controller="DoctorAppointments"
+                           asp-action="Index"
+                           asp-route-filter="Today">
+                            Today
+                        </a>
+
+                        <a class="appt-tab @(isActive("upcoming") ? "active" : "")"
+                           asp-controller="DoctorAppointments"
+                           asp-action="Index"
+                           asp-route-filter="Upcoming">
+                            Upcoming
+                        </a>
+
+                        <a class="appt-tab @(isActive("completed") ? "active" : "")"
+                           asp-controller="DoctorAppointments"
+                           asp-action="Index"
+                           asp-route-filter="Completed">
+                            Completed
+                        </a>
+
+                        <a class="appt-tab @(isActive("cancelled") ? "active" : "")"
+                           asp-controller="DoctorAppointments"
+                           asp-action="Index"
+                           asp-route-filter="Cancelled">
+                            Cancelled / No Show
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- TABLE -->
+        @if (Model.Appointments == null || !Model.Appointments.Any())
+        {
+            <div class="appt-empty">No appointments found.</div>
+        }
+        else
+        {
+            <div class="appt-table-wrap">
+                <table class="appt-table">
+                    <thead>
+                        <tr>
+                            <th>Date &amp; Time</th>
+                            <th>Patient</th>
+                            <th>Patient Number</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th class="appt-actions-col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var a in Model.Appointments)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="appt-dt">
+                                        <div class="appt-dt-date">
+                                            @a.AppointmentDateTime.ToString("dd MMM yyyy")
+                                        </div>
+                                        <div class="appt-dt-time">
+                                            @a.AppointmentDateTime.ToString("hh:mm tt")
+                                            (@a.DurationMinutes min)
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>@a.PatientName</td>
+                                <td>@a.PatientPhone</td>
+                                <td>@a.Status</td>
+                                <td>
+                                    <div>
+                                        <div>@a.PaymentDisplay</div>
+
+                                        @if (a.PaidAmount.HasValue)
+                                        {
+                                            <div class="text-muted" style="font-size:16px;">
+                                                ৳@a.PaidAmount.Value.ToString("0")
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
+
+
+                                <td class="appt-actions-col">
+                                    @if (a.Status == AppointmentStatus.Confirmed &&
+                                                                a.AppointmentDateTime.Date == DateTime.Today)
+                                    {
+                                        <div class="appt-actions">
+                                            <form asp-controller="DoctorAppointments"
+                                                  asp-action="MarkCompleted"
+                                                  method="post"
+                                                  class="appt-action-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@a.Id" />
+                                                <input type="hidden" name="filter" value="@Model.Filter" />
+                                                <button type="submit"
+                                                        class="appt-btn appt-btn-primary">
+                                                    Complete
+                                                </button>
+                                            </form>
+
+                                            <form asp-controller="DoctorAppointments"
+                                                  asp-action="MarkNoShow"
+                                                  method="post"
+                                                  class="appt-action-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@a.Id" />
+                                                <input type="hidden" name="filter" value="@Model.Filter" />
+                                                <button type="submit"
+                                                        class="appt-btn appt-btn-danger">
+                                                    No Show
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="appt-dash">—</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

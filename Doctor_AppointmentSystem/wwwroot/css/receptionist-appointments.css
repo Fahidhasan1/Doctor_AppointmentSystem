@@ -291,3 +291,14 @@ body.modal-open {
 .appt-btn {
     text-decoration: none;
 }
+
+
+.appt-actions-col {
+    text-align: center;
+}
+
+.appt-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}

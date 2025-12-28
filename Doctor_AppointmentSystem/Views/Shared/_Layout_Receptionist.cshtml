@@ -95,22 +95,7 @@
                     <span>New Booking</span>
                 </a>
 
-                @* <!-- ✅ APPOINTMENTS -->
-                <a asp-controller="ReceptionistAppointments"
-                   asp-action="Index"
-                   asp-route-filter="all"
-                   class="nav-link @(currentController == "ReceptionistAppointments" ? "active" : "")">
-                    <div class="nav-link-icon">📅</div>
-                    <span>Appointments</span>
-                </a>
-
-                <!-- ✅ NOTIFICATIONS -->
-                <a asp-controller="ReceptionistNotifications"
-                   asp-action="Index"
-                   class="nav-link @(currentController == "ReceptionistNotifications" ? "active" : "")">
-                    <div class="nav-link-icon">🔔</div>
-                    <span>Notifications</span>
-                </a> *@
+           
 
                 <!-- APPOINTMENTS -->
                 <a asp-controller="ReceptionistAppointments"
@@ -162,11 +147,11 @@
                             Change Password
                         </a>
 
-                        <a asp-controller="Settings"
+                        @* <a asp-controller="Settings"
                            asp-action="NotificationPreferences"
                            class="nav-link nav-link--sub">
                             Notification Preferences
-                        </a>
+                        </a> *@
                     </div>
                 </div>
 

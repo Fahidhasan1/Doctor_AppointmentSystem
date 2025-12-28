@@ -12,6 +12,8 @@ namespace Doctor_AppointmentSystem.ViewModels
         public int CompletedVisits { get; set; }               // all-time completed
         public int CancelledOrMissed { get; set; }             // cancelled + no-show
         public decimal DigitalPaymentsTotal { get; set; }      // non-cash paid amount
+        public int PaidAppointmentsThisMonth { get; set; }
+
 
         // Extra stats (useful later if needed)
         public int TotalAppointments { get; set; }

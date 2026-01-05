@@ -1,0 +1,299 @@
+﻿@model Doctor_AppointmentSystem.Controllers.AdminAppointmentController.AdminAppointmentsIndexVM
+
+@{
+    ViewData["Title"] = "Sunshine Hospital";
+    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+
+    var activeFilter = (ViewBag.ActiveFilter as string ?? Model.Filter ?? "All")
+                        .Trim()
+                        .ToLowerInvariant();
+
+    bool isActive(string f) =>
+        activeFilter == (f ?? "").Trim().ToLowerInvariant();
+
+    // var headerDate = DateTime.Now.ToString("dddd, MMM dd, yyyy");
+}
+
+<style>
+    /* Page background spacing similar to sample */
+    .admin-appt-page {
+        padding: 22px 22px 30px 22px;
+    }
+
+    /* Top title row: "Appointments" left, date pill right */
+    .admin-appt-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+
+    .admin-appt-page-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0;
+        color: #0f172a;
+    }
+
+    /* Date pill (top-right) */
+    .admin-appt-date-pill {
+        font-size: 14px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        color: #4f46e5;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        white-space: nowrap;
+    }
+
+    /* Main card container like sample */
+    .admin-appt-card {
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(99, 102, 241, 0.12);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Card header */
+    .admin-appt-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .admin-appt-card-title {
+        font-size: 34px;
+        font-weight: 800;
+        margin: 0;
+        color: #0f172a;
+    }
+
+    .admin-appt-card-subtitle {
+        margin: 6px 0 0 0;
+        font-size: 15px;
+        color: rgba(15, 23, 42, 0.65);
+    }
+
+    /* Tabs (pill buttons) */
+    .admin-appt-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+        margin-bottom: 14px;
+    }
+
+    .admin-appt-tab {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        color: #111827;
+        background: rgba(255, 255, 255, 0.75);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.05);
+        transition: transform 0.08s ease, box-shadow 0.12s ease;
+        white-space: nowrap;
+    }
+
+        .admin-appt-tab:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .admin-appt-tab.active {
+            color: #4f46e5;
+            border-color: rgba(79, 70, 229, 0.55);
+            background: rgba(79, 70, 229, 0.06);
+        }
+
+    /* Table wrapper */
+    .admin-appt-table-wrap {
+        margin-top: 6px;
+        overflow-x: auto;
+    }
+
+    /* Table like sample: clean, separated rows */
+    .admin-appt-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+        .admin-appt-table thead th {
+            text-align: left;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 16px 14px;
+            color: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            white-space: nowrap;
+        }
+
+        .admin-appt-table tbody td {
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+            color: #0f172a;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+    /* Date/time styling */
+    .admin-appt-date {
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .admin-appt-time {
+        margin-top: 4px;
+        color: rgba(15, 23, 42, 0.62);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Payment text like sample */
+    .admin-appt-pay-label {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .admin-appt-pay-amount {
+        margin-top: 4px;
+        color: rgba(15, 23, 42, 0.75);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Status pill look (simple, neutral) */
+    .admin-appt-status {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 12px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: rgba(15, 23, 42, 0.03);
+        white-space: nowrap;
+    }
+
+    /* Empty row */
+    .admin-appt-empty {
+        padding: 18px !important;
+        color: rgba(15, 23, 42, 0.65);
+        white-space: normal;
+    }
+</style>
+
+<div class="admin-appt-page">
+
+    <!-- Card like sample -->
+    <div class="admin-appt-card">
+
+        <div class="admin-appt-card-header">
+            <div>
+                <h2 class="admin-appt-card-title">
+                    @(((ViewBag.IsTodaysPage as bool?) == true) ? "Today's Appointments" : "Appointments")
+                </h2>
+
+                <p class="admin-appt-card-subtitle">View and manage your appointments.</p>
+            </div>
+        </div>
+
+        @{
+            bool singleTab = (ViewBag.SingleTab as bool?) == true;
+            bool hideTabs = (ViewBag.HideTabs as bool?) == true;
+        }
+
+        @* ✅ Tabs/Buttons (hide completely for Today's Dashboard page) *@
+        @if (!hideTabs)
+        {
+            <div class="admin-appt-tabs">
+                @if (singleTab)
+                {
+                    <a class="admin-appt-tab active">Today</a>
+                }
+                else
+                {
+                    <a asp-controller="AdminAppointment" asp-action="Index" asp-route-filter="All"
+                       class="admin-appt-tab @(isActive("all") ? "active" : "")">All</a>
+
+                    <a asp-controller="AdminAppointment" asp-action="Index" asp-route-filter="Today"
+                       class="admin-appt-tab @(isActive("today") ? "active" : "")">Today</a>
+
+                    <a asp-controller="AdminAppointment" asp-action="Index" asp-route-filter="Upcoming"
+                       class="admin-appt-tab @(isActive("upcoming") ? "active" : "")">Upcoming</a>
+
+                    <a asp-controller="AdminAppointment" asp-action="Index" asp-route-filter="Completed"
+                       class="admin-appt-tab @(isActive("completed") ? "active" : "")">Completed</a>
+
+                    <a asp-controller="AdminAppointment" asp-action="Index" asp-route-filter="Cancelled"
+                       class="admin-appt-tab @(isActive("cancelled") ? "active" : "")">Cancelled / No Show</a>
+                }
+            </div>
+        }
+
+        <!-- Table -->
+        <div class="admin-appt-table-wrap">
+            <table class="admin-appt-table">
+                <thead>
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Doctor_Name</th>
+                        <th>Doctor_Number</th>
+                        <th>Patient_Name</th>
+                        <th>Patient_Number</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model.Appointments == null || !Model.Appointments.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="admin-appt-empty">No appointments found.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var appt in Model.Appointments)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="admin-appt-date">@appt.AppointmentDateTime.ToString("dd MMM yyyy")</div>
+                                    <div class="admin-appt-time">
+                                        @appt.AppointmentDateTime.ToString("hh:mm tt") (@appt.DurationMinutes min)
+                                    </div>
+                                </td>
+
+                                <td>@appt.DoctorName</td>
+                                <td>@appt.DoctorPhone</td>
+
+                                <td>@appt.PatientName</td>
+                                <td>@appt.PatientPhone</td>
+
+                                <td>
+                                    <div class="admin-appt-pay-label">@appt.PaymentLabel</div>
+                                    @if (appt.PaymentAmount.HasValue)
+                                    {
+                                        <div class="admin-appt-pay-amount">৳@appt.PaymentAmount.Value</div>
+                                    }
+                                </td>
+
+                                <td><span class="admin-appt-status">@appt.Status</span></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,12 +1,13 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.DoctorDashboardViewModel
 @using System.Text.Json
+@using Doctor_AppointmentSystem.Enums
 
 @{
     ViewData["Title"] = "Doctor Dashboard";
     Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
 }
 
-<!-- ===== TOP STATS (same structure as Admin) ===== -->
+<!-- ===== TOP STATS ===== -->
 <div class="stats-grid">
     <!-- TODAY'S APPOINTMENTS -->
     <div class="card stat-card"
@@ -57,7 +58,7 @@
     </div>
 </div>
 
-<!-- ===== CHARTS (same layout classes as Admin) ===== -->
+<!-- ===== CHARTS ===== -->
 <div class="charts-grid">
     <!-- Monthly Revenue Trend -->
     <div class="card">
@@ -78,7 +79,7 @@
         <div class="card-title-row">
             <div>
                 <h3>Appointment Status Breakdown</h3>
-                <div class="card-title-sub">Today's appointments by status</div>
+                <div class="card-title-sub">Today's paid appointments by status</div>
             </div>
         </div>
         <div class="chart-container">
@@ -87,7 +88,7 @@
     </div>
 </div>
 
-<!-- ===== LOWER GRID: Today's Appointments + Availability ===== -->
+<!-- ===== LOWER GRID ===== -->
 <div class="lower-grid">
     <!-- Today's Appointments -->
     <div class="card">
@@ -96,9 +97,12 @@
                 <h3>Today's Appointments</h3>
                 <div class="card-title-sub">Manage and update appointment status</div>
             </div>
+
             <a class="link-small"
                asp-controller="DoctorAppointments"
-               asp-action="Today">
+               asp-action="Index"
+               asp-route-filter="Today"
+               asp-route-fromCard="true">
                 View All
             </a>
         </div>
@@ -108,36 +112,76 @@
                 <tr>
                     <th>TIME</th>
                     <th>PATIENT</th>
-                    <th>REASON</th>
+                    <th>PHONE</th>
+                    <th>PAYMENT</th>
                     <th>STATUS</th>
                     <th>ACTIONS</th>
                 </tr>
             </thead>
+
             <tbody>
-                @if (Model.TodaysAppointmentsList.Any())
+                @if (Model.TodaysAppointmentsList != null && Model.TodaysAppointmentsList.Any())
                 {
                     foreach (var appt in Model.TodaysAppointmentsList)
                     {
                         var statusClass = appt.Status switch
                         {
-                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Completed => "status-pill status-pill--completed",
-                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Cancelled => "status-pill status-pill--cancelled",
-                            Doctor_AppointmentSystem.Enums.AppointmentStatus.NoShow => "status-pill status-pill--noshow",
-                            Doctor_AppointmentSystem.Enums.AppointmentStatus.Rescheduled => "status-pill status-pill--rescheduled",
+                            AppointmentStatus.Completed => "status-pill status-pill--completed",
+                            AppointmentStatus.Cancelled => "status-pill status-pill--cancelled",
+                            AppointmentStatus.NoShow => "status-pill status-pill--noshow",
+                            AppointmentStatus.Rescheduled => "status-pill status-pill--rescheduled",
                             _ => "status-pill status-pill--confirmed"
                         };
 
                         <tr>
                             <td>@appt.AppointmentDateTime.ToString("hh:mm tt")</td>
                             <td>@appt.PatientName</td>
-                            <td>@(string.IsNullOrWhiteSpace(appt.VisitType) ? "-" : appt.VisitType)</td>
+                            <td>@(string.IsNullOrWhiteSpace(appt.PatientPhone) ? "—" : appt.PatientPhone)</td>
+
+                            <td>
+                                <div>@appt.PaymentDisplay</div>
+                                @if (appt.PaidAmount.HasValue)
+                                {
+                                    <div class="text-muted" style="font-size:12px;">
+                                        @appt.Currency@appt.PaidAmount.Value.ToString("0")
+                                    </div>
+                                }
+                            </td>
+
                             <td>
                                 <span class="@statusClass">@appt.Status</span>
                             </td>
-                            <td class="table-actions">
-                                <!-- later hook these to DoctorAppointments actions -->
-                                <a class="btn-pill btn-pill--primary">Complete</a>
-                                <a class="btn-pill btn-pill--danger">Cancel</a>
+
+                            <td class="table purely-actions">
+                                @* Only show buttons for TODAY + Confirmed *@
+                                @if (appt.Status == AppointmentStatus.Confirmed && appt.AppointmentDateTime.Date == DateTime.Today)
+                                {
+                                    <div class="appt-actions">
+                                        <form asp-controller="DoctorAppointments"
+                                              asp-action="MarkCompleted"
+                                              method="post"
+                                              style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@appt.AppointmentId" />
+                                            <input type="hidden" name="filter" value="Today" />
+                                            <button type="submit" class="btn-pill btn-pill--primary">Complete</button>
+                                        </form>
+
+                                        <form asp-controller="DoctorAppointments"
+                                              asp-action="MarkNoShow"
+                                              method="post"
+                                              style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@appt.AppointmentId" />
+                                            <input type="hidden" name="filter" value="Today" />
+                                            <button type="submit" class="btn-pill btn-pill--danger">No Show</button>
+                                        </form>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="appt-dash">—</span>
+                                }
                             </td>
                         </tr>
                     }
@@ -145,9 +189,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-muted">
-                            No appointments scheduled for today.
-                        </td>
+                        <td colspan="6" class="text-muted">No appointments scheduled for today.</td>
                     </tr>
                 }
             </tbody>
@@ -173,18 +215,16 @@
             <div>
                 <div class="activity-revenue-label">Today's Slots</div>
 
-                @if (Model.TodaySlots.Any())
+                @if (Model.TodaySlots != null && Model.TodaySlots.Any())
                 {
                     foreach (var slot in Model.TodaySlots)
                     {
                         <div class="slot-row">
                             <div class="slot-main">
+                                @* ✅ FIX: avoid double time (Label already contains time) *@
                                 <div class="slot-label">@slot.Label</div>
-                                <div class="slot-time">
-                                    @slot.StartTime.ToString(@"hh\:mm") –
-                                    @slot.EndTime.ToString(@"hh\:mm")
-                                </div>
                             </div>
+
                             <div class="slot-badge">
                                 @slot.SlotsRemaining slots left
                             </div>
@@ -199,16 +239,23 @@
 
             <!-- Upcoming Off Days -->
             <div class="availability-offdays">
-                <div class="activity-revenue-label">Upcoming Off Days</div>
+                @* ✅ right aligned, same color as "Edit Slots" *@
+                <div class="card-title-row" style="margin-bottom:10px;">
+                    <div class="activity-revenue-label" style="margin:0;">Upcoming Off Days</div>
 
-                @if (Model.UpcomingOffDays.Any())
+                    <a class="link-small"
+                       asp-controller="DoctorSchedule"
+                       asp-action="UnavailableDates">
+                        Manage Off Days
+                    </a>
+                </div>
+
+                @if (Model.UpcomingOffDays != null && Model.UpcomingOffDays.Any())
                 {
                     foreach (var off in Model.UpcomingOffDays)
                     {
                         <div class="offday-row">
-                            <div class="offday-date">
-                                @off.Date.ToString("dd MMM yyyy")
-                            </div>
+                            <div class="offday-date">@off.Date.ToString("dd MMM yyyy")</div>
                             <div class="offday-reason">
                                 @(string.IsNullOrWhiteSpace(off.Reason) ? "—" : off.Reason)
                             </div>
@@ -219,12 +266,6 @@
                 {
                     <div class="text-muted">No upcoming off days configured.</div>
                 }
-
-                <a class="btn-pill btn-pill--outline"
-                   asp-controller="DoctorSchedule"
-                   asp-action="UnavailableDates">
-                    Manage Off Days
-                </a>
             </div>
         </div>
     </div>
@@ -283,24 +324,27 @@
             });
         }
 
-        // ===== STATUS DONUT CHART =====
+        // ===== STATUS DONUT CHART (Tooltip shows % on hover) =====
         const statusCanvas = document.getElementById('doctorStatusChart');
         if (statusCanvas && window.Chart) {
             const sctx = statusCanvas.getContext('2d');
 
+            const statusLabels = ['Remaining Today', 'Completed', 'No Show'];
+            const statusValues = [
+                Number(@Model.TodayRemainingCount),
+                Number(@Model.TodayCompletedCount),
+                Number(@Model.TodayNoShowCount)
+            ];
+
+            const total = statusValues.reduce((sum, v) => sum + (Number(v) || 0), 0);
+
             new Chart(sctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Accepted', 'Remaining Today', 'Completed', 'Cancelled'],
+                    labels: statusLabels,
                     datasets: [{
-                        data: [
-                            @Model.TodayAcceptedCount,
-                            @Model.TodayRemainingCount,
-                            @Model.TodayCompletedCount,
-                            @Model.TodayCancelledCount
-                        ],
+                        data: statusValues,
                         backgroundColor: [
-                            'rgba(79, 125, 255, 0.9)',
                             'rgba(255, 184, 76, 0.9)',
                             'rgba(84, 201, 139, 0.9)',
                             'rgba(255, 104, 120, 0.9)'
@@ -317,6 +361,16 @@
                                 usePointStyle: true,
                                 boxWidth: 8,
                                 boxHeight: 8
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const label = context.label || '';
+                                    const value = Number(context.parsed) || 0;
+                                    const pct = total > 0 ? ((value / total) * 100) : 0;
+                                    return `${label}: ${value} (${pct.toFixed(1)}%)`;
+                                }
                             }
                         }
                     }

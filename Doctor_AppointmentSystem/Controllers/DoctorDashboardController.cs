@@ -31,25 +31,20 @@ namespace Doctor_AppointmentSystem.Controllers
             ViewData["Title"] = "Doctor Dashboard";
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Challenge();
-            }
+            if (user == null) return Challenge();
 
             var doctorProfile = await _context.DoctorProfiles
                 .FirstOrDefaultAsync(d => d.IsActive && d.UserId == user.Id);
 
             if (doctorProfile == null)
-            {
                 return RedirectToAction("Index", "Home");
-            }
 
             var doctorId = doctorProfile.Id;
 
             var vm = new DoctorDashboardViewModel();
 
             await PopulateTopSummaryAsync(vm, doctorId);
-            await PopulateRevenueSectionAsync(vm, doctorId); // ✅ updated: PaidAtUtc-only + count
+            await PopulateRevenueSectionAsync(vm, doctorId);
             await PopulateTodaySectionAsync(vm, doctorId);
             await PopulateAvailabilitySectionAsync(vm, doctorId);
             await PopulateReviewsSectionAsync(vm, doctorId);
@@ -65,22 +60,20 @@ namespace Doctor_AppointmentSystem.Controllers
 
             var doctorAppointments = _context.Appointments
                 .Where(a => a.IsActive && a.DoctorProfileId == doctorId)
-                // ✅ Paid-only policy (same as Doctor Appointments page)
-                .Where(a => _context.Payments.Any(p => p.IsActive &&
-                                                     p.AppointmentId == a.Id &&
-                                                     p.Status == PaymentStatus.Paid));
+                // ✅ paid-only policy
+                .Where(a => _context.Payments.Any(p =>
+                    p.IsActive &&
+                    p.AppointmentId == a.Id &&
+                    p.Status == PaymentStatus.Paid));
 
             vm.TodaysAppointments = await doctorAppointments
-                .CountAsync(a => a.AppointmentDateTime >= today &&
-                                 a.AppointmentDateTime < tomorrow);
+                .CountAsync(a => a.AppointmentDateTime >= today && a.AppointmentDateTime < tomorrow);
 
             vm.UpcomingAppointments = await doctorAppointments
-                .CountAsync(a => a.AppointmentDateTime >= tomorrow &&
-                                 a.Status == AppointmentStatus.Confirmed);
+                .CountAsync(a => a.AppointmentDateTime >= tomorrow && a.Status == AppointmentStatus.Confirmed);
 
-            // (we still compute these but don't show card now)
-            var now = DateTime.Today;
-            var monthStart = new DateTime(now.Year, now.Month, 1);
+            // For completeness (you may still use later)
+            var monthStart = new DateTime(today.Year, today.Month, 1);
             var nextMonthStart = monthStart.AddMonths(1);
 
             vm.CompletedThisMonth = await doctorAppointments
@@ -99,16 +92,15 @@ namespace Doctor_AppointmentSystem.Controllers
                                  a.AppointmentDateTime < nextMonthStart);
 
             // ✅ Unique patients treated (all time) from COMPLETED appointments
-            // Registered patients: distinct PatientProfileId
             var treatedRegisteredCount = await doctorAppointments
                 .Where(a => a.Status == AppointmentStatus.Completed && a.PatientProfileId != null)
                 .Select(a => a.PatientProfileId!.Value)
                 .Distinct()
                 .CountAsync();
 
-            // Unregistered patients: distinct phone (fallback unique key)
             var treatedUnregisteredCount = await doctorAppointments
-                .Where(a => a.Status == AppointmentStatus.Completed && a.PatientProfileId == null &&
+                .Where(a => a.Status == AppointmentStatus.Completed &&
+                            a.PatientProfileId == null &&
                             !string.IsNullOrWhiteSpace(a.UnregisteredPatientPhone))
                 .Select(a => a.UnregisteredPatientPhone!)
                 .Distinct()
@@ -118,16 +110,12 @@ namespace Doctor_AppointmentSystem.Controllers
         }
 
         // ---------------- REVENUE CHART + MONTHLY REVENUE CARD ----------------
-        // ✅ UPDATED:
-        // - Use PaidAtUtc ONLY (no fallback to CreatedAt)
-        // - Optionally sets vm.PaidAppointmentsThisMonth if that property exists in the ViewModel
         private async Task PopulateRevenueSectionAsync(DoctorDashboardViewModel vm, int doctorId)
         {
             var nowUtc = DateTime.UtcNow;
             var yearStart = new DateTime(nowUtc.Year, 1, 1);
             var yearEnd = yearStart.AddYears(1);
 
-            // Get doctor appointment ids for the year (to scope payments to this doctor)
             var apptIdsForDoctorYear = await _context.Appointments
                 .Where(a => a.IsActive &&
                             a.DoctorProfileId == doctorId &&
@@ -145,7 +133,7 @@ namespace Doctor_AppointmentSystem.Controllers
                                 && p.Status == PaymentStatus.Paid
                                 && p.PaidAtUtc != null
                                 && apptIdsForDoctorYear.Contains(p.AppointmentId))
-                    .Select(p => new { p.Amount, p.PaidAtUtc, p.AppointmentId })
+                    .Select(p => new { p.Amount, p.PaidAtUtc })
                     .ToListAsync();
 
                 foreach (var p in payments)
@@ -153,27 +141,8 @@ namespace Doctor_AppointmentSystem.Controllers
                     var paidAt = p.PaidAtUtc!.Value;
                     if (paidAt.Year == nowUtc.Year)
                     {
-                        int monthIndex = paidAt.Month - 1;
-                        revenueByMonth[monthIndex] += p.Amount;
+                        revenueByMonth[paidAt.Month - 1] += p.Amount;
                     }
-                }
-
-                // If your DoctorDashboardViewModel has this property, set it:
-                // public int PaidAppointmentsThisMonth { get; set; }
-                var monthStart = new DateTime(nowUtc.Year, nowUtc.Month, 1);
-                var nextMonthStart = monthStart.AddMonths(1);
-
-                // Use reflection-safe check so controller compiles even if you haven't added the property yet
-                var prop = vm.GetType().GetProperty("PaidAppointmentsThisMonth");
-                if (prop != null && prop.PropertyType == typeof(int) && prop.CanWrite)
-                {
-                    var countDistinct = payments
-                        .Where(x => x.PaidAtUtc!.Value >= monthStart && x.PaidAtUtc!.Value < nextMonthStart)
-                        .Select(x => x.AppointmentId)
-                        .Distinct()
-                        .Count();
-
-                    prop.SetValue(vm, countDistinct);
                 }
             }
 
@@ -185,123 +154,157 @@ namespace Doctor_AppointmentSystem.Controllers
             vm.MonthlyRevenue = revenueByMonth[nowUtc.Month - 1];
         }
 
-        // ---------------- TODAY'S APPOINTMENTS + STATUS DONUT ----------------
+        // ---------------- TODAY'S APPOINTMENTS + STATUS DONUT (UPDATED) ----------------
         private async Task PopulateTodaySectionAsync(DoctorDashboardViewModel vm, int doctorId)
         {
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
             var nowLocal = DateTime.Now;
 
+            // Paid-only today appointments
             var todaysAppointmentsQuery = _context.Appointments
+                .AsNoTracking()
                 .Include(a => a.Patient)
                     .ThenInclude(p => p.User)
                 .Where(a => a.IsActive &&
                             a.DoctorProfileId == doctorId &&
                             a.AppointmentDateTime >= today &&
                             a.AppointmentDateTime < tomorrow)
-                // ✅ Paid-only policy
-                .Where(a => _context.Payments.Any(p => p.IsActive &&
-                                                     p.AppointmentId == a.Id &&
-                                                     p.Status == PaymentStatus.Paid));
+                .Where(a => _context.Payments.Any(p =>
+                    p.IsActive &&
+                    p.AppointmentId == a.Id &&
+                    p.Status == PaymentStatus.Paid));
 
-            vm.TodayAcceptedCount = await todaysAppointmentsQuery
-                .CountAsync(a => a.Status == AppointmentStatus.Confirmed);
+            // ✅ Donut values required:
+            vm.TodayCompletedCount = await todaysAppointmentsQuery.CountAsync(a => a.Status == AppointmentStatus.Completed);
+            vm.TodayNoShowCount = await todaysAppointmentsQuery.CountAsync(a => a.Status == AppointmentStatus.NoShow);
 
-            vm.TodayCompletedCount = await todaysAppointmentsQuery
-                .CountAsync(a => a.Status == AppointmentStatus.Completed);
+            // Remaining Today = confirmed and time is still in the future
+            vm.TodayRemainingCount = await todaysAppointmentsQuery.CountAsync(a =>
+                a.Status == AppointmentStatus.Confirmed &&
+                a.AppointmentDateTime > nowLocal);
 
-            // Treat NoShow as Cancelled bucket for the donut (matches "Cancelled" label)
-            vm.TodayCancelledCount = await todaysAppointmentsQuery
-                .CountAsync(a => a.Status == AppointmentStatus.Cancelled || a.Status == AppointmentStatus.NoShow);
+            // Keep legacy values if anything still references them
+            vm.TodayAcceptedCount = await todaysAppointmentsQuery.CountAsync(a => a.Status == AppointmentStatus.Confirmed);
+            vm.TodayCancelledCount = await todaysAppointmentsQuery.CountAsync(a => a.Status == AppointmentStatus.Cancelled);
 
-            vm.TodayRemainingCount = await todaysAppointmentsQuery
-                .CountAsync(a => a.Status == AppointmentStatus.Confirmed &&
-                                 a.AppointmentDateTime > nowLocal);
-
-            vm.TodaysAppointmentsList = await todaysAppointmentsQuery
+            // Build row list with Payment info
+            var appts = await todaysAppointmentsQuery
                 .OrderBy(a => a.AppointmentDateTime)
-                .Select(a => new DoctorDashboardAppointmentRow
+                .Take(6)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.AppointmentDateTime,
+                    a.Status,
+                    a.VisitType,
+
+                    PatientName =
+                        a.PatientProfileId != null
+                            ? ((a.Patient != null && a.Patient.User != null)
+                                ? ((a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim())
+                                : "—")
+                            : (!string.IsNullOrWhiteSpace(a.UnregisteredPatientName) ? a.UnregisteredPatientName! : "—"),
+
+                    PatientPhone =
+                        a.PatientProfileId != null
+                            ? (!string.IsNullOrWhiteSpace(a.Patient!.User!.PhoneNumber) ? a.Patient.User.PhoneNumber! : "—")
+                            : (!string.IsNullOrWhiteSpace(a.UnregisteredPatientPhone) ? a.UnregisteredPatientPhone! : "—")
+                })
+                .ToListAsync();
+
+            var ids = appts.Select(x => x.Id).ToList();
+
+            var latestPaidPayments = await _context.Payments
+                .AsNoTracking()
+                .Where(p => p.IsActive &&
+                            p.Status == PaymentStatus.Paid &&
+                            ids.Contains(p.AppointmentId))
+                .GroupBy(p => p.AppointmentId)
+                .Select(g => g.OrderByDescending(p => p.PaidAtUtc ?? p.CreatedAt).FirstOrDefault())
+                .ToListAsync();
+
+            var payMap = latestPaidPayments
+                .Where(p => p != null)
+                .ToDictionary(p => p!.AppointmentId, p => p!);
+
+            vm.TodaysAppointmentsList = appts.Select(a =>
+            {
+                payMap.TryGetValue(a.Id, out var pay);
+
+                return new DoctorDashboardAppointmentRow
                 {
                     AppointmentId = a.Id,
                     AppointmentDateTime = a.AppointmentDateTime,
-                    PatientName = a.PatientProfileId != null
-                               ? ((a.Patient != null && a.Patient.User != null)
-                                   ? ((a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim())
-                                   : "-")
-                               : (!string.IsNullOrWhiteSpace(a.UnregisteredPatientName) ? a.UnregisteredPatientName! : "-"),
+                    Status = a.Status,
                     VisitType = a.VisitType,
-                    Status = a.Status
-                })
-                .Take(6)
-                .ToListAsync();
+                    PatientName = a.PatientName,
+                    PatientPhone = a.PatientPhone,
+
+                    PaymentDisplay = pay != null ? $"Paid ({pay.Method})" : "Paid",
+                    PaidAmount = pay?.Amount,
+                    Currency = pay?.Currency ?? "BDT"
+                };
+            }).ToList();
         }
 
-        // ---------------- TODAY'S SLOTS + UPCOMING OFF DAYS ----------------
+        // ---------------- AVAILABILITY (MORE ACCURATE) + UPCOMING OFF DAYS ----------------
         private async Task PopulateAvailabilitySectionAsync(DoctorDashboardViewModel vm, int doctorId)
         {
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
-            var todayDayOfWeek = today.DayOfWeek;
+            var dow = today.DayOfWeek;
 
-            var todaysSchedules = await _context.DoctorSchedules
-                .Where(s => s.IsActive &&
-                            s.DoctorProfileId == doctorId &&
-                            s.DayOfWeek == todayDayOfWeek)
+            var schedules = await _context.DoctorSchedules
+                .AsNoTracking()
+                .Where(s => s.IsActive && s.DoctorProfileId == doctorId && s.DayOfWeek == dow)
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
 
-            var todaysAppointmentsQuery = _context.Appointments
+            // Paid-only booked appointments for today (exclude cancelled + no show for slot taken)
+            var bookedTodayQuery = _context.Appointments
+                .AsNoTracking()
                 .Where(a => a.IsActive &&
                             a.DoctorProfileId == doctorId &&
                             a.AppointmentDateTime >= today &&
                             a.AppointmentDateTime < tomorrow)
-                // ✅ Paid-only policy
-                .Where(a => _context.Payments.Any(p => p.IsActive &&
-                                                     p.AppointmentId == a.Id &&
-                                                     p.Status == PaymentStatus.Paid));
+                .Where(a => _context.Payments.Any(p =>
+                    p.IsActive &&
+                    p.AppointmentId == a.Id &&
+                    p.Status == PaymentStatus.Paid))
+                .Where(a => a.Status != AppointmentStatus.Cancelled && a.Status != AppointmentStatus.NoShow);
 
-            var todaySlotSummaries = new List<DoctorDashboardSlotSummary>();
+            var slotSummaries = new List<DoctorDashboardSlotSummary>();
 
-            foreach (var s in todaysSchedules)
+            foreach (var s in schedules)
             {
                 var totalMinutes = (int)(s.EndTime - s.StartTime).TotalMinutes;
-                int totalSlots = s.SlotDurationMinutes > 0
-                    ? totalMinutes / s.SlotDurationMinutes
-                    : 0;
+                int totalSlots = (s.SlotDurationMinutes > 0) ? (totalMinutes / s.SlotDurationMinutes) : 0;
 
-                var bookedInSlot = await todaysAppointmentsQuery
-                    .Where(a =>
-                        a.AppointmentDateTime.TimeOfDay >= s.StartTime &&
-                        a.AppointmentDateTime.TimeOfDay < s.EndTime &&
-                        a.Status != AppointmentStatus.Cancelled)
-                    .CountAsync();
+                var bookedInBlock = await bookedTodayQuery.CountAsync(a =>
+                    a.AppointmentDateTime.TimeOfDay >= s.StartTime &&
+                    a.AppointmentDateTime.TimeOfDay < s.EndTime);
 
-                string partOfDay;
-                if (s.StartTime < TimeSpan.FromHours(12))
-                    partOfDay = "Morning";
-                else if (s.StartTime < TimeSpan.FromHours(17))
-                    partOfDay = "Afternoon";
-                else
-                    partOfDay = "Evening";
+                string partOfDay =
+                    s.StartTime < TimeSpan.FromHours(12) ? "Morning" :
+                    s.StartTime < TimeSpan.FromHours(17) ? "Afternoon" : "Evening";
 
-                string label = $"{partOfDay} {s.StartTime:hh\\:mm} – {s.EndTime:hh\\:mm}";
-
-                todaySlotSummaries.Add(new DoctorDashboardSlotSummary
+                slotSummaries.Add(new DoctorDashboardSlotSummary
                 {
-                    Label = label,
+                    Label = $"{partOfDay} {s.StartTime:hh\\:mm} – {s.EndTime:hh\\:mm}",
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
                     TotalSlots = totalSlots,
-                    SlotsBooked = bookedInSlot
+                    SlotsBooked = bookedInBlock,
+                    SlotsRemaining = Math.Max(totalSlots - bookedInBlock, 0)
                 });
             }
 
-            vm.TodaySlots = todaySlotSummaries;
+            vm.TodaySlots = slotSummaries;
 
             vm.UpcomingOffDays = await _context.DoctorUnavailabilities
-                .Where(u => u.IsActive &&
-                            u.DoctorProfileId == doctorId &&
-                            u.EndDateTime >= today)
+                .AsNoTracking()
+                .Where(u => u.IsActive && u.DoctorProfileId == doctorId && u.EndDateTime >= today)
                 .OrderBy(u => u.StartDateTime)
                 .Take(5)
                 .Select(u => new DoctorDashboardOffDaySummary
@@ -316,11 +319,11 @@ namespace Doctor_AppointmentSystem.Controllers
         private async Task PopulateReviewsSectionAsync(DoctorDashboardViewModel vm, int doctorId)
         {
             var reviewsQuery = _context.DoctorReviews
-                .Where(r => r.IsActive &&
-                            r.IsVisible &&
-                            r.DoctorProfileId == doctorId);
+                .AsNoTracking()
+                .Where(r => r.IsActive && r.IsVisible && r.DoctorProfileId == doctorId);
 
             vm.TotalReviews = await reviewsQuery.CountAsync();
+
             if (vm.TotalReviews > 0)
             {
                 vm.AverageRating = await reviewsQuery.AverageAsync(r => (double)r.Rating);

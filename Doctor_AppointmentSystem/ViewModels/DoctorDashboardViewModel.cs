@@ -24,13 +24,17 @@ namespace Doctor_AppointmentSystem.ViewModels
         public List<string> RevenueMonthLabels { get; set; } = new();
         public List<decimal> RevenueMonthValues { get; set; } = new();
 
-        // ===== TODAY STATUS DONUT =====
-        public int TodayAcceptedCount { get; set; }     // Confirmed
+        // ===== TODAY STATUS DONUT (UPDATED) =====
+        // We will show: Completed, No Show, Remaining Today
         public int TodayRemainingCount { get; set; }    // Confirmed & time > now
         public int TodayCompletedCount { get; set; }    // Completed
-        public int TodayCancelledCount { get; set; }    // Cancelled
+        public int TodayNoShowCount { get; set; }       // NoShow
 
-        // ===== TODAY'S APPOINTMENTS TABLE =====
+        // (keep if your old code still references it anywhere; safe)
+        public int TodayAcceptedCount { get; set; }     // Confirmed
+        public int TodayCancelledCount { get; set; }    // Cancelled (optional legacy)
+
+        // ===== TODAY'S APPOINTMENTS TABLE (UPDATED) =====
         public List<DoctorDashboardAppointmentRow> TodaysAppointmentsList { get; set; } = new();
 
         // ===== AVAILABILITY & OFF DAYS =====
@@ -42,9 +46,19 @@ namespace Doctor_AppointmentSystem.ViewModels
     {
         public int AppointmentId { get; set; }
         public DateTime AppointmentDateTime { get; set; }
-        public string PatientName { get; set; } = string.Empty;
-        public string? VisitType { get; set; }
+
+        public string PatientName { get; set; } = "—";
+        public string PatientPhone { get; set; } = "—";
+
         public AppointmentStatus Status { get; set; }
+
+        // Payment display on dashboard table
+        public string PaymentDisplay { get; set; } = "Paid";
+        public decimal? PaidAmount { get; set; }
+        public string Currency { get; set; } = "BDT";
+
+        // Optional: keep VisitType if you still use it elsewhere
+        public string? VisitType { get; set; }
     }
 
     public class DoctorDashboardSlotSummary
@@ -52,9 +66,15 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string Label { get; set; } = string.Empty; // e.g. "Morning 09:00 – 11:30"
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }
+
+        // Total slots in the whole schedule block
         public int TotalSlots { get; set; }
+
+        // Booked slots (you can use future-booked if you want dynamic)
         public int SlotsBooked { get; set; }
-        public int SlotsRemaining => Math.Max(TotalSlots - SlotsBooked, 0);
+
+        // ✅ Make it dynamic: controller will calculate exact remaining slots
+        public int SlotsRemaining { get; set; }
     }
 
     public class DoctorDashboardOffDaySummary

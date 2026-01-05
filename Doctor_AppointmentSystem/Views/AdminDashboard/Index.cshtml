@@ -77,16 +77,7 @@
         <div class="stat-sub">All-time booked appointments</div>
     </div>
 
-    @* <div class="card stat-card" data-url="@Url.Action("TodayAppointments", "AdminDashboard")">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Today's Appointments</div>
-                <div class="stat-value">@Model.TodaysAppointments</div>
-            </div>
-           
-        </div>
-        <div class="stat-sub">Scheduled for today</div>
-    </div> *@
+   
     <div class="card stat-card" data-url="@Url.Action("TodaysAppointment", "AdminAppointment")">
         <div class="stat-card-header">
             <div>
@@ -99,7 +90,7 @@
 
 
 
-    <div class="card stat-card" data-url="@Url.Action("Payments", "AdminDashboard")">
+    @* <div class="card stat-card" data-url="@Url.Action("Payments", "AdminDashboard")">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Monthly Revenue</div>
@@ -108,7 +99,17 @@
             
         </div>
         <div class="stat-sub">From all digital payments</div>
+    </div> *@
+    <div class="card stat-card" data-url="@Url.Action("RevenueReport", "AdminDashboard")">
+        <div class="stat-card-header">
+            <div>
+                <div class="stat-title">Monthly Revenue</div>
+                <div class="stat-value">৳@Model.MonthlyRevenue</div>
+            </div>
+        </div>
+        <div class="stat-sub">From all digital payments</div>
     </div>
+
 </div>
 
 <!-- CHARTS (Revenue = BAR, Appointments = LINE) -->

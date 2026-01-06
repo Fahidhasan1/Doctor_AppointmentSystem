@@ -278,6 +278,18 @@
             }
         </select>
 
+        <select name="doctorProfileId" class="rev-select">
+            <option value="">All Doctors</option>
+            @foreach (var d in Model.Doctors)
+            {
+                <option value="@d.Id" selected="@(Model.DoctorProfileId == d.Id)">
+                    @d.Name
+                </option>
+            }
+        </select>
+
+
+
 
         <!-- Custom range -->
         <input type="date" name="start" value="@Model.Start" class="rev-date" id="startDate" />
@@ -340,21 +352,18 @@
         </div>
 
         <div class="rev-export">
-            <form method="get"
-                  asp-controller="AdminDashboard"
-                  asp-action="RevenueReportPdf">
-
+            <form method="get" asp-controller="AdminDashboard" asp-action="RevenueReportPdf">
                 <input type="hidden" name="mode" value="@Model.Mode" />
                 <input type="hidden" name="year" value="@Model.Year" />
                 <input type="hidden" name="month" value="@Model.Month" />
                 <input type="hidden" name="start" value="@Model.Start" />
                 <input type="hidden" name="end" value="@Model.End" />
+                <input type="hidden" name="doctorProfileId" value="@Model.DoctorProfileId" />
 
-                <button type="submit" class="btn-secondary">
-                    Export PDF
-                </button>
+                <button type="submit" class="btn-secondary">Export PDF</button>
             </form>
         </div>
+
 
     </div>
 

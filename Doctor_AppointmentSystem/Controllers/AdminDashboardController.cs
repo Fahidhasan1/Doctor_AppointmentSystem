@@ -5,10 +5,12 @@ using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+
 
 
 namespace Doctor_AppointmentSystem.Controllers
@@ -154,19 +156,16 @@ namespace Doctor_AppointmentSystem.Controllers
             return View(vm);
         }
 
-        // =========================================================
-        // ✅ Revenue Report Page
-        // Modes: month | last7 | last15 | custom
-        // =========================================================
         [HttpGet]
         public async Task<IActionResult> RevenueReport(
-      string mode = "month",
-      int? year = null,
-      int? month = null,
-      string? start = null,
-      string? end = null)
+     string mode = "month",
+     int? year = null,
+     int? month = null,
+     string? start = null,
+     string? end = null,
+     int? doctorProfileId = null)
         {
-            // ✅ Sidebar/header data (same as Index)
+            // ✅ Make sidebar show properly (same as Index)
             var currentUser = await _userManager.GetUserAsync(User);
 
             var name = (currentUser?.FirstName + " " + currentUser?.LastName)?.Trim();
@@ -176,138 +175,8 @@ namespace Doctor_AppointmentSystem.Controllers
             ViewBag.CurrentUserName = name;
             ViewBag.ProfileImagePath = currentUser?.ProfileImagePath;
 
+            // Top title like other pages
             ViewBag.PageTopTitle = "Sunshine Hospital";
-
-            // ======================
-            // Date range
-            // ======================
-            var nowUtc = DateTime.UtcNow;
-            mode = (mode ?? "month").Trim().ToLowerInvariant();
-
-            DateTime fromUtc;
-            DateTime toUtcExclusive;
-
-            var y = year ?? nowUtc.Year;
-            var m = month ?? nowUtc.Month;
-
-            if (mode == "month")
-            {
-                fromUtc = new DateTime(y, m, 1);
-                toUtcExclusive = fromUtc.AddMonths(1);
-            }
-            else if (mode == "last7")
-            {
-                toUtcExclusive = nowUtc.Date.AddDays(1);
-                fromUtc = toUtcExclusive.AddDays(-7);
-            }
-            else if (mode == "last15")
-            {
-                toUtcExclusive = nowUtc.Date.AddDays(1);
-                fromUtc = toUtcExclusive.AddDays(-15);
-            }
-            else if (mode == "custom")
-            {
-                if (!DateTime.TryParse(start, out var s) || !DateTime.TryParse(end, out var e))
-                {
-                    fromUtc = new DateTime(y, m, 1);
-                    toUtcExclusive = fromUtc.AddMonths(1);
-                    mode = "month";
-                }
-                else
-                {
-                    fromUtc = s.Date;
-                    toUtcExclusive = e.Date.AddDays(1);
-                }
-            }
-            else
-            {
-                fromUtc = new DateTime(y, m, 1);
-                toUtcExclusive = fromUtc.AddMonths(1);
-                mode = "month";
-            }
-
-            // ======================
-            // Query (Include needed navigation)
-            // ======================
-            var query = _context.Payments
-                .AsNoTracking()
-                .Where(p => p.IsActive
-                            && p.Status == PaymentStatus.Paid
-                            && p.PaidAtUtc.HasValue
-                            && p.PaidAtUtc.Value >= fromUtc
-                            && p.PaidAtUtc.Value < toUtcExclusive)
-                .Include(p => p.Appointment)
-                    .ThenInclude(a => a.Doctor)
-                        .ThenInclude(d => d.User)
-                .Include(p => p.Appointment)
-                    .ThenInclude(a => a.Patient)
-                        .ThenInclude(pt => pt.User);
-
-            // ✅ Pull into memory first (so we can safely use ?. without EF errors)
-            var payments = await query
-                .OrderByDescending(p => p.PaidAtUtc)
-                .ToListAsync();
-
-            var total = payments.Sum(p => p.Amount);
-
-            // ✅ Now build rows in memory (no EF translation)
-            var rows = payments.Select(p =>
-            {
-                var doctorFirst = p.Appointment?.Doctor?.User?.FirstName ?? "";
-                var doctorLast = p.Appointment?.Doctor?.User?.LastName ?? "";
-                var doctorName = (doctorFirst + " " + doctorLast).Trim();
-                if (string.IsNullOrWhiteSpace(doctorName)) doctorName = "—";
-
-                string patientName;
-                var patientFirst = p.Appointment?.Patient?.User?.FirstName ?? "";
-                var patientLast = p.Appointment?.Patient?.User?.LastName ?? "";
-                var regPatient = (patientFirst + " " + patientLast).Trim();
-
-                if (!string.IsNullOrWhiteSpace(regPatient))
-                    patientName = regPatient;
-                else if (!string.IsNullOrWhiteSpace(p.Appointment?.UnregisteredPatientName))
-                    patientName = p.Appointment!.UnregisteredPatientName!;
-                else
-                    patientName = "—";
-
-                return new RevenueReportRowViewModel
-                {
-                    PaidAtUtc = p.PaidAtUtc!.Value,
-                    AppointmentId = p.AppointmentId,
-                    Method = p.Method.ToString(),
-                    Currency = string.IsNullOrWhiteSpace(p.Currency) ? "BDT" : p.Currency,
-                    Amount = p.Amount,
-                    DoctorName = doctorName,
-                    PatientName = patientName
-                };
-            }).ToList();
-
-            var vm = new RevenueReportViewModel
-            {
-                Mode = mode,
-                Year = y,
-                Month = m,
-                Start = start,
-                End = end,
-                FromUtc = fromUtc,
-                ToUtc = toUtcExclusive.AddSeconds(-1),
-                Rows = rows,
-                Total = total
-            };
-
-            return View(vm);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> RevenueReportPdf(
-    string mode = "month",
-    int? year = null,
-    int? month = null,
-    string? start = null,
-    string? end = null)
-        {
-            // QuestPDF license (Community)
-            QuestPDF.Settings.License = LicenseType.Community;
 
             var nowUtc = DateTime.UtcNow;
             mode = (mode ?? "month").Trim().ToLowerInvariant();
@@ -354,14 +223,37 @@ namespace Doctor_AppointmentSystem.Controllers
                 mode = "month";
             }
 
-            // Same query as RevenueReport (with includes for names)
-            var query = _context.Payments
+            // ✅ Doctor dropdown list (DoctorProfile -> User)
+            var doctors = await _context.DoctorProfiles
+                .AsNoTracking()
+                .Include(d => d.User)
+                .OrderBy(d => d.User.FirstName)
+                .Select(d => new DoctorDropdownItemViewModel
+                {
+                    Id = d.Id,
+                    Name = (d.User.FirstName + " " + d.User.LastName).Trim()
+                })
+                .ToListAsync();
+
+            // ✅ IMPORTANT FIX:
+            // Start as IQueryable<Payment> so we can safely assign Where() results
+            IQueryable<Payment> query = _context.Payments
                 .AsNoTracking()
                 .Where(p => p.IsActive
                             && p.Status == PaymentStatus.Paid
                             && p.PaidAtUtc.HasValue
                             && p.PaidAtUtc.Value >= fromUtc
-                            && p.PaidAtUtc.Value < toUtcExclusive)
+                            && p.PaidAtUtc.Value < toUtcExclusive);
+
+            // ✅ Apply doctor-wise filter using Appointment.DoctorProfileId
+            if (doctorProfileId.HasValue)
+            {
+                int did = doctorProfileId.Value; // avoid EF expression issues
+                query = query.Where(p => p.Appointment != null && p.Appointment.DoctorProfileId == did);
+            }
+
+            // ✅ Add includes AFTER filters (prevents CS0266 type issue)
+            query = query
                 .Include(p => p.Appointment)
                     .ThenInclude(a => a.Doctor)
                         .ThenInclude(d => d.User)
@@ -382,12 +274,16 @@ namespace Doctor_AppointmentSystem.Controllers
                     Amount = p.Amount,
 
                     DoctorName =
-                        p.Appointment != null && p.Appointment.Doctor != null && p.Appointment.Doctor.User != null
+                        p.Appointment != null &&
+                        p.Appointment.Doctor != null &&
+                        p.Appointment.Doctor.User != null
                             ? (p.Appointment.Doctor.User.FirstName + " " + p.Appointment.Doctor.User.LastName).Trim()
                             : "—",
 
                     PatientName =
-                        p.Appointment != null && p.Appointment.Patient != null && p.Appointment.Patient.User != null
+                        p.Appointment != null &&
+                        p.Appointment.Patient != null &&
+                        p.Appointment.Patient.User != null
                             ? (p.Appointment.Patient.User.FirstName + " " + p.Appointment.Patient.User.LastName).Trim()
                             : (p.Appointment != null && !string.IsNullOrWhiteSpace(p.Appointment.UnregisteredPatientName)
                                 ? p.Appointment.UnregisteredPatientName
@@ -404,18 +300,170 @@ namespace Doctor_AppointmentSystem.Controllers
                 End = end,
                 FromUtc = fromUtc,
                 ToUtc = toUtcExclusive.AddSeconds(-1),
+
                 Rows = rows,
-                Total = total
+                Total = total,
+
+                DoctorProfileId = doctorProfileId,
+                Doctors = doctors
             };
 
-            // Build PDF bytes
-            var pdfBytes = new RevenueReportPdfDocument(vm).GeneratePdf();
-
-            var fileName = $"RevenueReport_{vm.FromUtc:yyyyMMdd}_{vm.ToUtc:yyyyMMdd}.pdf";
-            return File(pdfBytes, "application/pdf", fileName);
+            return View(vm);
         }
 
-        public class RevenueReportPdfDocument : IDocument
+       
+
+[HttpGet]
+    public async Task<IActionResult> RevenueReportPdf(
+    string mode = "month",
+    int? year = null,
+    int? month = null,
+    string? start = null,
+    string? end = null,
+    int? doctorProfileId = null)
+    {
+        // (Optional but fine) sidebar header data
+        var currentUser = await _userManager.GetUserAsync(User);
+        var name = (currentUser?.FirstName + " " + currentUser?.LastName)?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            name = User.Identity?.Name ?? "Admin";
+
+        ViewBag.CurrentUserName = name;
+        ViewBag.ProfileImagePath = currentUser?.ProfileImagePath;
+
+        var nowUtc = DateTime.UtcNow;
+        mode = (mode ?? "month").Trim().ToLowerInvariant();
+
+        DateTime fromUtc;
+        DateTime toUtcExclusive;
+
+        var y = year ?? nowUtc.Year;
+        var m = month ?? nowUtc.Month;
+
+        if (mode == "month")
+        {
+            fromUtc = new DateTime(y, m, 1);
+            toUtcExclusive = fromUtc.AddMonths(1);
+        }
+        else if (mode == "last7")
+        {
+            toUtcExclusive = nowUtc.Date.AddDays(1);
+            fromUtc = toUtcExclusive.AddDays(-7);
+        }
+        else if (mode == "last15")
+        {
+            toUtcExclusive = nowUtc.Date.AddDays(1);
+            fromUtc = toUtcExclusive.AddDays(-15);
+        }
+        else if (mode == "custom")
+        {
+            if (!DateTime.TryParse(start, out var s) || !DateTime.TryParse(end, out var e))
+            {
+                mode = "month";
+                fromUtc = new DateTime(nowUtc.Year, nowUtc.Month, 1);
+                toUtcExclusive = fromUtc.AddMonths(1);
+                y = nowUtc.Year;
+                m = nowUtc.Month;
+            }
+            else
+            {
+                fromUtc = s.Date;
+                toUtcExclusive = e.Date.AddDays(1);
+            }
+        }
+        else
+        {
+            mode = "month";
+            fromUtc = new DateTime(nowUtc.Year, nowUtc.Month, 1);
+            toUtcExclusive = fromUtc.AddMonths(1);
+            y = nowUtc.Year;
+            m = nowUtc.Month;
+        }
+
+            // ✅ Base query (keep it IQueryable so we can reassign after Where)
+            IQueryable<Payment> query = _context.Payments
+                .AsNoTracking()
+                .Where(p => p.IsActive
+                            && p.Status == PaymentStatus.Paid
+                            && p.PaidAtUtc.HasValue
+                            && p.PaidAtUtc.Value >= fromUtc
+                            && p.PaidAtUtc.Value < toUtcExclusive);
+
+            // ✅ doctor filter (Appointment.DoctorProfileId)
+            if (doctorProfileId.HasValue)
+            {
+                int did = doctorProfileId.Value;
+                query = query.Where(p => p.Appointment != null && p.Appointment.DoctorProfileId == did);
+            }
+
+            // ✅ includes AFTER filtering (safe now)
+            query = query
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Doctor)
+                        .ThenInclude(d => d.User)
+                .Include(p => p.Appointment)
+                    .ThenInclude(a => a.Patient)
+                        .ThenInclude(pt => pt.User);
+
+            // ✅ Build rows
+            var rows = await query
+                .OrderByDescending(p => p.PaidAtUtc)
+                .Select(p => new RevenueReportRowViewModel
+                {
+                    PaidAtUtc = p.PaidAtUtc!.Value,
+                    AppointmentId = p.AppointmentId,
+                    Method = p.Method.ToString(),
+                    Currency = string.IsNullOrWhiteSpace(p.Currency) ? "BDT" : p.Currency,
+                    Amount = p.Amount,
+
+                    DoctorName =
+                        p.Appointment != null &&
+                        p.Appointment.Doctor != null &&
+                        p.Appointment.Doctor.User != null
+                            ? (p.Appointment.Doctor.User.FirstName + " " + p.Appointment.Doctor.User.LastName).Trim()
+                            : "—",
+
+                    PatientName =
+                        p.Appointment != null &&
+                        p.Appointment.Patient != null &&
+                        p.Appointment.Patient.User != null
+                            ? (p.Appointment.Patient.User.FirstName + " " + p.Appointment.Patient.User.LastName).Trim()
+                            : (p.Appointment != null && !string.IsNullOrWhiteSpace(p.Appointment.UnregisteredPatientName)
+                                ? p.Appointment.UnregisteredPatientName
+                                : "—")
+                })
+                .ToListAsync();
+
+
+            //var total = rows.Sum(r => r.Amount);
+            var total = await query.SumAsync(p => (decimal?)p.Amount) ?? 0m;
+
+
+            // Create VM for PDF document
+            var vm = new RevenueReportViewModel
+        {
+            Mode = mode,
+            Year = y,
+            Month = m,
+            Start = start,
+            End = end,
+            FromUtc = fromUtc,
+            ToUtc = toUtcExclusive.AddSeconds(-1),
+            Rows = rows,
+            Total = total,
+            DoctorProfileId = doctorProfileId
+        };
+
+        // ✅ Generate PDF using your existing document class
+        QuestPDF.Settings.License = LicenseType.Community;
+        var pdfBytes = new RevenueReportPdfDocument(vm).GeneratePdf();
+
+        var fileName = $"RevenueReport_{mode}_{DateTime.UtcNow:yyyyMMdd_HHmm}.pdf";
+        return File(pdfBytes, "application/pdf", fileName);
+    }
+
+
+    public class RevenueReportPdfDocument : IDocument
         {
             private readonly RevenueReportViewModel _model;
 

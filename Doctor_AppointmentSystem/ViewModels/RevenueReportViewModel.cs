@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Doctor_AppointmentSystem.ViewModels
 {
@@ -16,12 +17,19 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string? Start { get; set; }
         public string? End { get; set; }
 
+        // ✅ Doctor filter
+        public string? DoctorId { get; set; }              // Identity user id of doctor
+        public List<SelectListItem> DoctorOptions { get; set; } = new(); // dropdown options
+
         // calculated range actually used by query
         public DateTime FromUtc { get; set; }
         public DateTime ToUtc { get; set; } // inclusive display (controller can set exclusive internally)
 
         public List<RevenueReportRowViewModel> Rows { get; set; } = new();
         public decimal Total { get; set; }
+        public int? DoctorProfileId { get; set; }   // selected doctor filter
+        public List<DoctorDropdownItemViewModel> Doctors { get; set; } = new(); // dropdown list
+
     }
 
     public class RevenueReportRowViewModel
@@ -37,4 +45,11 @@ namespace Doctor_AppointmentSystem.ViewModels
         public string Currency { get; set; } = "BDT";
         public decimal Amount { get; set; }
     }
+
+    public class DoctorDropdownItemViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "—";
+    }
+
 }

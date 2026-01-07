@@ -10,7 +10,7 @@
     var cardTitle = ViewData["CardTitle"] as string ?? "Appointments";
 
     // ✅ match Patient-style title behavior
-    string prettyTitle = "Appointments";
+    string prettyTitle = "Appoinments";
     if (fromCard)
     {
         prettyTitle = currentFilter switch
@@ -126,12 +126,12 @@
     }
 </style>
 
-@if (fromCard)
+@* @if (fromCard)
 {
     <div class="page-header">
         <h1 class="page-hospital">Sunshine Hospital</h1>
     </div>
-}
+} *@
 
 <div class="appt-page">
     <div class="appt-card">

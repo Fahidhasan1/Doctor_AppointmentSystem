@@ -50,6 +50,9 @@
     <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
 
     <link rel="stylesheet" href="~/css/receptionist-appointments.css" asp-append-version="true" />
+    <!-- Add this to: Views/Shared/_Layout_Receptionist.cshtml <head> (same way patient layout does) -->
+    <link rel="stylesheet" href="~/css/patient-profile.css" asp-append-version="true" />
+
 
 </head>
 <body>
@@ -115,12 +118,15 @@
 
 
                 <!-- PAYMENTS & RECEIPTS -->
-                <a asp-controller="ReceptionistPayments"
+                <a asp-controller="ReceptionistAppointments"
                    asp-action="Index"
-                   class="nav-link @(currentController == "ReceptionistPayments" ? "active" : "")">
+                   asp-route-filter="paidall"
+                   asp-route-fromCard="true"
+                   class="nav-link @(currentController == "ReceptionistAppointments" ? "active" : "")">
                     <div class="nav-link-icon">💳</div>
                     <span>Payments &amp; Receipts</span>
                 </a>
+
 
                 <!-- MY PROFILE -->
                 <a asp-controller="ReceptionistProfile"
@@ -155,17 +161,17 @@
                     </div>
                 </div>
 
+               
+
                 <!-- LOGOUT -->
-                <form asp-area="Identity"
-                      asp-page="/Account/Logout"
-                      asp-route-returnUrl="~/"
-                      method="post"
-                      class="sidebar-logout">
-                    <button type="submit" class="nav-link nav-link--logout">
+                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="nav-link nav-link-button">
                         <div class="nav-link-icon">🚪</div>
                         <span>Logout</span>
                     </button>
                 </form>
+
             </nav>
         </aside>
 
@@ -176,7 +182,7 @@
                     <button id="menuToggle" class="menu-toggle" type="button">
                         ☰
                     </button>
-                    <div class="topbar-title">@pageTitle</div>
+                    <div class="topbar-title">Sunshine Hospitale</div>
                 </div>
                 <div class="topbar-right">
                     <div class="topbar-date" id="currentDate"></div>

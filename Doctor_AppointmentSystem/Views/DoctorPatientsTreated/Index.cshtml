@@ -1,7 +1,8 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.DoctorPatientsTreatedIndexViewModel
 
 @{
-    ViewData["Title"] = Model.PageTitle ?? "Patients Treated";
+    // ViewData["Title"] = Model.PageTitle ?? "Sunshine Hospital";
+    ViewData["Title"] = "Sunshine Hospital";
     Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
 }
 
@@ -12,7 +13,7 @@
 
         <div class="appt-header">
             <div>
-                <h2 class="appt-title">@Model.PageTitle</h2>
+                <h2 class="appt-title">Patients Treated</h2>
                 <div class="appt-subtitle">
                     Unique patients you have treated (Completed appointments only).
                 </div>

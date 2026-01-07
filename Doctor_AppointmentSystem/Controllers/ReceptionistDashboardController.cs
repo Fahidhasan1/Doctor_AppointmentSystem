@@ -177,132 +177,132 @@ namespace Doctor_AppointmentSystem.Controllers
                 })
                 .ToListAsync();
 
-            // ==========================
-            // 4) TODAY'S APPOINTMENTS LIST (NULL-SAFE FIX)
-            // ==========================
-            // Note: this section is a dashboard table, it can remain based on AppointmentDateTime (actual schedule)
-            var todaysAppointmentsQuery = _context.Appointments
-                .Include(a => a.Patient).ThenInclude(p => p.User)
-                .Include(a => a.Doctor).ThenInclude(d => d.User)
-                .Where(a => a.IsActive
-                            && a.BookedByUserId == receptionistUserId
-                            && a.AppointmentDateTime >= todayLocal
-                            && a.AppointmentDateTime < tomorrowLocal)
-                .OrderBy(a => a.AppointmentDateTime);
+            //// ==========================
+            //// 4) TODAY'S APPOINTMENTS LIST (NULL-SAFE FIX)
+            //// ==========================
+            //// Note: this section is a dashboard table, it can remain based on AppointmentDateTime (actual schedule)
+            //var todaysAppointmentsQuery = _context.Appointments
+            //    .Include(a => a.Patient).ThenInclude(p => p.User)
+            //    .Include(a => a.Doctor).ThenInclude(d => d.User)
+            //    .Where(a => a.IsActive
+            //                && a.BookedByUserId == receptionistUserId
+            //                && a.AppointmentDateTime >= todayLocal
+            //                && a.AppointmentDateTime < tomorrowLocal)
+            //    .OrderBy(a => a.AppointmentDateTime);
 
-            var todaysAppointments = await todaysAppointmentsQuery.ToListAsync();
-            var todaysAppointmentIds = todaysAppointments.Select(a => a.Id).ToList();
+            //var todaysAppointments = await todaysAppointmentsQuery.ToListAsync();
+            //var todaysAppointmentIds = todaysAppointments.Select(a => a.Id).ToList();
 
-            var latestPayments = await _context.Payments
-                .Where(p => p.IsActive && todaysAppointmentIds.Contains(p.AppointmentId))
-                .GroupBy(p => p.AppointmentId)
-                .Select(g => g.OrderByDescending(p => p.CreatedAt).First())
-                .ToListAsync();
+            //var latestPayments = await _context.Payments
+            //    .Where(p => p.IsActive && todaysAppointmentIds.Contains(p.AppointmentId))
+            //    .GroupBy(p => p.AppointmentId)
+            //    .Select(g => g.OrderByDescending(p => p.CreatedAt).First())
+            //    .ToListAsync();
 
-            var paymentsByAppointmentId = latestPayments.ToDictionary(p => p.AppointmentId, p => p);
+            //var paymentsByAppointmentId = latestPayments.ToDictionary(p => p.AppointmentId, p => p);
 
-            var todaysAppointmentRows = new List<ReceptionistDashboardViewModel.TodaysAppointmentRow>();
+            //var todaysAppointmentRows = new List<ReceptionistDashboardViewModel.TodaysAppointmentRow>();
 
-            foreach (var a in todaysAppointments)
-            {
-                paymentsByAppointmentId.TryGetValue(a.Id, out var payment);
+            //foreach (var a in todaysAppointments)
+            //{
+            //    paymentsByAppointmentId.TryGetValue(a.Id, out var payment);
 
-                var paymentStatus = payment?.Status ?? PaymentStatus.Pending;
-                PaymentMethod? paymentMethod = payment?.Method;
+            //    var paymentStatus = payment?.Status ?? PaymentStatus.Pending;
+            //    PaymentMethod? paymentMethod = payment?.Method;
 
-                var paymentDisplay = "Unpaid";
-                if (payment != null)
-                {
-                    if (payment.Status == PaymentStatus.Paid)
-                    {
-                        var methodText = payment.Method switch
-                        {
-                            PaymentMethod.Cash => "Cash",
-                            PaymentMethod.Bkash => "bKash",
-                            PaymentMethod.Nagad => "Nagad",
-                            PaymentMethod.Rocket => "Rocket",
-                            _ => payment.Method.ToString()
-                        };
+            //    var paymentDisplay = "Unpaid";
+            //    if (payment != null)
+            //    {
+            //        if (payment.Status == PaymentStatus.Paid)
+            //        {
+            //            var methodText = payment.Method switch
+            //            {
+            //                PaymentMethod.Cash => "Cash",
+            //                PaymentMethod.Bkash => "bKash",
+            //                PaymentMethod.Nagad => "Nagad",
+            //                PaymentMethod.Rocket => "Rocket",
+            //                _ => payment.Method.ToString()
+            //            };
 
-                        paymentDisplay = $"Paid ({methodText})";
-                    }
-                    else
-                    {
-                        paymentDisplay = payment.Status.ToString();
-                    }
-                }
+            //            paymentDisplay = $"Paid ({methodText})";
+            //        }
+            //        else
+            //        {
+            //            paymentDisplay = payment.Status.ToString();
+            //        }
+            //    }
 
-                // ✅ FIX: Patient can be NULL for Unregistered Patient
-                var patientName =
-                    (a.PatientProfileId != null && a.Patient != null && a.Patient.User != null)
-                        ? (a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim()
-                        : (a.UnregisteredPatientName ?? "Unregistered Patient").Trim();
+            //    // ✅ FIX: Patient can be NULL for Unregistered Patient
+            //    var patientName =
+            //        (a.PatientProfileId != null && a.Patient != null && a.Patient.User != null)
+            //            ? (a.Patient.User.FirstName + " " + a.Patient.User.LastName).Trim()
+            //            : (a.UnregisteredPatientName ?? "Unregistered Patient").Trim();
 
-                todaysAppointmentRows.Add(new ReceptionistDashboardViewModel.TodaysAppointmentRow
-                {
-                    AppointmentId = a.Id,
-                    AppointmentDateTime = a.AppointmentDateTime,
-                    PatientName = patientName,
-                    DoctorName = "Dr. " + (a.Doctor.User.FirstName + " " + a.Doctor.User.LastName).Trim(),
-                    Status = a.Status,
-                    PaymentStatus = paymentStatus,
-                    PaymentMethod = paymentMethod,
-                    PaymentDisplay = paymentDisplay
-                });
-            }
+            //    todaysAppointmentRows.Add(new ReceptionistDashboardViewModel.TodaysAppointmentRow
+            //    {
+            //        AppointmentId = a.Id,
+            //        AppointmentDateTime = a.AppointmentDateTime,
+            //        PatientName = patientName,
+            //        DoctorName = "Dr. " + (a.Doctor.User.FirstName + " " + a.Doctor.User.LastName).Trim(),
+            //        Status = a.Status,
+            //        PaymentStatus = paymentStatus,
+            //        PaymentMethod = paymentMethod,
+            //        PaymentDisplay = paymentDisplay
+            //    });
+            //}
 
-            // ==========================
-            // 5) ALERTS & NOTIFICATIONS
-            // ==========================
-            var latestNotifications = await _context.Notifications
-                .Where(n => n.IsActive)
-                .OrderByDescending(n => n.CreatedAt)
-                .Take(5)
-                .ToListAsync();
+            //// ==========================
+            //// 5) ALERTS & NOTIFICATIONS
+            //// ==========================
+            //var latestNotifications = await _context.Notifications
+            //    .Where(n => n.IsActive)
+            //    .OrderByDescending(n => n.CreatedAt)
+            //    .Take(5)
+            //    .ToListAsync();
 
-            var alerts = latestNotifications
-                .Select(n =>
-                {
-                    var item = new ReceptionistDashboardViewModel.NotificationItem
-                    {
-                        NotificationId = n.Id,
-                        CreatedAt = n.CreatedAt,
-                        Title = n.Subject ?? (n.Channel == NotificationChannel.Email ? "Email notification" : "SMS notification"),
-                        Message = n.MessageBody,
-                        Meta = n.Channel.ToString()
-                    };
+            //var alerts = latestNotifications
+            //    .Select(n =>
+            //    {
+            //        var item = new ReceptionistDashboardViewModel.NotificationItem
+            //        {
+            //            NotificationId = n.Id,
+            //            CreatedAt = n.CreatedAt,
+            //            Title = n.Subject ?? (n.Channel == NotificationChannel.Email ? "Email notification" : "SMS notification"),
+            //            Message = n.MessageBody,
+            //            Meta = n.Channel.ToString()
+            //        };
 
-                    if (n.Status == NotificationStatus.Failed)
-                    {
-                        item.BadgeText = "Important";
-                        item.BadgeCssClass = "badge-important";
-                        item.IsUnread = true;
-                    }
-                    else if (n.Status == NotificationStatus.Pending)
-                    {
-                        item.BadgeText = "Pending";
-                        item.BadgeCssClass = "badge-pending";
-                        item.IsUnread = true;
-                    }
-                    else
-                    {
-                        if (n.CreatedAt.Date == todayLocal)
-                        {
-                            item.BadgeText = "Today";
-                            item.BadgeCssClass = "badge-today";
-                        }
-                        else
-                        {
-                            item.BadgeText = "Viewed";
-                            item.BadgeCssClass = "badge-viewed";
-                        }
+            //        if (n.Status == NotificationStatus.Failed)
+            //        {
+            //            item.BadgeText = "Important";
+            //            item.BadgeCssClass = "badge-important";
+            //            item.IsUnread = true;
+            //        }
+            //        else if (n.Status == NotificationStatus.Pending)
+            //        {
+            //            item.BadgeText = "Pending";
+            //            item.BadgeCssClass = "badge-pending";
+            //            item.IsUnread = true;
+            //        }
+            //        else
+            //        {
+            //            if (n.CreatedAt.Date == todayLocal)
+            //            {
+            //                item.BadgeText = "Today";
+            //                item.BadgeCssClass = "badge-today";
+            //            }
+            //            else
+            //            {
+            //                item.BadgeText = "Viewed";
+            //                item.BadgeCssClass = "badge-viewed";
+            //            }
 
-                        item.IsUnread = false;
-                    }
+            //            item.IsUnread = false;
+            //        }
 
-                    return item;
-                })
-                .ToList();
+            //        return item;
+            //    })
+            //    .ToList();
 
             // ==========================
             // 6) BUILD VIEWMODEL
@@ -328,8 +328,8 @@ namespace Doctor_AppointmentSystem.Controllers
                 TotalPages = totalPages,
                 TotalDoctors = totalDoctors,
 
-                TodaysAppointmentsList = todaysAppointmentRows,
-                AlertsAndNotifications = alerts
+                //TodaysAppointmentsList = todaysAppointmentRows,
+                //AlertsAndNotifications = alerts
             };
 
             return View(vm);

@@ -130,19 +130,17 @@
                     </div>
                 </div>
 
+              
+
                 <!-- LOGOUT -->
-                @if (User?.Identity?.IsAuthenticated ?? false)
-                {
-                    <form asp-area="Identity"
-                          asp-page="/Account/Logout"
-                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
-                          method="post">
-                        <button type="submit" class="nav-link nav-link-button">
-                            <div class="nav-link-icon">↩</div>
-                            <span>Logout</span>
-                        </button>
-                    </form>
-                }
+                <form asp-controller="Account" asp-action="Logout" method="post" class="logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="nav-link nav-link-button">
+                        <div class="nav-link-icon">🚪</div>
+                        <span>Logout</span>
+                    </button>
+                </form>
+
             </nav>
         </aside>
 

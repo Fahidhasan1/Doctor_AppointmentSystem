@@ -1,24 +1,13 @@
-﻿@model Doctor_AppointmentSystem.ViewModels.AdminProfileViewModel
+﻿@* File: Views/ReceptionistProfile/MyProfile.cshtml *@
+@model Doctor_AppointmentSystem.ViewModels.ReceptionistProfileViewModel
+@using Doctor_AppointmentSystem.Enums
 
 @{
-    ViewData["Title"] = "Sunshine Hospital";
-    Layout = "~/Views/Shared/_Layout_Admin.cshtml";
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout_Receptionist.cshtml";
 
     var fullName = $"{Model.FirstName} {Model.LastName}".Trim();
-    var initial = (!string.IsNullOrWhiteSpace(fullName) ? fullName.Trim()[0].ToString().ToUpper() : "A");
-}
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert-success-soft">
-        @TempData["SuccessMessage"]
-    </div>
-}
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert-danger-soft">
-        @TempData["ErrorMessage"]
-    </div>
+    var initial = (!string.IsNullOrWhiteSpace(fullName) ? fullName.Trim()[0].ToString().ToUpper() : "R");
 }
 
 <div class="card">
@@ -26,13 +15,13 @@
         <div>
             <h3>My Profile</h3>
             <div class="card-title-sub">
-                View and update your admin profile information.
+                View and update your receptionist profile information.
             </div>
         </div>
     </div>
 
     <div class="profile-grid">
-        <!-- LEFT PANEL -->
+        <!-- LEFT PANEL (same as patient/admin style) -->
         <div class="profile-left">
             <div class="profile-photo-wrap">
                 @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
@@ -46,11 +35,11 @@
             </div>
 
             <div class="profile-name">@fullName</div>
-            <div class="profile-role">System Admin</div>
+            <div class="profile-role">Receptionist</div>
             <div class="profile-email">@Model.Email</div>
 
-            <!-- Change Photo (patient style) -->
-            <form asp-controller="AdminProfile"
+            <!-- Change Photo (same behavior as patient) -->
+            <form asp-controller="ReceptionistProfile"
                   asp-action="ChangePhoto"
                   method="post"
                   enctype="multipart/form-data"
@@ -77,11 +66,11 @@
                 <div class="profile-side-title">Personal Details</div>
                 <div class="profile-side-item"><b>Phone:</b> @(!string.IsNullOrWhiteSpace(Model.PhoneNumber) ? Model.PhoneNumber : "-")</div>
                 <div class="profile-side-item"><b>Date of Birth:</b> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "-")</div>
-                <div class="profile-side-item"><b>Gender:</b> @(!string.IsNullOrWhiteSpace(Model.Gender) ? Model.Gender : "-")</div>
+                <div class="profile-side-item"><b>Gender:</b> @(Model.Gender.HasValue? Model.Gender.Value.ToString() : "-")</div>
 
-                <div class="profile-side-title mt-3">Office Details</div>
-                <div class="profile-side-item"><b>Office Phone:</b> @(!string.IsNullOrWhiteSpace(Model.OfficePhoneNo) ? Model.OfficePhoneNo : "-")</div>
-                <div class="profile-side-item"><b>Office Room:</b> @(!string.IsNullOrWhiteSpace(Model.OfficeRoomNo) ? Model.OfficeRoomNo : "-")</div>
+                <div class="profile-side-title mt-3">Work Details</div>
+                <div class="profile-side-item"><b>Office Phone:</b> @(!string.IsNullOrWhiteSpace(Model.OfficePhone) ? Model.OfficePhone : "-")</div>
+                <div class="profile-side-item"><b>Counter Number:</b> @(!string.IsNullOrWhiteSpace(Model.CounterNumber) ? Model.CounterNumber : "-")</div>
 
                 <div class="profile-side-title mt-3">Address</div>
                 <div class="profile-side-item">@(!string.IsNullOrWhiteSpace(Model.Address) ? Model.Address : "-")</div>
@@ -90,9 +79,7 @@
 
         <!-- RIGHT PANEL -->
         <div class="profile-right">
-            @* NOTE: keep asp-action same as your controller POST.
-               If your admin save POST is Index, keep Index. If it is MyProfile, change it. *@
-            <form asp-controller="AdminProfile" asp-action="Index" method="post">
+            <form asp-controller="ReceptionistProfile" asp-action="MyProfile" method="post">
                 @Html.AntiForgeryToken()
 
                 <div class="form-grid-2">
@@ -120,6 +107,18 @@
                     </div>
 
                     <div class="form-group">
+                        <label asp-for="OfficePhone">Office Phone</label>
+                        <input asp-for="OfficePhone" class="form-control" />
+                        <span asp-validation-for="OfficePhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CounterNumber">Counter Number</label>
+                        <input asp-for="CounterNumber" class="form-control" />
+                        <span asp-validation-for="CounterNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
                         <label asp-for="DateOfBirth">Date of Birth</label>
                         <input asp-for="DateOfBirth" type="date" class="form-control" />
                         <span asp-validation-for="DateOfBirth" class="text-danger"></span>
@@ -127,25 +126,10 @@
 
                     <div class="form-group">
                         <label asp-for="Gender"></label>
-                        <select asp-for="Gender" class="form-control">
+                        <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Gender>()" class="form-control">
                             <option value="">Select</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
                         </select>
                         <span asp-validation-for="Gender" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="OfficePhoneNo">Office Phone</label>
-                        <input asp-for="OfficePhoneNo" class="form-control" />
-                        <span asp-validation-for="OfficePhoneNo" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="OfficeRoomNo">Office Room No</label>
-                        <input asp-for="OfficeRoomNo" class="form-control" />
-                        <span asp-validation-for="OfficeRoomNo" class="text-danger"></span>
                     </div>
 
                     <div class="form-group form-group-full">

@@ -1,4 +1,5 @@
-﻿using System;
+﻿// File: Controllers/AdminProfileController.cs
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Doctor_AppointmentSystem.Data;
@@ -7,6 +8,7 @@ using Doctor_AppointmentSystem.Models;
 using Doctor_AppointmentSystem.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -48,33 +50,40 @@ namespace Doctor_AppointmentSystem.Controllers
             ViewBag.ProfileImagePath = user.ProfileImagePath;
         }
 
+        // Ensures AdminProfile exists for the current user
+        private async Task<AdminProfile> EnsureAdminProfileAsync(ApplicationUser user)
+        {
+            var adminProfile = await _context.AdminProfiles
+                .FirstOrDefaultAsync(a => a.UserId == user.Id);
+
+            if (adminProfile != null) return adminProfile;
+
+            adminProfile = new AdminProfile
+            {
+                UserId = user.Id,
+                IsSuperAdmin = false,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.AdminProfiles.Add(adminProfile);
+            await _context.SaveChangesAsync();
+
+            return adminProfile;
+        }
+
         // GET: /AdminProfile
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             SetPageHeader();
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
+            if (user == null) return Challenge();
 
             SetLayoutUser(user);
 
-            // Ensure AdminProfile exists
-            var adminProfile = await _context.AdminProfiles
-                .FirstOrDefaultAsync(a => a.UserId == user.Id);
-
-            if (adminProfile == null)
-            {
-                adminProfile = new AdminProfile
-                {
-                    UserId = user.Id,
-                    IsSuperAdmin = false,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.AdminProfiles.Add(adminProfile);
-                await _context.SaveChangesAsync();
-            }
+            var adminProfile = await EnsureAdminProfileAsync(user);
 
             var vm = new AdminProfileViewModel
             {
@@ -95,6 +104,7 @@ namespace Doctor_AppointmentSystem.Controllers
         }
 
         // POST: /AdminProfile
+        // (Photo upload is handled ONLY by ChangePhoto to avoid 2 upload systems.)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(AdminProfileViewModel model)
@@ -102,24 +112,11 @@ namespace Doctor_AppointmentSystem.Controllers
             SetPageHeader();
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
+            if (user == null) return Challenge();
 
             SetLayoutUser(user);
 
-            var adminProfile = await _context.AdminProfiles
-                .FirstOrDefaultAsync(a => a.UserId == user.Id);
-
-            if (adminProfile == null)
-            {
-                adminProfile = new AdminProfile
-                {
-                    UserId = user.Id,
-                    IsSuperAdmin = false,
-                    IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.AdminProfiles.Add(adminProfile);
-            }
+            var adminProfile = await EnsureAdminProfileAsync(user);
 
             if (!ModelState.IsValid)
             {
@@ -148,6 +145,8 @@ namespace Doctor_AppointmentSystem.Controllers
                 user.Gender = parsedGender;
             }
 
+            user.UpdatedAt = DateTime.UtcNow;
+
             // --- Update AdminProfile fields ---
             adminProfile.OfficePhoneNo = string.IsNullOrWhiteSpace(model.OfficePhoneNo)
                 ? null
@@ -158,39 +157,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 : model.OfficeRoomNo.Trim();
 
             adminProfile.UpdatedAt = DateTime.UtcNow;
-
-            // --- Handle profile photo upload ---
-            if (model.ProfileImageFile != null && model.ProfileImageFile.Length > 0)
-            {
-                var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "users");
-                Directory.CreateDirectory(uploadsRoot);
-
-                // delete old file if any
-                if (!string.IsNullOrWhiteSpace(user.ProfileImagePath))
-                {
-                    var oldPhysicalPath = Path.Combine(
-                        _env.WebRootPath,
-                        user.ProfileImagePath.TrimStart('/')
-                            .Replace('/', Path.DirectorySeparatorChar));
-
-                    if (System.IO.File.Exists(oldPhysicalPath))
-                    {
-                        System.IO.File.Delete(oldPhysicalPath);
-                    }
-                }
-
-                var ext = Path.GetExtension(model.ProfileImageFile.FileName);
-                var fileName = $"{Guid.NewGuid()}{ext}";
-                var filePath = Path.Combine(uploadsRoot, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.ProfileImageFile.CopyToAsync(stream);
-                }
-
-                // store web-relative path in DB
-                user.ProfileImagePath = $"/uploads/users/{fileName}";
-            }
 
             // --- Persist changes ---
             var result = await _userManager.UpdateAsync(user);
@@ -207,6 +173,75 @@ namespace Doctor_AppointmentSystem.Controllers
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "Your profile has been updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /AdminProfile/ChangePhoto
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePhoto(IFormFile profilePhoto)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Challenge();
+
+            if (profilePhoto == null || profilePhoto.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Please select an image file.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var ext = Path.GetExtension(profilePhoto.FileName).ToLowerInvariant();
+
+            if (Array.IndexOf(allowed, ext) < 0)
+            {
+                TempData["ErrorMessage"] = "Only JPG, JPEG, PNG, or WEBP images are allowed.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Folder: wwwroot/uploads/profiles  (consistent with patient/receptionist)
+            var uploadFolder = Path.Combine(_env.WebRootPath, "uploads", "profiles");
+            if (!Directory.Exists(uploadFolder))
+                Directory.CreateDirectory(uploadFolder);
+
+            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await profilePhoto.CopyToAsync(stream);
+            }
+
+            // Delete old image if it was inside /uploads/profiles
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(user.ProfileImagePath) &&
+                    user.ProfileImagePath.StartsWith("/uploads/profiles/", StringComparison.OrdinalIgnoreCase))
+                {
+                    var oldPhysical = Path.Combine(
+                        _env.WebRootPath,
+                        user.ProfileImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+                    if (System.IO.File.Exists(oldPhysical))
+                        System.IO.File.Delete(oldPhysical);
+                }
+            }
+            catch
+            {
+                // ignore cleanup errors
+            }
+
+            user.ProfileImagePath = $"/uploads/profiles/{fileName}";
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = "Failed to update photo. Please try again.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["SuccessMessage"] = "Profile photo updated successfully.";
             return RedirectToAction(nameof(Index));
         }
     }

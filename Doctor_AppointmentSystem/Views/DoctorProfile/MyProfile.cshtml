@@ -1,0 +1,204 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorProfileViewModel
+@using Doctor_AppointmentSystem.Enums
+
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
+
+    var fullName = $"{Model.FirstName} {Model.LastName}".Trim();
+    var initial = (!string.IsNullOrWhiteSpace(fullName) ? fullName.Trim()[0].ToString().ToUpper() : "D");
+}
+
+<div class="card">
+    <div class="card-title-row">
+        <div>
+            <h3>My Profile</h3>
+            <div class="card-title-sub">
+                View and update your doctor profile information.
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <!-- LEFT PANEL -->
+        <div class="profile-left">
+            <div class="profile-photo-wrap">
+                @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+                {
+                    <img src="@Url.Content(Model.ProfileImagePath)" class="profile-photo" alt="Profile" />
+                }
+                else
+                {
+                    <div class="profile-photo-fallback">@initial</div>
+                }
+            </div>
+
+            <div class="profile-name">@fullName</div>
+            <div class="profile-role">Doctor</div>
+            <div class="profile-email">@Model.Email</div>
+
+            <!-- Change Photo (WORKING) -->
+            <form asp-controller="DoctorProfile"
+                  asp-action="ChangePhoto"
+                  method="post"
+                  enctype="multipart/form-data"
+                  class="profile-photo-form">
+                @Html.AntiForgeryToken()
+
+                <input type="file"
+                       name="profilePhoto"
+                       id="profilePhotoInput"
+                       accept=".jpg,.jpeg,.png,.webp"
+                       hidden />
+
+                <button type="button" class="btn btn-outline-primary" id="changePhotoBtn">
+                    Change Photo
+                </button>
+
+                <button type="submit" class="btn btn-outline-primary" id="uploadPhotoBtn" style="display:none;">
+                    Upload
+                </button>
+            </form>
+
+            <!-- LEFT DETAILS -->
+            <div class="profile-side-details">
+                <div class="profile-side-title">Personal Details</div>
+                <div class="profile-side-item"><b>Phone:</b> @(!string.IsNullOrWhiteSpace(Model.PhoneNumber) ? Model.PhoneNumber : "-")</div>
+                <div class="profile-side-item"><b>Date of Birth:</b> @(Model.DateOfBirth.HasValue? Model.DateOfBirth.Value.ToString("dd MMM yyyy") : "-")</div>
+                <div class="profile-side-item"><b>Gender:</b> @(Model.Gender.HasValue? Model.Gender.Value.ToString() : "-")</div>
+
+                <div class="profile-side-title mt-3">Doctor Details</div>
+                <div class="profile-side-item"><b>Room No:</b> @(!string.IsNullOrWhiteSpace(Model.RoomNo) ? Model.RoomNo : "-")</div>
+                <div class="profile-side-item"><b>Visit Charge:</b> @Model.VisitCharge</div>
+
+                <div class="profile-side-title mt-3">Professional Info</div>
+                <div class="profile-side-item"><b>License No:</b> @(!string.IsNullOrWhiteSpace(Model.LicenseNumber) ? Model.LicenseNumber : "-")</div>
+                <div class="profile-side-item"><b>Qualification:</b> @(!string.IsNullOrWhiteSpace(Model.Qualification) ? Model.Qualification : "-")</div>
+                <div class="profile-side-item"><b>Designation:</b> @(!string.IsNullOrWhiteSpace(Model.Designation) ? Model.Designation : "-")</div>
+                <div class="profile-side-item"><b>Experience:</b> @Model.Experience</div>
+
+                <div class="profile-side-title mt-3">Address</div>
+                <div class="profile-side-item">@(!string.IsNullOrWhiteSpace(Model.Address) ? Model.Address : "-")</div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="profile-right">
+            <form asp-controller="DoctorProfile" asp-action="MyProfile" method="post">
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label asp-for="FirstName"></label>
+                        <input asp-for="FirstName" class="form-control" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LastName"></label>
+                        <input asp-for="LastName" class="form-control" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input value="@Model.Email" class="form-control" readonly />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PhoneNumber"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth">Date of Birth</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Gender"></label>
+                        <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Gender>()" class="form-control">
+                            <option value="">Select</option>
+                        </select>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="RoomNo">Room No</label>
+                        <input asp-for="RoomNo" class="form-control" />
+                        <span asp-validation-for="RoomNo" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="VisitCharge">Visit Charge</label>
+                        <input asp-for="VisitCharge" class="form-control" />
+                        <span asp-validation-for="VisitCharge" class="text-danger"></span>
+                    </div>
+
+                    <!-- READ ONLY (IMPORTANT: use readonly + hidden to keep ModelState valid) -->
+                    <div class="form-group">
+                        <label>License No</label>
+                        <input value="@Model.LicenseNumber" class="form-control" readonly />
+                        <input type="hidden" asp-for="LicenseNumber" />
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Qualification"></label>
+                        <input asp-for="Qualification" class="form-control" readonly />
+                        <input type="hidden" asp-for="Qualification" />
+                        <span asp-validation-for="Qualification" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Designation"></label>
+                        <input asp-for="Designation" class="form-control" readonly />
+                        <input type="hidden" asp-for="Designation" />
+                        <span asp-validation-for="Designation" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Experience"></label>
+                        <input asp-for="Experience" class="form-control" readonly />
+                        <input type="hidden" asp-for="Experience" />
+                        <span asp-validation-for="Experience" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group form-group-full">
+                        <label asp-for="Address"></label>
+                        <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- SAVE BUTTON -->
+                <button type="submit" class="btn btn-primary btn-save-profile">
+                    Save Profile
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+            const btn = document.getElementById('changePhotoBtn');
+            const input = document.getElementById('profilePhotoInput');
+            const uploadBtn = document.getElementById('uploadPhotoBtn');
+
+            if (!btn || !input) return;
+
+            btn.addEventListener('click', () => input.click());
+
+            input.addEventListener('change', () => {
+                uploadBtn.style.display = (input.files && input.files.length) ? "inline-flex" : "none";
+            });
+        })();
+    </script>
+}

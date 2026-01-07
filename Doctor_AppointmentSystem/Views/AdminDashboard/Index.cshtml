@@ -13,7 +13,7 @@
                 <div class="stat-title">System Admin</div>
                 <div class="stat-value">@Model.TotalAdmins</div>
             </div>
-            
+
             @* <div class="stat-icon">🛡️</div> *@
         </div>
         <div class="stat-sub"> system administrator</div>
@@ -25,7 +25,7 @@
                 <div class="stat-title">Total Doctor</div>
                 <div class="stat-value">@Model.TotalDoctors</div>
             </div>
-            
+
         </div>
         <div class="stat-sub">Across all specialties</div>
     </div>
@@ -36,13 +36,10 @@
                 <div class="stat-title">Total Receptionist</div>
                 <div class="stat-value">@Model.TotalReceptionists</div>
             </div>
-            
+
         </div>
         <div class="stat-sub">Handling front-desk &amp; booking</div>
     </div>
-
-  
-
 
     <div class="card stat-card" data-url="@Url.Action("Index", "AdminPatient")">
         <div class="stat-card-header">
@@ -50,7 +47,7 @@
                 <div class="stat-title">Total Registered Patient</div>
                 <div class="stat-value">@Model.TotalPatients</div>
             </div>
-            
+
         </div>
         <div class="stat-sub">Active patient profiles</div>
     </div>
@@ -61,7 +58,7 @@
                 <div class="stat-title">Total Specialties</div>
                 <div class="stat-value">@Model.TotalSpecialties</div>
             </div>
-           
+
         </div>
         <div class="stat-sub">Distinct medical departments</div>
     </div>
@@ -72,12 +69,11 @@
                 <div class="stat-title">Total Appointments</div>
                 <div class="stat-value">@Model.TotalAppointments</div>
             </div>
-           
+
         </div>
         <div class="stat-sub">All-time booked appointments</div>
     </div>
 
-   
     <div class="card stat-card" data-url="@Url.Action("TodaysAppointment", "AdminAppointment")">
         <div class="stat-card-header">
             <div>
@@ -88,18 +84,6 @@
         <div class="stat-sub">Scheduled for today</div>
     </div>
 
-
-
-    @* <div class="card stat-card" data-url="@Url.Action("Payments", "AdminDashboard")">
-        <div class="stat-card-header">
-            <div>
-                <div class="stat-title">Monthly Revenue</div>
-                <div class="stat-value">৳@Model.MonthlyRevenue.ToString("0")</div>
-            </div>
-            
-        </div>
-        <div class="stat-sub">From all digital payments</div>
-    </div> *@
     <div class="card stat-card" data-url="@Url.Action("RevenueReport", "AdminDashboard")">
         <div class="stat-card-header">
             <div>
@@ -109,7 +93,6 @@
         </div>
         <div class="stat-sub">From all digital payments</div>
     </div>
-
 </div>
 
 <!-- CHARTS (Revenue = BAR, Appointments = LINE) -->
@@ -119,7 +102,7 @@
         <div class="card-title-row">
             <div>
                 <h3>Monthly Revenue Trend</h3>
-                <div class="card-title-sub">Current year total revenue by month</div>
+                <div class="card-title-sub">Last 12 months revenue</div>
             </div>
         </div>
         <div class="chart-container">
@@ -140,16 +123,17 @@
         </div>
     </div>
 </div>
-
-
-
 @using System.Text.Json
 
 <script>
-    // ✅ Dynamic chart data from server
     window.adminDashboardData = {
-        labels: @Html.Raw(JsonSerializer.Serialize(Model.MonthLabels)),
-        revenue: @Html.Raw(JsonSerializer.Serialize(Model.RevenueByMonth)),
-        appointments: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentsByMonth))
+        // appointments (6 months)
+        apptLabels: @Html.Raw(JsonSerializer.Serialize(Model.MonthLabels)),
+        appointments: @Html.Raw(JsonSerializer.Serialize(Model.AppointmentsByMonth)),
+
+        // revenue (rolling 12 months)
+        revenueLabels: @Html.Raw(JsonSerializer.Serialize(Model.RevenueMonthLabels)),
+        revenue: @Html.Raw(JsonSerializer.Serialize(Model.RevenueLast12Months))
     };
 </script>
+

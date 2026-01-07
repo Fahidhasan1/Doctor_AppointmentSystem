@@ -1,0 +1,372 @@
+﻿@model Doctor_AppointmentSystem.ViewModels.DoctorRevenueReportViewModel
+
+@{
+    ViewData["Title"] = "Sunshine Hospital";
+    Layout = "~/Views/Shared/_Layout_Doctor.cshtml";
+
+    string mode = ((Model.RangeType ?? "Month").Trim().ToLowerInvariant()) switch
+    {
+        "last7" => "last7",
+        "last15" => "last15",
+        "custom" => "custom",
+        _ => "month"
+    };
+
+    var currentYear = DateTime.UtcNow.Year;
+}
+
+<style>
+    /* Page header */
+    .page-top {
+        margin: 6px 0 18px;
+    }
+
+    .page-title {
+        font-size: 32px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .page-subtitle {
+        margin: 6px 0 0;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    /* Card */
+    .rev-card {
+        background: rgba(255,255,255,0.85);
+        border: 1px solid rgba(210,220,255,0.85);
+        border-radius: 18px;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+        padding: 18px 18px 14px;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Filters */
+    .rev-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 14px;
+    }
+
+    .rev-select, .rev-date {
+        height: 42px;
+        padding: 0 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(205, 215, 255, 1);
+        background: #fff;
+        color: #0f172a;
+        font-weight: 600;
+        outline: none;
+        min-width: 150px;
+    }
+
+    .rev-date {
+        min-width: 170px;
+    }
+
+    .btn-primary {
+        height: 42px;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: none;
+        background: #4f7dff;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 10px 18px rgba(79,125,255,0.20);
+        transition: transform 0.08s ease;
+    }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+    .btn-secondary {
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(205, 215, 255, 1);
+        background: #fff;
+        color: #0f172a;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    /* Table wrap */
+    .rev-table-wrap {
+        overflow: auto;
+        border-radius: 14px;
+        border: 1px solid rgba(226,232,240,0.9);
+        background: #fff;
+    }
+
+    /* ✅ FIX: Even column spacing */
+    .rev-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 820px;
+        table-layout: fixed; /* 🔥 KEY */
+    }
+
+        .rev-table thead th {
+            text-align: left;
+            font-size: 13px;
+            letter-spacing: .02em;
+            color: #334155;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 14px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .rev-table tbody td {
+            padding: 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #0f172a;
+            font-weight: 600;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .rev-table tbody tr:hover td {
+            background: #f9fbff;
+        }
+
+        /* ✅ Balanced widths (prevents the big empty gap) */
+        .rev-table th:nth-child(1),
+        .rev-table td:nth-child(1) {
+            width: 16%;
+        }
+        /* Date */
+
+        .rev-table th:nth-child(2),
+        .rev-table td:nth-child(2) {
+            width: 24%;
+        }
+        /* Patient */
+
+        .rev-table th:nth-child(3),
+        .rev-table td:nth-child(3) {
+            width: 22%;
+        }
+        /* Patient Number */
+
+        .rev-table th:nth-child(4),
+        .rev-table td:nth-child(4) {
+            width: 20%;
+        }
+        /* Payment Method */
+
+        .rev-table th:nth-child(5),
+        .rev-table td:nth-child(5) {
+            width: 18%; /* Amount */
+            text-align: right;
+        }
+
+    .rev-empty {
+        padding: 18px 14px;
+        color: #64748b;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .money {
+        font-weight: 900;
+        color: #0f172a;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    /* Total */
+    .rev-footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+    }
+
+    .rev-total {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(205,215,255,1);
+        background: rgba(79,125,255,0.06);
+    }
+
+        .rev-total span {
+            color: #334155;
+            font-weight: 800;
+        }
+
+        .rev-total strong {
+            font-size: 18px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+    .rev-export {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    /* Range chip */
+    .range-chip {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(205,215,255,1);
+        color: #334155;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+</style>
+
+<div class="rev-card">
+    <h1 class="page-title">Revenue Report</h1>
+
+    <!-- ================= FILTERS ================= -->
+    <form method="get"
+          asp-controller="DoctorRevenue"
+          asp-action="RevenueReport"
+          class="rev-filters"
+          id="revFilterForm">
+
+        <select name="mode" class="rev-select" id="modeSelect">
+            <option value="month" selected="@(mode == "month")">Month</option>
+            <option value="last7" selected="@(mode == "last7")">Last 7 Days</option>
+            <option value="last15" selected="@(mode == "last15")">Last 15 Days</option>
+            <option value="custom" selected="@(mode == "custom")">Custom</option>
+        </select>
+
+        <select name="month" class="rev-select" id="monthSelect">
+            @for (int m = 1; m <= 12; m++)
+            {
+                var monthName = new DateTime(2000, m, 1).ToString("MMMM");
+                <option value="@m" selected="@(Model.Month == m)">@monthName</option>
+            }
+        </select>
+
+        <select name="year" class="rev-select" id="yearSelect">
+            @for (int y = currentYear - 3; y <= currentYear + 1; y++)
+            {
+                <option value="@y" selected="@(Model.Year == y)">@y</option>
+            }
+        </select>
+
+        <input type="date"
+               name="start"
+               value="@(Model.StartDate.HasValue? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")"
+               class="rev-date"
+               id="startDate" />
+
+        <input type="date"
+               name="end"
+               value="@(Model.EndDate.HasValue? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")"
+               class="rev-date"
+               id="endDate" />
+
+        <button type="submit" class="btn-primary">Apply</button>
+
+        <span class="range-chip">
+            Range:
+            <span>@Model.RangeLabel.Replace("Range: ", "")</span>
+        </span>
+    </form>
+
+    <!-- ================= TABLE ================= -->
+    <div class="rev-table-wrap">
+        <table class="rev-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Patient Number</th>
+                    <th>Payment Method</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.Rows == null || !Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="rev-empty">No payments found in this range.</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.Date.ToLocalTime().ToString("dd MMM yyyy")</td>
+                            <td title="@row.PatientName">@row.PatientName</td>
+                            <td>@row.PatientPhone</td>
+                            <td>@row.PaymentMethod</td>
+                            <td class="money">৳@row.Amount.ToString("0.00")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ================= TOTAL + PDF ================= -->
+    <div class="rev-footer">
+        <div class="rev-total">
+            <span>Total Revenue</span>
+            <strong>৳@Model.TotalRevenue.ToString("0.00")</strong>
+        </div>
+
+        <div class="rev-export">
+            <form method="get" asp-controller="DoctorRevenue" asp-action="RevenueReportPdf">
+                <input type="hidden" name="mode" value="@mode" />
+                <input type="hidden" name="year" value="@Model.Year" />
+                <input type="hidden" name="month" value="@Model.Month" />
+                <input type="hidden" name="start" value="@(Model.StartDate?.ToString("yyyy-MM-dd") ?? "")" />
+                <input type="hidden" name="end" value="@(Model.EndDate?.ToString("yyyy-MM-dd") ?? "")" />
+                <button type="submit" class="btn-secondary">Export PDF</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const modeSelect = document.getElementById("modeSelect");
+        const monthSelect = document.getElementById("monthSelect");
+        const yearSelect = document.getElementById("yearSelect");
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+
+        function applyModeUI() {
+            const mode = (modeSelect.value || "month").toLowerCase();
+            const isMonth = mode === "month";
+            const isCustom = mode === "custom";
+
+            monthSelect.style.display = isMonth ? "inline-flex" : "none";
+            yearSelect.style.display = isMonth ? "inline-flex" : "none";
+
+            startDate.style.display = isCustom ? "inline-flex" : "none";
+            endDate.style.display = isCustom ? "inline-flex" : "none";
+        }
+
+        modeSelect.addEventListener("change", applyModeUI);
+        applyModeUI();
+    })();
+</script>

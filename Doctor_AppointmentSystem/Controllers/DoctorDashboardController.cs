@@ -191,7 +191,7 @@ namespace Doctor_AppointmentSystem.Controllers
             // Build row list with Payment info
             var appts = await todaysAppointmentsQuery
                 .OrderBy(a => a.AppointmentDateTime)
-                .Take(6)
+                .Take(3)
                 .Select(a => new
                 {
                     a.Id,

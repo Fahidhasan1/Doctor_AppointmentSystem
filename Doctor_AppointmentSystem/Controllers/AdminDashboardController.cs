@@ -29,7 +29,6 @@ namespace Doctor_AppointmentSystem.Controllers
             _userManager = userManager;
         }
 
-        // GET: /AdminDashboard
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -75,52 +74,26 @@ namespace Doctor_AppointmentSystem.Controllers
                 .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
             // =========================================================
-            // ✅ Revenue Graph Data (CURRENT YEAR: Jan - Dec)
+            // ✅ Appointment Graph Data (ROLLING LAST 6 MONTHS) - dynamic
             // =========================================================
-            var year = nowUtc.Year;
-
-            var revenueRaw = await _context.Payments
-                .AsNoTracking()
-                .Where(p => p.IsActive
-                            && p.Status == PaymentStatus.Paid
-                            && p.PaidAtUtc.HasValue
-                            && p.PaidAtUtc.Value.Year == year)
-                .GroupBy(p => p.PaidAtUtc.Value.Month)
-                .Select(g => new
-                {
-                    Month = g.Key,
-                    Total = g.Sum(x => x.Amount)
-                })
-                .ToListAsync();
-
-            var revenueByMonthArr = new decimal[12];
-            foreach (var r in revenueRaw)
-            {
-                if (r.Month >= 1 && r.Month <= 12)
-                    revenueByMonthArr[r.Month - 1] = r.Total;
-            }
-
-            // =========================================================
-            // ✅ Appointment Graph Data (ROLLING LAST 6 MONTHS)
-            // =========================================================
-            var localNow = DateTime.Now; // appointments are usually local
-            var startMonth = new DateTime(localNow.Year, localNow.Month, 1).AddMonths(-5);
-            var endMonth = new DateTime(localNow.Year, localNow.Month, 1).AddMonths(1);
+            var localNow = DateTime.Now;
+            var apptStartMonth = new DateTime(localNow.Year, localNow.Month, 1).AddMonths(-5);
+            var apptEndMonthExclusive = new DateTime(localNow.Year, localNow.Month, 1).AddMonths(1);
 
             var apptMonthLabels = Enumerable.Range(0, 6)
-                .Select(i => startMonth.AddMonths(i).ToString("MMM"))
+                .Select(i => apptStartMonth.AddMonths(i).ToString("MMM"))
                 .ToList();
 
-            var monthKeys = Enumerable.Range(0, 6)
-                .Select(i => startMonth.AddMonths(i))
+            var apptMonthKeys = Enumerable.Range(0, 6)
+                .Select(i => apptStartMonth.AddMonths(i))
                 .Select(d => new { d.Year, d.Month })
                 .ToList();
 
             var apptRaw = await _context.Appointments
                 .AsNoTracking()
                 .Where(a => a.IsActive
-                            && a.AppointmentDateTime >= startMonth
-                            && a.AppointmentDateTime < endMonth)
+                            && a.AppointmentDateTime >= apptStartMonth
+                            && a.AppointmentDateTime < apptEndMonthExclusive)
                 .GroupBy(a => new { a.AppointmentDateTime.Year, a.AppointmentDateTime.Month })
                 .Select(g => new
                 {
@@ -130,11 +103,50 @@ namespace Doctor_AppointmentSystem.Controllers
                 })
                 .ToListAsync();
 
-            var apptsByMonth = monthKeys.Select(k =>
+            var apptsByMonth = apptMonthKeys.Select(k =>
             {
                 var match = apptRaw.FirstOrDefault(x => x.Year == k.Year && x.Month == k.Month);
                 return match?.Count ?? 0;
             }).ToList();
+
+            // =========================================================
+            // ✅ Revenue Graph Data (ROLLING LAST 12 MONTHS) - dynamic
+            // Example: if now is Jan 2026 => Feb 2025 ... Jan 2026
+            // =========================================================
+            var revenueStartUtc = new DateTime(nowUtc.Year, nowUtc.Month, 1).AddMonths(-11);
+            var revenueEndUtcExclusive = new DateTime(nowUtc.Year, nowUtc.Month, 1).AddMonths(1);
+
+            var revenueRaw12 = await _context.Payments
+                .AsNoTracking()
+                .Where(p => p.IsActive
+                            && p.Status == PaymentStatus.Paid
+                            && p.PaidAtUtc.HasValue
+                            && p.PaidAtUtc.Value >= revenueStartUtc
+                            && p.PaidAtUtc.Value < revenueEndUtcExclusive)
+                .GroupBy(p => new { p.PaidAtUtc.Value.Year, p.PaidAtUtc.Value.Month })
+                .Select(g => new
+                {
+                    g.Key.Year,
+                    g.Key.Month,
+                    Total = g.Sum(x => x.Amount)
+                })
+                .ToListAsync();
+
+            // Map totals by Year+Month
+            var revenueMap = revenueRaw12.ToDictionary(
+                x => (x.Year, x.Month),
+                x => x.Total
+            );
+
+            var revenueMonthLabels = new List<string>();
+            var revenueLast12 = new List<decimal>();
+
+            for (int i = 0; i < 12; i++)
+            {
+                var d = revenueStartUtc.AddMonths(i);
+                revenueMonthLabels.Add(d.ToString("MMM")); // you can use "MMM yy" if you prefer
+                revenueLast12.Add(revenueMap.TryGetValue((d.Year, d.Month), out var val) ? val : 0m);
+            }
 
             var vm = new AdminDashboardViewModel
             {
@@ -147,14 +159,22 @@ namespace Doctor_AppointmentSystem.Controllers
                 TodaysAppointments = todaysAppointments,
                 MonthlyRevenue = monthlyRevenue,
 
+                // appointments (6 months)
                 MonthLabels = apptMonthLabels,
                 AppointmentsByMonth = apptsByMonth,
 
-                RevenueByMonth = revenueByMonthArr.ToList()
+                // revenue (rolling 12 months)
+                RevenueMonthLabels = revenueMonthLabels,
+                RevenueLast12Months = revenueLast12,
+
+                // keep old property filled so old view/js doesn't break
+                RevenueByMonth = revenueLast12
             };
 
             return View(vm);
         }
+
+
 
         [HttpGet]
         public async Task<IActionResult> RevenueReport(

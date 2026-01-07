@@ -38,6 +38,8 @@
 
     <!-- ✅ Toast/Alert styles in separate file -->
     <link rel="stylesheet" href="~/css/toast.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/patient-profile.css" asp-append-version="true" />
+
 </head>
 
 <body>
@@ -112,19 +114,19 @@
                 </a>
 
                 <!-- PATIENT REVIEWS -->
-                <a asp-controller="DoctorReviews"
+                @* <a asp-controller="DoctorReviews"
                    asp-action="Index"
                    class="nav-link">
                     <div class="nav-link-icon">⭐</div>
                     <span>Patient Reviews</span>
-                </a>
+                </a> *@
 
                 <!-- REVENUE & CHARGES -->
                 <a asp-controller="DoctorRevenue"
-                   asp-action="Index"
+                   asp-action="RevenueReport"
                    class="nav-link">
                     <div class="nav-link-icon">💰</div>
-                    <span>Revenue &amp; Charges</span>
+                    <span>Revenue &amp; Reports</span>
                 </a>
 
                 <!-- MY PROFILE -->

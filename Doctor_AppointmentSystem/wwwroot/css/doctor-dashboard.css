@@ -73,3 +73,59 @@ body.doctor-layout {
     font-size: 13px;
     color: #50618a;
 }
+
+
+/* ===== DASHBOARD TODAY APPOINTMENTS ACTIONS ===== */
+
+/* Container inside ACTIONS column */
+.appt-actions {
+    display: flex;
+    flex-direction: column; /* stack vertically */
+    gap: 10px; /* space between buttons */
+    align-items: flex-end; /* align to right like image */
+}
+
+/* Base pill button */
+.btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 130px; /* consistent button width */
+    padding: 10px 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 999px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+/* ===== COMPLETE (BLUE OUTLINE) ===== */
+.btn-pill--outline-primary {
+    border: 1.5px solid rgba(79, 125, 255, 0.8);
+    color: #4f7dff;
+}
+
+    .btn-pill--outline-primary:hover {
+        background: rgba(79, 125, 255, 0.08);
+    }
+
+/* ===== NO SHOW (RED OUTLINE) ===== */
+.btn-pill--outline-danger {
+    border: 1.5px solid rgba(255, 104, 120, 0.85);
+    color: #ff6878;
+}
+
+    .btn-pill--outline-danger:hover {
+        background: rgba(255, 104, 120, 0.08);
+    }
+
+/* Dash placeholder when no actions */
+.appt-dash {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+

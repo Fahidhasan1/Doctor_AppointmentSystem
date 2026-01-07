@@ -45,9 +45,9 @@
         <div class="stat-sub">Unique patients (all time)</div>
     </div>
 
-    <!-- MONTHLY REVENUE -->
+    <!-- MONTHLY REVENUE (✅ now opens DoctorRevenue/RevenueReport) -->
     <div class="card stat-card"
-         data-url="@Url.Action("Index", "DoctorAppointments", new { filter = "ThisMonthPaid", fromCard = true })">
+         data-url="@Url.Action("RevenueReport", "DoctorRevenue", new { mode = "month" })">
         <div class="stat-card-header">
             <div>
                 <div class="stat-title">Monthly Revenue</div>
@@ -164,7 +164,7 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@appt.AppointmentId" />
                                             <input type="hidden" name="filter" value="Today" />
-                                            <button type="submit" class="btn-pill btn-pill--primary">Complete</button>
+                                            <button type="submit" class="btn-pill btn-pill--outline-primary">Complete</button>
                                         </form>
 
                                         <form asp-controller="DoctorAppointments"
@@ -174,7 +174,7 @@
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@appt.AppointmentId" />
                                             <input type="hidden" name="filter" value="Today" />
-                                            <button type="submit" class="btn-pill btn-pill--danger">No Show</button>
+                                            <button type="submit" class="btn-pill btn-pill--outline-danger">No Show</button>
                                         </form>
                                     </div>
                                 }
@@ -183,6 +183,8 @@
                                     <span class="appt-dash">—</span>
                                 }
                             </td>
+                           
+
                         </tr>
                     }
                 }
@@ -205,7 +207,7 @@
             </div>
             <a class="link-small"
                asp-controller="DoctorSchedule"
-               asp-action="ManageSlots">
+               asp-action="ManageTimeSlots">
                 Edit Slots
             </a>
         </div>
@@ -244,8 +246,8 @@
                     <div class="activity-revenue-label" style="margin:0;">Upcoming Off Days</div>
 
                     <a class="link-small"
-                       asp-controller="DoctorSchedule"
-                       asp-action="UnavailableDates">
+                       asp-controller="DoctorUnavailability"
+                       asp-action="Index">
                         Manage Off Days
                     </a>
                 </div>
@@ -273,6 +275,16 @@
 
 @section Scripts {
     <script>
+        // ✅ Make stat cards clickable via data-url
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".stat-card[data-url]").forEach(card => {
+                card.addEventListener("click", () => {
+                    const url = card.getAttribute("data-url");
+                    if (url) window.location.href = url;
+                });
+            });
+        });
+
         // ===== REVENUE LINE CHART =====
         const doctorRevLabels = @Html.Raw(JsonSerializer.Serialize(Model.RevenueMonthLabels));
         const doctorRevValues = @Html.Raw(JsonSerializer.Serialize(Model.RevenueMonthValues));

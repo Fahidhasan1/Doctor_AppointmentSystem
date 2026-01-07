@@ -1,4 +1,6 @@
-﻿@{
+﻿@model Doctor_AppointmentSystem.ViewModels.HomeIndexViewModel
+
+@{
     ViewData["Title"] = "Home";
 }
 
@@ -158,119 +160,307 @@
         </div>
     </section>
 
-    <!-- FIND YOUR DOCTOR -->
-    <section class="section-block section-block-alt" id="doctors">
-        <div class="section-inner">
-            <h2 class="section-heading">Find Your Doctor</h2>
+    <!-- ====== FIND YOUR DOCTOR SECTION (Landing Page) ====== -->
+    <section class="doctor-search-section" id="doctors">
+        <h2 class="doctor-search-title">Find Your Doctor</h2>
 
-            <div class="doctor-filter-bar">
-                <div class="doctor-filter-field">
-                    <label for="filterName" class="doctor-filter-label">Doctor Name</label>
-                    <input id="filterName" type="text" class="doctor-filter-input" placeholder="e.g. Rahman" />
+        <!-- FILTER BAR -->
+        <div class="doctor-search-card">
+            @* <form asp-action="Index"
+                  asp-controller="Home"
+                  method="get"
+                  class="doctor-search-form"
+                  id="homeDoctorFilterForm"> *@
+            <form method="get"
+                  action="@Url.Action("Index","Home")#doctors"
+                  class="doctor-search-form"
+                  id="homeDoctorFilterForm">
+
+
+                <!-- Doctor Name (live search) -->
+                <div class="doctor-search-field">
+                    <label>Doctor Name</label>
+                    <input type="text"
+                           name="doctorNameFilter"
+                           value="@Model.DoctorNameFilter"
+                           placeholder="e.g. Rahman" />
                 </div>
 
-                <div class="doctor-filter-field">
-                    <label for="filterSpecialty" class="doctor-filter-label">Specialty</label>
-                    <select id="filterSpecialty" class="doctor-filter-select">
-                        <option value="all">All Specialties</option>
-                        <option value="cardiology">Cardiology</option>
-                        <option value="neurology">Neurology</option>
-                        <option value="pediatrics">Pediatrics</option>
-                        <option value="orthopedics">Orthopedics</option>
-                        <option value="dermatology">Dermatology</option>
-                        <option value="general">General Medicine</option>
+                <!-- Specialty -->
+                <div class="doctor-search-field">
+                    <label>Specialty</label>
+                    <select name="specialtyIdFilter">
+                        @foreach (var option in Model.SpecialtyOptions)
+                        {
+                            <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
+                                @option.Text
+                            </option>
+                        }
                     </select>
                 </div>
 
-                <div class="doctor-filter-field">
-                    <label for="filterExperience" class="doctor-filter-label">Experience</label>
-                    <select id="filterExperience" class="doctor-filter-select">
-                        <option value="all">Any Experience</option>
-                        <option value="0-5">0 - 5 years</option>
-                        <option value="5-10">5 - 10 years</option>
-                        <option value="10plus">10+ years</option>
+                <!-- Experience -->
+                <div class="doctor-search-field">
+                    <label>Experience</label>
+                    <select name="experienceFilter">
+                        @foreach (var option in Model.ExperienceOptions)
+                        {
+                            <option value="@option.Value" selected="@(option.Selected ? "selected" : null)">
+                                @option.Text
+                            </option>
+                        }
                     </select>
                 </div>
 
-                <div class="doctor-filter-actions">
-                    <button type="button" class="doctor-filter-reset" id="filterResetBtn">
+                <!-- Reset -->
+                <div class="doctor-search-field doctor-search-actions">
+                    <label>&nbsp;</label>
+                    @* <a asp-action="Index"
+                       asp-controller="Home"
+                       class="btn-reset-full">
                         Reset Filters
-                    </button>
-                </div>
-            </div>
+                    </a> *@
+                    <a asp-action="Index"
+                       asp-controller="Home"
+                       asp-fragment="doctors"
+                       class="btn-reset-full">
+                        Reset Filters
+                    </a>
 
-            <div class="doctor-grid" id="doctorGrid">
-                <!-- Doctor 1 -->
-                <div class="doctor-card"
-                     data-name="Dr. Ahsan Rahman"
-                     data-specialty="cardiology"
-                     data-experience="12">
-                    <div class="doctor-photo-wrap">
-                        <img src="/images/D4.jpg" alt="Cardiologist" class="doctor-photo">
-                    </div>
-                    <div class="doctor-info">
-                        <div class="doctor-name">Dr. Ahsan Rahman</div>
-                        <div class="doctor-specialty">Cardiologist</div>
-                        <div class="doctor-meta">12+ years experience · Sunshine Hospital</div>
-                        <div class="doctor-desc">
-                            Specialised in heart failure, hypertension, and preventive cardiology with
-                            a strong focus on lifestyle-based treatment.
-                        </div>
-                    </div>
-                    <div class="doctor-card-footer">
-                        <span><i class="fa-solid fa-star"></i> 4.9 (320 reviews)</span>
-                        <button class="doctor-cta-btn">View Slots</button>
-                    </div>
-                </div>
 
-                <!-- Doctor 2 -->
-                <div class="doctor-card"
-                     data-name="Dr. Mita Chowdhury"
-                     data-specialty="pediatrics"
-                     data-experience="7">
-                    <div class="doctor-photo-wrap">
-                        <img src="~/images/D2.jpg" alt="Pediatrician" class="doctor-photo">
-                    </div>
-                    <div class="doctor-info">
-                        <div class="doctor-name">Dr. Mita Chowdhury</div>
-                        <div class="doctor-specialty">Pediatrician</div>
-                        <div class="doctor-meta">7 years experience · Children Care Unit</div>
-                        <div class="doctor-desc">
-                            Focused on child growth, vaccinations, and common childhood illnesses with a
-                            very friendly approach for kids and parents.
-                        </div>
-                    </div>
-                    <div class="doctor-card-footer">
-                        <span><i class="fa-solid fa-star"></i> 4.8 (210 reviews)</span>
-                        <button class="doctor-cta-btn">View Slots</button>
-                    </div>
-                </div>
 
-                <!-- Doctor 3 -->
-                <div class="doctor-card"
-                     data-name="Dr. Farhan Islam"
-                     data-specialty="neurology"
-                     data-experience="9">
-                    <div class="doctor-photo-wrap">
-                        <img src="/images/D3.jpg" alt="Neurologist" class="doctor-photo">
-                    </div>
-                    <div class="doctor-info">
-                        <div class="doctor-name">Dr. Farhan Islam</div>
-                        <div class="doctor-specialty">Neurologist</div>
-                        <div class="doctor-meta">9 years experience · Brain & Nerve Center</div>
-                        <div class="doctor-desc">
-                            Treats migraine, stroke, epilepsy and other neurological disorders using modern
-                            diagnostic tools and patient education.
-                        </div>
-                    </div>
-                    <div class="doctor-card-footer">
-                        <span><i class="fa-solid fa-star"></i> 4.7 (185 reviews)</span>
-                        <button class="doctor-cta-btn">View Slots</button>
-                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-    </section>
+
+        <!-- DOCTOR CARDS (3 per row, 6 per page) -->
+        <div class="doctor-card-grid doctor-card-grid-three">
+            @if (Model.Doctors != null && Model.Doctors.Any())
+            {
+                foreach (var d in Model.Doctors)
+                {
+                    <div class="doctor-card-large">
+                        <!-- Photo -->
+                        <div class="doctor-card-photo">
+                            @if (!string.IsNullOrWhiteSpace(d.ProfileImagePath))
+                            {
+                                <img src="@Url.Content(d.ProfileImagePath)" alt="@d.FullName" />
+                            }
+                            else
+                            {
+                                var initial = string.IsNullOrWhiteSpace(d.FullName)
+                                ? "?"
+                                : d.FullName.Trim()[0].ToString().ToUpper();
+
+                                <div class="doctor-photo-fallback">@initial</div>
+                            }
+                        </div>
+
+                        <!-- Info -->
+                        <div class="doctor-info">
+                            <h3 class="doctor-name">@d.FullName</h3>
+                            <div class="doctor-specialty">@d.PrimarySpecialty</div>
+
+                            <div class="doctor-meta">@d.ExperienceText</div>
+
+                            @if (!string.IsNullOrWhiteSpace(d.ClinicInfo))
+                            {
+                                <div class="doctor-meta">@d.ClinicInfo</div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(d.Qualification))
+                            {
+                                <div class="doctor-qualification">@d.Qualification</div>
+                            }
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="doctor-card-footer">
+                            <div class="doctor-rating">
+                                <span class="doctor-rating-star">★</span>
+                                <span class="doctor-rating-value">@d.AverageRating.ToString("0.0")</span>
+                                <span class="doctor-rating-count">(@d.ReviewCount reviews)</span>
+                            </div>
+                            @* <a asp-controller="Appointment"
+                               asp-action="DoctorSlots"
+                               asp-route-doctorProfileId="@d.DoctorProfileId"
+                               class="doctor-card-button">
+                                View Slots
+                            </a> *@
+
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            {
+                                <a asp-controller="Appointment"
+                                   asp-action="DoctorSlots"
+                                   asp-route-doctorProfileId="@d.DoctorProfileId"
+                                   class="doctor-card-button">
+                                    View Slots
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0);"
+                                   class="doctor-card-button js-auth-required"
+                                   data-doctor-id="@d.DoctorProfileId">
+                                    View Slots
+                                </a>
+                            }
+
+
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="doctor-empty">
+                    No doctors found for the selected filters.
+                </div>
+            }
+        </div>
+
+
+        <!-- PAGINATION -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="doctor-pagination">
+                <ul class="doctor-pagination-list">
+
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <li>
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@(Model.CurrentPage - 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter"
+                               asp-fragment="doctors">
+                                ‹ Prev
+                            </a>
+                        </li>
+                    }
+
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="@(Model.CurrentPage == p ? "active" : "")">
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@p"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter"
+                               asp-fragment="doctors">
+                                @p
+                            </a>
+                        </li>
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <li>
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@(Model.CurrentPage + 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter"
+                               asp-fragment="doctors">
+                                Next ›
+                            </a>
+                        </li>
+                    }
+
+                </ul>
+            </nav>
+        }
+
+        @* <!-- PAGINATION -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="doctor-pagination">
+                <ul class="doctor-pagination-list">
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <li>
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@(Model.CurrentPage - 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter">
+                                ‹ Prev
+                            </a>
+                        </li>
+                    }
+
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="@(Model.CurrentPage == p ? "active" : "")">
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@p"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter">
+                                @p
+                            </a>
+                        </li>
+                    }
+
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <li>
+                            <a asp-action="Index"
+                               asp-controller="Home"
+                               asp-route-page="@(Model.CurrentPage + 1)"
+                               asp-route-doctorNameFilter="@Model.DoctorNameFilter"
+                               asp-route-specialtyIdFilter="@Model.SpecialtyIdFilter"
+                               asp-route-experienceFilter="@Model.ExperienceFilter">
+                                Next ›
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        } *@
+
+        @section Scripts {
+            <script>
+                (function () {
+                    const form = document.getElementById('homeDoctorFilterForm');
+                    if (!form) return;
+
+                    const debounce = (fn, delay) => {
+                        let timer;
+                        return (...args) => {
+                            clearTimeout(timer);
+                            timer = setTimeout(() => fn.apply(null, args), delay);
+                        };
+                    };
+
+                    const submitForm = () => form.submit();
+
+                    const doctorNameInput = form.querySelector('input[name="doctorNameFilter"]');
+                    const specialtySelect = form.querySelector('select[name="specialtyIdFilter"]');
+                    const experienceSelect = form.querySelector('select[name="experienceFilter"]');
+
+                    if (doctorNameInput) {
+                        doctorNameInput.addEventListener('input', debounce(submitForm, 400));
+                    }
+
+                    [specialtySelect, experienceSelect].forEach(el => {
+                        if (el) el.addEventListener('change', submitForm);
+                    });
+                })();
+            </script>
+        }
+
+
+
+
+
+
 
     <!-- ABOUT US -->
     <section class="section-block" id="about">
@@ -435,9 +625,17 @@
 
             <div class="auth-inline">
                 <label class="auth-checkbox-wrap">
-                    <input type="checkbox" class="auth-checkbox" name="RememberMe" />
+                    <!-- IMPORTANT: ensures RememberMe is always posted -->
+                    <input type="hidden" name="RememberMe" value="false" />
+
+                    <input type="checkbox"
+                           class="auth-checkbox"
+                           name="RememberMe"
+                           value="true" />
+
                     <span>Remember me</span>
                 </label>
+
 
                 <a href="#" class="auth-link">Forgot password?</a>
             </div>
@@ -583,6 +781,33 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/landing.js"></script>
-}
+
+<!-- ========= AUTH REQUIRED MODAL ========= -->
+<div class="auth-modal-overlay" id="authRequiredModal" aria-hidden="true">
+    <div class="auth-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="authRequiredTitle">
+        <button class="auth-close-btn" type="button" data-close-modal>
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <h2 class="auth-title" id="authRequiredTitle">Sign in required</h2>
+        <p class="auth-subtitle">
+            Please sign in or create an account to view available time slots.
+        </p>
+
+        <div style="display:flex; gap:12px; margin-top:16px;">
+            <button type="button"
+                    class="auth-primary-btn"
+                    data-switch-to="signin"
+                    style="flex:1;">
+                Sign In
+            </button>
+
+            <button type="button"
+                    class="btn-reset-full"
+                    data-switch-to="signup"
+                    style="flex:1;">
+                Sign Up
+            </button>
+        </div>
+    </div>
+</div>

@@ -25,15 +25,36 @@ document.addEventListener("DOMContentLoaded", function () {
     var bookBtn = document.querySelector(".js-book-btn");
     var navLinks = document.querySelectorAll(".nav-link");
 
+    //if (appointmentBtn) {
+    //    appointmentBtn.addEventListener("click", function () {
+    //        scrollToSection("signup"); // placeholder for actual appointment section
+    //    });
+    //}
+
     if (appointmentBtn) {
-        appointmentBtn.addEventListener("click", function () {
-            scrollToSection("signup"); // placeholder for actual appointment section
+        appointmentBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            // Smooth scroll to Find Your Doctor section
+            scrollToSection("doctors");
+
+            // Optional: focus doctor name input after scroll
+            setTimeout(function () {
+                const input = document.querySelector(
+                    '#homeDoctorFilterForm input[name="doctorNameFilter"]'
+                );
+                if (input) input.focus();
+            }, 350);
         });
     }
 
+
     if (bookBtn) {
-        bookBtn.addEventListener("click", function () {
-            scrollToSection("signin");
+        bookBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+
+            // Show "Sign in required" modal (same as View Slots)
+            openModal("authRequiredModal");
         });
     }
 
@@ -149,52 +170,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Doctor filter logic
-    var doctorCards = document.querySelectorAll(".doctor-card");
-    var filterName = document.getElementById("filterName");
-    var filterSpecialty = document.getElementById("filterSpecialty");
-    var filterExperience = document.getElementById("filterExperience");
-    var resetBtn = document.getElementById("filterResetBtn");
-
-    function applyDoctorFilters() {
-        var nameValue = filterName.value.toLowerCase().trim();
-        var specValue = filterSpecialty.value;
-        var expValue = filterExperience.value;
-
-        doctorCards.forEach(function (card) {
-            var cardName = (card.getAttribute("data-name") || "").toLowerCase();
-            var cardSpec = card.getAttribute("data-specialty") || "";
-            var cardExp = parseInt(card.getAttribute("data-experience") || "0", 10);
-
-            var matchesName = !nameValue || cardName.indexOf(nameValue) !== -1;
-            var matchesSpec = specValue === "all" || specValue === "" || cardSpec === specValue;
-
-            var matchesExp = true;
-            if (expValue === "0-5") {
-                matchesExp = cardExp <= 5;
-            } else if (expValue === "5-10") {
-                matchesExp = cardExp > 5 && cardExp <= 10;
-            } else if (expValue === "10plus") {
-                matchesExp = cardExp > 10;
-            }
-
-            if (matchesName && matchesSpec && matchesExp) {
-                card.classList.remove("doctor-card-hidden");
-            } else {
-                card.classList.add("doctor-card-hidden");
-            }
+    // View Slots requires auth
+    document.querySelectorAll('.js-auth-required').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            openModal('authRequiredModal');
         });
-    }
+    });
 
-    if (filterName) filterName.addEventListener("keyup", applyDoctorFilters);
-    if (filterSpecialty) filterSpecialty.addEventListener("change", applyDoctorFilters);
-    if (filterExperience) filterExperience.addEventListener("change", applyDoctorFilters);
-    if (resetBtn) {
-        resetBtn.addEventListener("click", function () {
-            filterName.value = "";
-            filterSpecialty.value = "all";
-            filterExperience.value = "all";
-            applyDoctorFilters();
-        });
-    }
+
+    
 });

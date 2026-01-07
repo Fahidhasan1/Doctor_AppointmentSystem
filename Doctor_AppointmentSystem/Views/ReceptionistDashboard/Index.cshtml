@@ -186,11 +186,11 @@
 
                     <!-- Footer -->
                     <div class="doctor-card-footer">
-                        <div class="doctor-rating">
-                            <span class="doctor-rating-star">★</span>
-                            <span class="doctor-rating-value">@d.AverageRating.ToString("0.0")</span>
-                            <span class="doctor-rating-count">(@d.ReviewCount reviews)</span>
+                        <div class="doctor-fee">
+                            <span class="doctor-fee-label">Visiting Charge:</span>
+                            <span class="doctor-fee-value">৳@d.VisitCharge.ToString("0")</span>
                         </div>
+
 
                         <a asp-controller="Appointment"
                            asp-action="DoctorSlots"

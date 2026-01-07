@@ -69,9 +69,13 @@ namespace Doctor_AppointmentSystem.ViewModels
             public string Qualification { get; set; }
             public string Bio { get; set; }
             public string ProfileImagePath { get; set; }
-            public double AverageRating { get; set; }
-            public int ReviewCount { get; set; }
+            public decimal VisitCharge { get; set; }
+            //public double AverageRating { get; set; }
+            //public int ReviewCount { get; set; }
+
         }
+       
+
 
         public class TodaysAppointmentRow
         {

@@ -61,7 +61,16 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var today = DateTime.Today;
             var date = vm.UnavailableDate.Value.Date;
+
+            // ✅ Block selecting past dates (server-side)
+            if (date < today)
+            {
+                TempData["ErrorMessage"] = "You cannot select a past date.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var start = date; // 00:00
             var end = date.AddDays(1).AddSeconds(-1); // 23:59:59
 
@@ -111,6 +120,14 @@ namespace Doctor_AppointmentSystem.Controllers
             if (item == null)
             {
                 TempData["ErrorMessage"] = "Unavailable date not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // ✅ Block removing past dates (server-side)
+            var today = DateTime.Today;
+            if (item.StartDateTime.Date < today)
+            {
+                TempData["ErrorMessage"] = "Past unavailable dates cannot be removed.";
                 return RedirectToAction(nameof(Index));
             }
 

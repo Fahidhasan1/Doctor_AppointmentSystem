@@ -30,7 +30,6 @@ namespace Doctor_AppointmentSystem.Controllers
         }
 
         // GET: /PatientDashboard
-        // Doctor filters come from the query string / form as GET parameters
         public async Task<IActionResult> Index(
             string doctorNameFilter,
             int? specialtyIdFilter,
@@ -43,7 +42,6 @@ namespace Doctor_AppointmentSystem.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                // force re-login if something is wrong
                 return Challenge();
             }
 
@@ -64,32 +62,30 @@ namespace Doctor_AppointmentSystem.Controllers
             var next7Days = today.AddDays(7);
 
             // ----------------------------
-            // 2. Base appointment query for this patient
+            // 2. Base appointment query
             // ----------------------------
             var patientAppointments = _context.Appointments
                 .Where(a => a.IsActive && a.PatientProfileId == patientId);
 
-            // Upcoming within next 7 days – for top card + sidebar badge
             var upcomingAppointments = await patientAppointments
                 .CountAsync(a =>
                     a.AppointmentDateTime >= today &&
                     a.AppointmentDateTime < next7Days &&
                     a.Status == AppointmentStatus.Confirmed);
 
-            // Completed (all time)
             var completedVisits = await patientAppointments
                 .CountAsync(a => a.Status == AppointmentStatus.Completed);
 
-            // Cancelled or missed (Cancelled + NoShow)
             var cancelledOrMissed = await patientAppointments
                 .CountAsync(a =>
                     a.Status == AppointmentStatus.Cancelled ||
                     a.Status == AppointmentStatus.NoShow);
 
-            // Total appointments (for internal use if needed later)
             var totalAppointments = await patientAppointments.CountAsync();
 
-            // Payment stats (for Digital Payments card)
+            // ----------------------------
+            // 3. Payment stats
+            // ----------------------------
             var patientApptIds = await patientAppointments
                 .Select(a => a.Id)
                 .ToListAsync();
@@ -98,30 +94,22 @@ namespace Doctor_AppointmentSystem.Controllers
 
             if (patientApptIds.Count > 0)
             {
-                var paymentsForPatient = _context.Payments
+                digitalPaymentsTotal = await _context.Payments
                     .Where(p => p.IsActive &&
-                                patientApptIds.Contains(p.AppointmentId));
-
-                digitalPaymentsTotal = await paymentsForPatient
-                    .Where(p =>
-                        p.Status == PaymentStatus.Paid &&
-                        p.Method != PaymentMethod.Cash)
+                                patientApptIds.Contains(p.AppointmentId) &&
+                                p.Status == PaymentStatus.Paid &&
+                                p.Method != PaymentMethod.Cash)
                     .SumAsync(p => p.Amount);
             }
 
-            // Notification count (for badge / future use)
             var notificationsCount = await _context.Notifications
                 .CountAsync(n => n.IsActive && n.UserId == user.Id);
 
-            // These ViewBags can be used by the layout/sidebar if you want badges there
             ViewBag.MyAppointmentsBadge = upcomingAppointments;
             ViewBag.NotificationBadge = notificationsCount;
 
             // ----------------------------
-            // 3. Doctor filter dropdowns (Specialties + Experience)
-            // ----------------------------
-            // ----------------------------
-            // 3. Doctor filter dropdowns (Specialties + Experience)
+            // 4. Filters (Specialty + Experience)
             // ----------------------------
             var specialties = await _context.Specialties
                 .Where(s => s.IsActive)
@@ -137,7 +125,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 })
                 .ToList();
 
-            // Insert "All Specialties" at the top
             specialtyOptions.Insert(0, new SelectListItem
             {
                 Value = "",
@@ -145,50 +132,27 @@ namespace Doctor_AppointmentSystem.Controllers
                 Selected = !specialtyIdFilter.HasValue
             });
 
-            // Experience dropdown values – matches the UI text
             var experienceOptions = new[]
             {
-    new SelectListItem
-    {
-        Value = "",
-        Text = "Any Experience",
-        Selected = string.IsNullOrWhiteSpace(experienceFilter)
-    },
-    new SelectListItem
-    {
-        Value = "0-3",
-        Text = "0 - 3 years",
-        Selected = experienceFilter == "0-3"
-    },
-    new SelectListItem
-    {
-        Value = "4-7",
-        Text = "4 - 7 years",
-        Selected = experienceFilter == "4-7"
-    },
-    new SelectListItem
-    {
-        Value = "8+",
-        Text = "8+ years",
-        Selected = experienceFilter == "8+"
-    }
-}.ToList();
+                new SelectListItem { Value = "",    Text = "Any Experience", Selected = string.IsNullOrWhiteSpace(experienceFilter) },
+                new SelectListItem { Value = "0-3", Text = "0 - 3 years",    Selected = experienceFilter == "0-3" },
+                new SelectListItem { Value = "4-7", Text = "4 - 7 years",    Selected = experienceFilter == "4-7" },
+                new SelectListItem { Value = "8+",  Text = "8+ years",       Selected = experienceFilter == "8+" }
+            }.ToList();
 
             // ----------------------------
-            // 4. Base doctor query (for "Find Your Doctor")
+            // 5. Doctor query (NO reviews, NO ratings)
             // ----------------------------
             var doctorsQuery = _context.DoctorProfiles
                 .AsNoTracking()
                 .Include(d => d.User)
                 .Include(d => d.DoctorSpecialties)
                     .ThenInclude(ds => ds.Specialty)
-                .Include(d => d.Reviews)
                 .Where(d =>
                     d.IsActive &&
                     d.IsAvailable &&
                     d.User.IsActive);
 
-            // Filter by doctor name
             if (!string.IsNullOrWhiteSpace(doctorNameFilter))
             {
                 var term = doctorNameFilter.Trim().ToLower();
@@ -196,15 +160,12 @@ namespace Doctor_AppointmentSystem.Controllers
                     (d.User.FirstName + " " + d.User.LastName).ToLower().Contains(term));
             }
 
-            // Filter by specialty
             if (specialtyIdFilter.HasValue)
             {
-                var sid = specialtyIdFilter.Value;
                 doctorsQuery = doctorsQuery.Where(d =>
-                    d.DoctorSpecialties.Any(ds => ds.SpecialtyId == sid));
+                    d.DoctorSpecialties.Any(ds => ds.SpecialtyId == specialtyIdFilter.Value));
             }
 
-            // Filter by experience range
             if (!string.IsNullOrWhiteSpace(experienceFilter))
             {
                 switch (experienceFilter)
@@ -221,14 +182,13 @@ namespace Doctor_AppointmentSystem.Controllers
                 }
             }
 
-            // Order by experience desc, then name
             doctorsQuery = doctorsQuery
                 .OrderByDescending(d => d.Experience)
                 .ThenBy(d => d.User.FirstName)
                 .ThenBy(d => d.User.LastName);
 
             // ----------------------------
-            // 5. Pagination for doctors
+            // 6. Pagination
             // ----------------------------
             if (page < 1) page = 1;
 
@@ -243,7 +203,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 .ToListAsync();
 
             // ----------------------------
-            // 6. Map doctors to card items
+            // 7. Map doctors to cards (VisitCharge)
             // ----------------------------
             var doctorCards = doctorsPage
                 .Select(d =>
@@ -252,17 +212,6 @@ namespace Doctor_AppointmentSystem.Controllers
                         .OrderByDescending(ds => ds.IsPrimary)
                         .ThenBy(ds => ds.Specialty.Name)
                         .FirstOrDefault();
-
-                    var reviews = d.Reviews
-                        .Where(r => r.IsActive && r.IsVisible)
-                        .ToList();
-
-                    double averageRating = 0;
-                    int reviewCount = reviews.Count;
-                    if (reviewCount > 0)
-                    {
-                        averageRating = reviews.Average(r => (double)r.Rating);
-                    }
 
                     return new PatientDashboardViewModel.DoctorCardItem
                     {
@@ -273,45 +222,36 @@ namespace Doctor_AppointmentSystem.Controllers
                         ClinicInfo = !string.IsNullOrWhiteSpace(d.RoomNo)
                             ? $"Room {d.RoomNo}"
                             : null,
-
-                        // NEW: map qualification so it shows on the card
                         Qualification = d.Qualification,
-
                         Bio = d.Description,
                         ProfileImagePath = d.User.ProfileImagePath,
-                        AverageRating = Math.Round(averageRating, 1),
-                        ReviewCount = reviewCount
+
+                        // ✅ instead of rating
+                        VisitCharge = d.VisitCharge
                     };
                 })
                 .ToList();
 
             // ----------------------------
-            // 7. Build ViewModel
+            // 8. Build ViewModel
             // ----------------------------
             var vm = new PatientDashboardViewModel
             {
-                // top cards
                 UpcomingAppointments = upcomingAppointments,
                 CompletedVisits = completedVisits,
                 CancelledOrMissed = cancelledOrMissed,
                 DigitalPaymentsTotal = digitalPaymentsTotal,
                 TotalAppointments = totalAppointments,
-                PendingPaymentsCount = 0,          // keep your existing values if you set them
-                NextAppointmentDate = null,
-                LastAppointmentDate = null,
 
-                // sidebar badges
                 MyAppointmentsBadge = upcomingAppointments,
-                NotificationBadge = 0,             // or your existing value
+                NotificationBadge = notificationsCount,
 
-                // filters (preserve current filter state)
                 DoctorNameFilter = doctorNameFilter,
                 SpecialtyIdFilter = specialtyIdFilter,
                 ExperienceFilter = experienceFilter,
                 SpecialtyOptions = specialtyOptions,
                 ExperienceOptions = experienceOptions,
 
-                // doctor cards + pagination
                 Doctors = doctorCards,
                 CurrentPage = page,
                 TotalPages = totalPages,
@@ -320,10 +260,6 @@ namespace Doctor_AppointmentSystem.Controllers
             };
 
             return View(vm);
-
         }
-
-        // Later you’ll create separate controllers like:
-        // PatientAppointmentsController, PatientNotificationsController, etc.
     }
 }

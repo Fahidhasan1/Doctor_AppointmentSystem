@@ -1,9 +1,6 @@
 ﻿@model Doctor_AppointmentSystem.ViewModels.DoctorUnavailabilityIndexViewModel
 
-@* @{
-    ViewData["Title"] = "Sunshine Hospital";
-    Layout = "_Layout_Doctor";
-} *@
+
 @{
     ViewData["Title"] = "Sunshine Hospital";
     Layout = "_Layout_Doctor";
@@ -71,13 +68,7 @@
                             <tr>
                                 <td>@item.Date.ToString("dddd, MMM dd, yyyy")</td>
                                 <td>@(string.IsNullOrWhiteSpace(item.Reason) ? "-" : item.Reason)</td>
-                                @* <td>
-                                    <form asp-action="Remove" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@item.Id" />
-                                        <button type="submit" class="btn-remove">Remove</button>
-                                    </form>
-                                </td> *@
+                               
 
                                 <td>
                                     @if (item.Date < today)

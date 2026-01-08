@@ -57,31 +57,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            //var patientId = patientProfile.Id;
-            //var today = DateTime.Today;
-            //var next7Days = today.AddDays(7);
-
-            //// ----------------------------
-            //// 2. Base appointment query
-            //// ----------------------------
-            //var patientAppointments = _context.Appointments
-            //    .Where(a => a.IsActive && a.PatientProfileId == patientId);
-
-            //var upcomingAppointments = await patientAppointments
-            //    .CountAsync(a =>
-            //        a.AppointmentDateTime >= today &&
-            //        a.AppointmentDateTime < next7Days &&
-            //        a.Status == AppointmentStatus.Confirmed);
-
-            //var completedVisits = await patientAppointments
-            //    .CountAsync(a => a.Status == AppointmentStatus.Completed);
-
-            //var cancelledOrMissed = await patientAppointments
-            //    .CountAsync(a =>
-            //        a.Status == AppointmentStatus.Cancelled ||
-            //        a.Status == AppointmentStatus.NoShow);
-
-            //var totalAppointments = await patientAppointments.CountAsync();
+           
 
             var patientId = patientProfile.Id;
 

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doctor_AppointmentSystem.Controllers
 {
@@ -20,17 +21,14 @@ namespace Doctor_AppointmentSystem.Controllers
     public class ReceptionistAppointmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _email;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public ReceptionistAppointmentsController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IEmailService email)
+            IServiceScopeFactory scopeFactory)
         {
             _context = context;
-            _userManager = userManager;
-            _email = email;
+            _scopeFactory = scopeFactory;
         }
 
         // GET: /ReceptionistAppointments?filter=all|today|upcoming|cancelled|paidtoday|paidall&fromCard=true
@@ -290,6 +288,8 @@ namespace Doctor_AppointmentSystem.Controllers
         public async Task<IActionResult> CollectCash(int id, string? filter = "all")
         {
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(receptionistUserId))
+                return Challenge();
 
             var appt = await _context.Appointments
                 .FirstOrDefaultAsync(a => a.Id == id && a.IsActive && a.BookedByUserId == receptionistUserId);
@@ -320,8 +320,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Select(d => d.VisitCharge)
                 .FirstOrDefaultAsync();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var newPayment = new Payment
             {
                 AppointmentId = appt.Id,
@@ -333,7 +331,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 GatewayTransactionId = null,
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
-                InitiatedByUserId = userId,
+                InitiatedByUserId = receptionistUserId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -341,8 +339,28 @@ namespace Doctor_AppointmentSystem.Controllers
             _context.Payments.Add(newPayment);
             await _context.SaveChangesAsync();
 
-            // ✅ Case-2 emails: Doctor + Receptionist
-            await TrySendReceptionistPaidEmailsAsync(appt.Id, methodLabel: "Cash");
+            // ✅ Non-blocking email: use fresh DI scope (prevents disposed DbContext/UserManager)
+            var apptId = appt.Id;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+                    await SendReceptionistPaidEmailsAsync(
+                        db, userManager, emailService,
+                        appointmentId: apptId,
+                        receptionistUserId: receptionistUserId,
+                        methodLabel: "Cash");
+                }
+                catch
+                {
+                    // Optional: add logging later
+                }
+            });
 
             TempData["SuccessMessage"] = "Cash payment collected successfully.";
             return RedirectToAction(nameof(Index), new { filter });
@@ -354,6 +372,8 @@ namespace Doctor_AppointmentSystem.Controllers
         public async Task<IActionResult> ConfirmMobile(int id, string provider, string transactionId, string? filter = "all")
         {
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(receptionistUserId))
+                return Challenge();
 
             var appt = await _context.Appointments
                 .FirstOrDefaultAsync(a => a.Id == id && a.IsActive && a.BookedByUserId == receptionistUserId);
@@ -407,8 +427,6 @@ namespace Doctor_AppointmentSystem.Controllers
                 .Select(d => d.VisitCharge)
                 .FirstOrDefaultAsync();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
             var newPayment = new Payment
             {
                 AppointmentId = appt.Id,
@@ -420,7 +438,7 @@ namespace Doctor_AppointmentSystem.Controllers
                 GatewayTransactionId = transactionId,
                 PaidAtUtc = DateTime.UtcNow,
                 StatusLastUpdatedUtc = DateTime.UtcNow,
-                InitiatedByUserId = userId,
+                InitiatedByUserId = receptionistUserId,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -428,8 +446,29 @@ namespace Doctor_AppointmentSystem.Controllers
             _context.Payments.Add(newPayment);
             await _context.SaveChangesAsync();
 
-            // ✅ Case-2 emails: Doctor + Receptionist
-            await TrySendReceptionistPaidEmailsAsync(appt.Id, methodLabel: provider);
+            // ✅ Non-blocking email: use fresh DI scope
+            var apptId = appt.Id;
+            var methodLabel = provider;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+
+                    await SendReceptionistPaidEmailsAsync(
+                        db, userManager, emailService,
+                        appointmentId: apptId,
+                        receptionistUserId: receptionistUserId,
+                        methodLabel: methodLabel);
+                }
+                catch
+                {
+                    // Optional: add logging later
+                }
+            });
 
             TempData["SuccessMessage"] = "Mobile banking payment confirmed.";
             return RedirectToAction(nameof(Index), new { filter });
@@ -441,6 +480,8 @@ namespace Doctor_AppointmentSystem.Controllers
         public async Task<IActionResult> Cancel(int id, string? filter = "all")
         {
             var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(receptionistUserId))
+                return Challenge();
 
             var appt = await _context.Appointments
                 .FirstOrDefaultAsync(a => a.Id == id && a.IsActive && a.BookedByUserId == receptionistUserId);
@@ -471,76 +512,77 @@ namespace Doctor_AppointmentSystem.Controllers
 
         // ==========================================================
         // EMAIL SENDER (Case 2): Doctor + Receptionist after Paid
+        // Runs with scoped services (safe for background Task)
         // ==========================================================
-        private async Task TrySendReceptionistPaidEmailsAsync(int appointmentId, string methodLabel)
+        private static async Task SendReceptionistPaidEmailsAsync(
+            ApplicationDbContext db,
+            UserManager<ApplicationUser> userManager,
+            IEmailService email,
+            int appointmentId,
+            string receptionistUserId,
+            string methodLabel)
         {
-            try
+            var apptFull = await db.Appointments
+                .Include(a => a.Doctor).ThenInclude(d => d.User)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsActive);
+
+            if (apptFull == null)
+                return;
+
+            // Doctor
+            var doctorUser = apptFull.Doctor?.User;
+            var doctorEmail = doctorUser?.Email;
+
+            var doctorNamePlain = doctorUser == null
+                ? "Doctor"
+                : $"{doctorUser.FirstName} {doctorUser.LastName}".Trim();
+
+            var doctorNameWithPrefix = $"Dr. {doctorNamePlain}".Trim();
+
+            // Receptionist
+            var receptionistUser = await userManager.FindByIdAsync(receptionistUserId);
+            var receptionistEmail = receptionistUser?.Email;
+
+            var receptionistName = receptionistUser == null
+                ? "Receptionist"
+                : $"{receptionistUser.FirstName} {receptionistUser.LastName}".Trim();
+
+            // Patient
+            string patientName =
+                apptFull.PatientProfileId != null
+                    ? (apptFull.Patient.User.FirstName + " " + apptFull.Patient.User.LastName).Trim()
+                    : (apptFull.UnregisteredPatientName ?? "Unregistered Patient").Trim();
+
+            var apptTime = apptFull.AppointmentDateTime;
+
+            // Email to Doctor
+            if (!string.IsNullOrWhiteSpace(doctorEmail))
             {
-                var apptFull = await _context.Appointments
-                    .Include(a => a.Doctor).ThenInclude(d => d.User)
-                    .Include(a => a.Patient).ThenInclude(p => p.User)
-                    .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsActive);
+                var subject = "Appointment Confirmed (Paid by Receptionist)";
+                var body = EmailTemplates.AppointmentPaidDoctor(
+                    doctorNamePlain,
+                    patientName,
+                    apptTime,
+                    methodLabel);
 
-                if (apptFull == null)
-                    return;
-
-                // Doctor
-                var doctorUser = apptFull.Doctor?.User;
-                var doctorName = doctorUser == null ? "Doctor" : $"Dr. {doctorUser.FirstName} {doctorUser.LastName}".Trim();
-                var doctorEmail = doctorUser?.Email;
-
-                // Receptionist
-                var receptionistUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                ApplicationUser? receptionistUser = null;
-
-                if (!string.IsNullOrWhiteSpace(receptionistUserId))
-                    receptionistUser = await _userManager.FindByIdAsync(receptionistUserId);
-
-                var receptionistName = receptionistUser == null
-                    ? "Receptionist"
-                    : $"{receptionistUser.FirstName} {receptionistUser.LastName}".Trim();
-
-                var receptionistEmail = receptionistUser?.Email;
-
-                // Patient
-                string patientName =
-                    apptFull.PatientProfileId != null
-                        ? (apptFull.Patient.User.FirstName + " " + apptFull.Patient.User.LastName).Trim()
-                        : (apptFull.UnregisteredPatientName ?? "Unregistered Patient").Trim();
-
-                var apptTime = apptFull.AppointmentDateTime;
-
-                // Email to Doctor
-                if (!string.IsNullOrWhiteSpace(doctorEmail))
-                {
-                    var subject = "Appointment Confirmed (Paid by Receptionist)";
-                    var body = EmailTemplates.AppointmentPaidDoctor(
-                        doctorName.Replace("Dr. ", "").Trim(),
-                        patientName,
-                        apptTime,
-                        methodLabel);
-
-                    await _email.SendAsync(doctorEmail, subject, body);
-                }
-
-                // Email to Receptionist
-                if (!string.IsNullOrWhiteSpace(receptionistEmail))
-                {
-                    var subject = "Payment Confirmation Recorded";
-                    var body = EmailTemplates.AppointmentPaidReceptionist(
-                        receptionistName,
-                        patientName,
-                        doctorName,
-                        apptTime,
-                        methodLabel);
-
-                    await _email.SendAsync(receptionistEmail, subject, body);
-                }
+                await email.SendAsync(doctorEmail, subject, body);
             }
-            catch
+
+            // Email to Receptionist
+            if (!string.IsNullOrWhiteSpace(receptionistEmail))
             {
-                // Keep receptionist flow smooth even if email fails
+                var subject = "Payment Confirmation Recorded";
+                var body = EmailTemplates.AppointmentPaidReceptionist(
+                    receptionistName,
+                    patientName,
+                    doctorNameWithPrefix,
+                    apptTime,
+                    methodLabel);
+
+                await email.SendAsync(receptionistEmail, subject, body);
             }
         }
     }
 }
+

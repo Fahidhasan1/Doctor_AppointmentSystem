@@ -702,7 +702,9 @@ namespace Doctor_AppointmentSystem.Controllers
                 payment.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
-                TempData["ErrorMessage"] = $"SSLCOMMERZ init failed: {init.failedreason ?? "Unknown error"}";
+                //TempData["ErrorMessage"] = $"SSLCOMMERZ init failed: {init.failedreason ?? "Unknown error"}";
+                TempData["ErrorMessage"] = "Payment gateway is unavailable right now. Please try again later.";
+
                 return RedirectToAction(nameof(Index), new { filter });
             }
 

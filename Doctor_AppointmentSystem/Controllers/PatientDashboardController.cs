@@ -57,9 +57,37 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            //var patientId = patientProfile.Id;
+            //var today = DateTime.Today;
+            //var next7Days = today.AddDays(7);
+
+            //// ----------------------------
+            //// 2. Base appointment query
+            //// ----------------------------
+            //var patientAppointments = _context.Appointments
+            //    .Where(a => a.IsActive && a.PatientProfileId == patientId);
+
+            //var upcomingAppointments = await patientAppointments
+            //    .CountAsync(a =>
+            //        a.AppointmentDateTime >= today &&
+            //        a.AppointmentDateTime < next7Days &&
+            //        a.Status == AppointmentStatus.Confirmed);
+
+            //var completedVisits = await patientAppointments
+            //    .CountAsync(a => a.Status == AppointmentStatus.Completed);
+
+            //var cancelledOrMissed = await patientAppointments
+            //    .CountAsync(a =>
+            //        a.Status == AppointmentStatus.Cancelled ||
+            //        a.Status == AppointmentStatus.NoShow);
+
+            //var totalAppointments = await patientAppointments.CountAsync();
+
             var patientId = patientProfile.Id;
-            var today = DateTime.Today;
-            var next7Days = today.AddDays(7);
+
+            // Use DateTime.Now so it matches the “Upcoming” page logic
+            var now = DateTime.Now;
+            var next7Days = now.AddDays(7);
 
             // ----------------------------
             // 2. Base appointment query
@@ -69,9 +97,9 @@ namespace Doctor_AppointmentSystem.Controllers
 
             var upcomingAppointments = await patientAppointments
                 .CountAsync(a =>
-                    a.AppointmentDateTime >= today &&
+                    a.AppointmentDateTime >= now &&
                     a.AppointmentDateTime < next7Days &&
-                    a.Status == AppointmentStatus.Confirmed);
+                    (a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Rescheduled));
 
             var completedVisits = await patientAppointments
                 .CountAsync(a => a.Status == AppointmentStatus.Completed);
@@ -82,6 +110,7 @@ namespace Doctor_AppointmentSystem.Controllers
                     a.Status == AppointmentStatus.NoShow);
 
             var totalAppointments = await patientAppointments.CountAsync();
+
 
             // ----------------------------
             // 3. Payment stats

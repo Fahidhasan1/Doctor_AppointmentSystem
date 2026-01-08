@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        @if (TempData["SuccessMessage"] != null)
+        @* @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-success">@TempData["SuccessMessage"]</div>
         }
@@ -90,7 +90,7 @@
         @if (TempData["InfoMessage"] != null)
         {
             <div class="alert alert-info">@TempData["InfoMessage"]</div>
-        }
+        } *@
 
         @if (Model.Appointments == null || !Model.Appointments.Any())
         {

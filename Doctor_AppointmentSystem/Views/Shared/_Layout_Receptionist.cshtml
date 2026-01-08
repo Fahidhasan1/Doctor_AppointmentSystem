@@ -108,13 +108,13 @@
                     <span>Appointments</span>
                 </a>
 
-                <!-- NOTIFICATIONS -->
+                @* <!-- NOTIFICATIONS -->
                 <a asp-controller="ReceptionistNotifications"
                    asp-action="Index"
                    class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "ReceptionistNotifications" ? "active" : "")">
                     <div class="nav-link-icon">🔔</div>
                     <span>Notifications</span>
-                </a>
+                </a> *@
 
 
                 <!-- PAYMENTS & RECEIPTS -->
@@ -153,11 +153,7 @@
                             Change Password
                         </a>
 
-                        @* <a asp-controller="Settings"
-                           asp-action="NotificationPreferences"
-                           class="nav-link nav-link--sub">
-                            Notification Preferences
-                        </a> *@
+                       
                     </div>
                 </div>
 

@@ -5,6 +5,7 @@
         Cash = 1,
         Bkash = 2,
         Nagad = 3,
-        Rocket = 4
+        Rocket = 4,
+        SslCommerz = 5
     }
 }

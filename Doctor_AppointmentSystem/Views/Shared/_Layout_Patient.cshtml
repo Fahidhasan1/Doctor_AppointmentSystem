@@ -89,13 +89,13 @@
                     <span>My Appointments</span>
                 </a>
 
-                <!-- NOTIFICATIONS -->
+                @* <!-- NOTIFICATIONS -->
                 <a asp-controller="PatientNotifications"
                    asp-action="Index"
                    class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "PatientNotifications" ? "active" : "")">
                     <div class="nav-link-icon">🔔</div>
                     <span>Notifications</span>
-                </a>
+                </a> *@
 
                 <!-- PROFILE -->
                 <a asp-controller="PatientProfile"

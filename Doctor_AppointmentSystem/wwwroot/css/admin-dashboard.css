@@ -387,18 +387,7 @@ body {
     font-weight: 600;
 }
 
-/*.stat-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #4f7dff, #9f76ff);
-    color: #fff;
-    font-size: 20px;
-    box-shadow: 0 10px 24px rgba(79, 125, 255, 0.5);
-}*/
+
 
 .stat-sub {
     font-size: 11px;

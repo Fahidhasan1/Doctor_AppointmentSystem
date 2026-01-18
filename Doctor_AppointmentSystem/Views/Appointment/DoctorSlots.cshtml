@@ -20,9 +20,9 @@
             <div class="card-head">
                 <div class="card-head-left">
                     <h2 class="card-title">Book Appointment</h2>
-                    <p class="card-subtitle">
+                    @* <p class="card-subtitle">
                         Choose a date to view available slots for <strong>@Model.DoctorName</strong>.
-                    </p>
+                    </p> *@
                 </div>
 
                 <a asp-controller="@backController" asp-action="Index" class="btn-back">
@@ -34,7 +34,7 @@
                 <div class="field field--date">
                     <label for="slotDate" class="label">Select Date</label>
                     <input id="slotDate" type="date" class="input input--date" />
-                    <div class="hint">Only schedule-based times will be shown.</div>
+                    
                 </div>
             </div>
 

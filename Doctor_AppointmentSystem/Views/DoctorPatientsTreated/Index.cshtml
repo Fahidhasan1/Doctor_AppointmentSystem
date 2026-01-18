@@ -14,9 +14,9 @@
         <div class="appt-header">
             <div>
                 <h2 class="appt-title">Patients Treated</h2>
-                <div class="appt-subtitle">
+                @* <div class="appt-subtitle">
                     Unique patients you have treated (Completed appointments only).
-                </div>
+                </div> *@
             </div>
         </div>
 
@@ -24,7 +24,7 @@
             <span class="text-muted" style="font-size:13px;">
                 Total Patients Treated:
             </span>
-            <strong style="font-size:14px;">@Model.TotalPatientsTreated</strong>
+            <strong style="font-size:18px;">@Model.TotalPatientsTreated</strong>
         </div>
 
         @if (Model.Patients == null || !Model.Patients.Any())

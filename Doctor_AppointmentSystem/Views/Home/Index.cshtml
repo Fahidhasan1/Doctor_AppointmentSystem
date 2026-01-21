@@ -661,7 +661,10 @@
                            type="date"
                            name="DateOfBirth"
                            class="auth-input"
-                           required />
+                           required 
+
+                           max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+
                 </div>
                 <div class="auth-form-col">
                     <label class="auth-label" for="signupGender">Gender</label>
@@ -673,7 +676,7 @@
                         <option value="female">Female</option>
                         <option value="male">Male</option>
                         <option value="other">Other</option>
-                        <option value="prefer_not_say">Prefer not to say</option>
+                        @* <option value="prefer_not_say">Prefer not to say</option> *@
                     </select>
                 </div>
             </div>

@@ -258,6 +258,12 @@ namespace Doctor_AppointmentSystem.Controllers
             {
                 return View(model);
             }
+            // DOB must not be in the future
+            if (model.DateOfBirth.HasValue && model.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(model.DateOfBirth), "Date of birth cannot be in the future.");
+                return View(model);
+            }
 
             // Ensure email is unique
             var existingUser = await _userManager.FindByEmailAsync(model.Email);
@@ -413,6 +419,14 @@ namespace Doctor_AppointmentSystem.Controllers
             {
                 return View(model);
             }
+
+            // DOB must not be in the future
+            if (model.DateOfBirth.HasValue && model.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(model.DateOfBirth), "Date of birth cannot be in the future.");
+                return View(model);
+            }
+
 
             var doctorProfile = await _context.DoctorProfiles
                 .Include(d => d.User)

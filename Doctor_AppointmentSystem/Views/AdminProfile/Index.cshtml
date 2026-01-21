@@ -119,11 +119,20 @@
                         <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group">
+                    @* <div class="form-group">
                         <label asp-for="DateOfBirth">Date of Birth</label>
                         <input asp-for="DateOfBirth" type="date" class="form-control" />
                         <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div> *@
+                    <div class="form-group">
+                        <label asp-for="DateOfBirth">Date of Birth</label>
+                        <input asp-for="DateOfBirth"
+                               type="date"
+                               class="form-control"
+                               max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                     </div>
+
 
                     <div class="form-group">
                         <label asp-for="Gender"></label>

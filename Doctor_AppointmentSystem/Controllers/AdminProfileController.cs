@@ -125,6 +125,14 @@ namespace Doctor_AppointmentSystem.Controllers
                 return View(model);
             }
 
+            // DOB must not be in the future
+            if (model.DateOfBirth.HasValue && model.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(model.DateOfBirth), "Date of birth cannot be in the future.");
+                model.ProfileImagePath = user.ProfileImagePath;
+                return View(model);
+            }
+
             // --- Update Identity user fields ---
             user.FirstName = model.FirstName?.Trim();
             user.LastName = model.LastName?.Trim();

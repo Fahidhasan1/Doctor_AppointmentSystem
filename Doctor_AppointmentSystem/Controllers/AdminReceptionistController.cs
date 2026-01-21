@@ -200,6 +200,12 @@ namespace Doctor_AppointmentSystem.Controllers
             {
                 return View(vm);
             }
+            // DOB must not be in the future
+            if (vm.DateOfBirth.HasValue && vm.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(vm.DateOfBirth), "Date of birth cannot be in the future.");
+                return View(vm);
+            }
 
             // ensure email unique
             var existingUser = await _userManager.FindByEmailAsync(vm.Email);
@@ -322,6 +328,13 @@ namespace Doctor_AppointmentSystem.Controllers
 
             if (!ModelState.IsValid)
             {
+                return View(vm);
+            }
+
+            // DOB must not be in the future
+            if (vm.DateOfBirth.HasValue && vm.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                ModelState.AddModelError(nameof(vm.DateOfBirth), "Date of birth cannot be in the future.");
                 return View(vm);
             }
 

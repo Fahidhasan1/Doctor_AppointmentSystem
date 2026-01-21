@@ -60,11 +60,20 @@
                     <span asp-validation-for="Gender" class="field-validation"></span>
                 </div>
 
-                <div class="form-field">
+                @* <div class="form-field">
                     <label asp-for="DateOfBirth" class="form-label"></label>
                     <input asp-for="DateOfBirth" type="date" class="form-input" />
                     <span asp-validation-for="DateOfBirth" class="field-validation"></span>
+                </div> *@
+                <div class="form-field">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth"
+                           type="date"
+                           class="form-input"
+                           max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="DateOfBirth" class="field-validation"></span>
                 </div>
+
 
                 <div class="form-field">
                     <label asp-for="Password" class="form-label"></label>

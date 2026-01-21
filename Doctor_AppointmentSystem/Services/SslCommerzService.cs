@@ -45,7 +45,7 @@ namespace Doctor_AppointmentSystem.Services
 
         public async Task<SslCommerzInitResponse> InitPaymentAsync(Dictionary<string, string> fields)
         {
-            var url = $"{_settings.BaseUrl}/gwprocess/v3/api.php";
+            var url = $"{_settings.BaseUrl}/gwprocess/v4/api.php";
 
             using var content = new FormUrlEncodedContent(fields);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");

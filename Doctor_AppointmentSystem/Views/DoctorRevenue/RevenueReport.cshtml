@@ -269,17 +269,20 @@
             }
         </select>
 
+       
         <input type="date"
                name="start"
                value="@(Model.StartDate.HasValue? Model.StartDate.Value.ToString("yyyy-MM-dd") : "")"
                class="rev-date"
-               id="startDate" />
+               id="startDate"
+               max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
 
         <input type="date"
                name="end"
                value="@(Model.EndDate.HasValue? Model.EndDate.Value.ToString("yyyy-MM-dd") : "")"
                class="rev-date"
-               id="endDate" />
+               id="endDate"
+               max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
 
         <button type="submit" class="btn-primary">Apply</button>
 
@@ -287,6 +290,7 @@
             Range:
             <span>@Model.RangeLabel.Replace("Range: ", "")</span>
         </span>
+
     </form>
 
     <!-- ================= TABLE ================= -->
@@ -346,7 +350,7 @@
     </div>
 </div>
 
-<script>
+@* <script>
     (function () {
         const modeSelect = document.getElementById("modeSelect");
         const monthSelect = document.getElementById("monthSelect");
@@ -369,4 +373,84 @@
         modeSelect.addEventListener("change", applyModeUI);
         applyModeUI();
     })();
+</script> *@
+
+<script>
+    (function () {
+        const modeSelect = document.getElementById("modeSelect");
+        const monthSelect = document.getElementById("monthSelect");
+        const yearSelect = document.getElementById("yearSelect");
+        const startDate = document.getElementById("startDate");
+        const endDate = document.getElementById("endDate");
+
+        function applyModeUI() {
+            const mode = (modeSelect.value || "month").toLowerCase();
+            const isMonth = mode === "month";
+            const isCustom = mode === "custom";
+
+            monthSelect.style.display = isMonth ? "inline-flex" : "none";
+            yearSelect.style.display = isMonth ? "inline-flex" : "none";
+
+            startDate.style.display = isCustom ? "inline-flex" : "none";
+            endDate.style.display = isCustom ? "inline-flex" : "none";
+        }
+
+        // ✅ Added: prevent selecting future dates
+        function applyNoFutureDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, "0");
+            const dd = String(today.getDate()).padStart(2, "0");
+            const maxDate = `${yyyy}-${mm}-${dd}`;
+
+            startDate.max = maxDate;
+            endDate.max = maxDate;
+        }
+
+        // ✅ Added: prevent start/end conflicts (end < start, start > end)
+        function syncStartEndConstraints() {
+            // If start selected, end must be >= start
+            endDate.min = startDate.value ? startDate.value : "";
+
+            // If end selected, start must be <= end
+            // Note: we keep the "no future dates" max already set by applyNoFutureDates()
+            // so only apply start.max to endDate if endDate is set and smaller than today.
+            if (endDate.value) {
+                startDate.max = endDate.value;
+            }
+        }
+
+        // ✅ Added: auto-fix invalid range by snapping end to start
+        function normalizeStartEndIfNeeded() {
+            if (startDate.value && endDate.value && endDate.value < startDate.value) {
+                endDate.value = startDate.value;
+            }
+
+            // If somehow user enters future date manually, snap it back to today
+            const maxDate = startDate.max; // both have same max
+            if (startDate.value && startDate.value > maxDate) startDate.value = maxDate;
+            if (endDate.value && endDate.value > maxDate) endDate.value = maxDate;
+        }
+
+        modeSelect.addEventListener("change", applyModeUI);
+
+        // ✅ Added listeners for conflict handling
+        startDate.addEventListener("change", function () {
+            syncStartEndConstraints();
+            normalizeStartEndIfNeeded();
+        });
+
+        endDate.addEventListener("change", function () {
+            syncStartEndConstraints();
+            normalizeStartEndIfNeeded();
+        });
+
+        applyModeUI();
+
+        // ✅ Initialize rules on page load
+        applyNoFutureDates();
+        syncStartEndConstraints();
+        normalizeStartEndIfNeeded();
+    })();
 </script>
+

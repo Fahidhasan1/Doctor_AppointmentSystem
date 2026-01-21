@@ -291,9 +291,22 @@
 
 
 
+     
+
         <!-- Custom range -->
-        <input type="date" name="start" value="@Model.Start" class="rev-date" id="startDate" />
-        <input type="date" name="end" value="@Model.End" class="rev-date" id="endDate" />
+        <input type="date"
+               name="start"
+               value="@Model.Start"
+               class="rev-date"
+               id="startDate"
+               max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
+
+        <input type="date"
+               name="end"
+               value="@Model.End"
+               class="rev-date"
+               id="endDate"
+               max="@DateTime.UtcNow.ToString("yyyy-MM-dd")" />
 
         <button type="submit" class="btn-primary">Apply</button>
 
@@ -303,6 +316,7 @@
                 @Model.FromUtc.ToString("dd MMM yyyy") - @Model.ToUtc.ToString("dd MMM yyyy")
             </span>
         </span>
+
     </form>
 
     <!-- ================= TABLE ================= -->
@@ -369,8 +383,10 @@
 
 </div>
 
+
+
 <script>
-    // show/hide inputs based on mode
+    // show/hide inputs based on mode + prevent invalid ranges + block future dates
     (function () {
         const modeSelect = document.getElementById("modeSelect");
         const monthSelect = document.getElementById("monthSelect");
@@ -391,7 +407,60 @@
             endDate.style.display = isCustom ? "inline-flex" : "none";
         }
 
+        // ✅ Added: prevent selecting future dates
+        function applyNoFutureDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, "0");
+            const dd = String(today.getDate()).padStart(2, "0");
+            const maxDate = `${yyyy}-${mm}-${dd}`;
+
+            startDate.max = maxDate;
+            endDate.max = maxDate;
+        }
+
+        // ✅ Added: prevent start/end conflicts
+        function syncStartEndConstraints() {
+            // End must be >= start
+            endDate.min = startDate.value ? startDate.value : "";
+
+            // Start must be <= end (but don't remove the "no future" max)
+            if (endDate.value) {
+                startDate.max = endDate.value;
+            }
+        }
+
+        // ✅ Added: normalize invalid inputs (manual typing / edge cases)
+        function normalizeStartEndIfNeeded() {
+            // If end < start, snap end to start
+            if (startDate.value && endDate.value && endDate.value < startDate.value) {
+                endDate.value = startDate.value;
+            }
+
+            // Clamp any future manual values back to today
+            const maxDate = startDate.max; // both should share same max after applyNoFutureDates()
+            if (startDate.value && startDate.value > maxDate) startDate.value = maxDate;
+            if (endDate.value && endDate.value > maxDate) endDate.value = maxDate;
+        }
+
         modeSelect.addEventListener("change", applyModeUI);
+
+        // ✅ Added listeners for conflict + future-date handling
+        startDate.addEventListener("change", function () {
+            syncStartEndConstraints();
+            normalizeStartEndIfNeeded();
+        });
+
+        endDate.addEventListener("change", function () {
+            syncStartEndConstraints();
+            normalizeStartEndIfNeeded();
+        });
+
         applyModeUI();
+
+        // ✅ Initialize on load (handles prefilled values)
+        applyNoFutureDates();
+        syncStartEndConstraints();
+        normalizeStartEndIfNeeded();
     })();
 </script>

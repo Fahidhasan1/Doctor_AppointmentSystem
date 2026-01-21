@@ -27,7 +27,7 @@ namespace Doctor_AppointmentSystem.Controllers
             _context = context;
         }
 
-        // We are not using full-page login/register views at all.
+   
         [HttpGet]
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
@@ -42,9 +42,9 @@ namespace Doctor_AppointmentSystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // ============================================
-        // POST: /Account/Login (from modal)
-        // ============================================
+       
+        // POST: /Account/Login
+        
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -104,6 +104,11 @@ namespace Doctor_AppointmentSystem.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            if (model.DateOfBirth.HasValue && model.DateOfBirth.Value.Date > DateTime.UtcNow.Date)
+            {
+                TempData["RegisterError"] = "Date of birth cannot be in the future.";
+                return RedirectToAction("Index", "Home");
+            }
             // Convert Gender string -> enum
             // Convert Gender string -> enum (safe)
             Gender? gender = null;
